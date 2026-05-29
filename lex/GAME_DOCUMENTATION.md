@@ -12,34 +12,40 @@
 
 ## 2. Characters & Objects
 
-| Asset                         | Name              | Role                                                                                                                       |
-| ----------------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `character (main).png`        | **Lex**           | The main ball. Bounces around the arena and accumulates tumble value.                                                      |
-| `character (clone).png`       | **Clone**         | A duplicate of Lex spawned during the Start Clone Bonus or by collecting the Clone Orb. Has a limited lifespan of 15 hits. |
-| `clone main character x1.png` | **Clone Orb**     | A green magic orb that spawns a Clone when collected.                                                                      |
-| `escape (cashout).png`        | **Escape Ladder** | A wooden ladder. Collecting it immediately cashes out the current tumble value and ends the round.                         |
-| `-50 balance.png`             | **Blue Blob**     | A cursed slime. Hitting it removes 50% of the current tumble value.                                                        |
-| `slayer.png`                  | **Slayer**        | An armoured goblin warrior. Hitting it destroys the ball. If no balls remain, the round ends with a $0.00 payout.          |
+| Asset                         | Name              | Role                                                                                                                                       |
+| ----------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `character (main).png`        | **Lex**           | The main ball. A bald adventurer with a glowing green eye and white outfit. Bounces around the arena and accumulates tumble value.         |
+| `character (clone).png`       | **Clone**         | A green humanoid duplicate of Lex, spawned during the Start Clone Bonus or by collecting the Clone Orb. Has a limited lifespan of 15 hits. |
+| `clone main character x1.png` | **Clone Orb**     | A green shamrock/clover. Collecting it spawns a Clone ball.                                                                                |
+| `escape (cashout).png`        | **Escape Ladder** | A wooden ladder descending into darkness. Collecting it immediately cashes out the current tumble value and ends the round.                |
+| `-50 balance.png`             | **Blue Blob**     | A cursed glowing slime. Hitting it removes 50% of the current tumble value.                                                                |
+| `slayer.png`                  | **Slayer**        | A red samurai warrior wielding a katana. Hitting it destroys the ball. If no balls remain, the round ends with a $0.00 payout.             |
+| _(gold coin)_                 | **Gold Coin**     | A shining pixel-art coin. Collecting it adds **+$0.50 of the current bet** to the tumble value.                                            |
+| _(green gem)_                 | **Green Gem**     | A large green diamond/gemstone. Collecting it multiplies the current bet by **×5** and adds it to the tumble value.                        |
+| _(red heart)_                 | **Red Heart**     | A pixel-art heart. Collecting it grants a one-time shield against the next Slayer hit.                                                     |
+| `chest.png`                   | **Mystery Chest** | A treasure chest that spawns randomly. Collecting it applies a random multiplier (**x0.1 – x10,000**) to the current tumble value.         |
 
 ---
 
 ## 3. Arena Layout
 
 ```
-┌──────────────────────────────────────────┐
-│ [TL corner]                  [TR corner] │
-│                                          │
-│      ·  Lex bounces freely here  ·       │
-│        Objects spawn in this zone        │
-│                                          │
-│ [BL corner]                  [BR corner] │
-└──────────────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│ [chest x2 — TL]               [chest x2 — TR]  │
+│                                                 │
+│      ·  Lex bounces freely here  ·              │
+│        Objects spawn in this zone               │
+│                                                 │
+│ [chest x0.2 — BL]             [chest x2 — BR]  │
+└─────────────────────────────────────────────────┘
 ```
 
+- The arena is set inside a **Japanese dojo** (tatami-tiled floor, shoji screen walls, tiled rooftop border).
 - The field is **800 × 500 px**.
-- The four **corners** are 50 × 50 px zones. Each corner independently displays either `NONE` or a live multiplier (e.g. `3.4x`).
+- The four **corners** are represented as **treasure chests** embedded in the arena walls. Each chest displays a multiplier badge — green for favourable values (e.g. `x2`), pink/red for low values (e.g. `x0.2`).
 - Corner multipliers **re-randomise on every wall bounce** (see §6 for distribution details).
-- A warm-up period of **5 bounces** keeps all corners at `NONE` to allow the tumble value to build.
+- A warm-up period of **5 bounces** keeps all corners inactive to allow the tumble value to build.
+- The **Lex Looter logo** is displayed prominently at the top-centre of the arena, flanked by the tumble value and bounce counter.
 
 ---
 
@@ -111,12 +117,16 @@ Corners re-randomise every bounce. Distributions differ between Standard Mode an
 
 Up to **3 objects** can exist on the field at any one time. Each game loop tick has a ~1.2% chance of spawning a new object. Objects are placed randomly in the central region of the arena (avoiding the outermost 100 px border). The ball must come within **35 px** of an object's centre to collect it.
 
-| Object            | Spawn Conditions                                  | Effect on Collection                |
-| ----------------- | ------------------------------------------------- | ----------------------------------- |
-| **Slayer**        | Standard Mode and Start Clone Bonus               | Destroys the ball that touched it   |
-| **Blue Blob**     | All modes                                         | −50% of tumble value                |
-| **Escape Ladder** | Standard Mode only (disabled in both bonus modes) | Cashes out tumble value immediately |
-| **Clone Orb**     | All modes                                         | Spawns a new Clone ball             |
+| Object            | Spawn Conditions                                  | Effect on Collection                                                     |
+| ----------------- | ------------------------------------------------- | ------------------------------------------------------------------------ |
+| **Slayer**        | Standard Mode and Start Clone Bonus               | Destroys the ball that touched it                                        |
+| **Blue Blob**     | All modes                                         | −50% of tumble value                                                     |
+| **Escape Ladder** | Standard Mode only (disabled in both bonus modes) | Cashes out tumble value immediately                                      |
+| **Clone Orb**     | All modes                                         | Spawns a new Clone ball                                                  |
+| Gold Coin         | All modes                                         | Adds +$0.50 of the current bet to tumble value                           |
+| Green Gem         | All modes                                         | Adds ×5 of the current bet to tumble value                               |
+| **Red Heart**     | All modes                                         | Grants a one-time shield against the next Slayer hit                     |
+| **Mystery Chest** | All modes                                         | Applies a random multiplier (x0.1 – x10,000) to the current tumble value |
 
 > The Escape Ladder is intentionally **disabled in both paid bonus modes** since those modes offer enhanced multiplier distributions, making an early cashout less desirable from a design perspective.
 
@@ -159,13 +169,18 @@ Up to **3 objects** can exist on the field at any one time. Each game loop tick 
 
 ## 9. HUD Reference
 
-| Element        | Location                 | Description                                                        |
-| -------------- | ------------------------ | ------------------------------------------------------------------ |
-| Balance        | Header — left            | Player's current wallet balance.                                   |
-| Mode Label     | Header — right           | Displays `STANDARD MODE`, `NO BOOM BONUS`, or `START CLONE BONUS`. |
-| Tumble Value   | Top-centre of arena      | Live running prize pot for the current round.                      |
-| Bounce Counter | Below tumble value       | Format: `X / 40 STEALTH`. Only counts Lex's (main ball) bounces.   |
-| Corner Labels  | Each corner of the arena | Shows `NONE` or a live multiplier (e.g. `7.2x`).                   |
+| Element        | Location                        | Description                                                                          |
+| -------------- | ------------------------------- | ------------------------------------------------------------------------------------ |
+| Tumble Value   | Top-centre, above arena         | Large dollar display showing the live running prize pot (e.g. `$0.15`).              |
+| Bounce Counter | Below tumble value, inside pill | Format: `X/40 Stealth`. Green pill badge. Only counts Lex's (main ball) bounces.     |
+| Game Logo      | Top-left of arena               | **LEX LOOTER** logo with Lex and Clone character heads flanking it.                  |
+| Corner Chests  | Each corner of the arena        | Treasure chests showing a multiplier badge — green (favourable) or pink (low value). |
+| PLAY Button    | Bottom-centre, below arena      | Green button to start a round. Disabled during an active round.                      |
+| Bet Controls   | Bottom bar — centre             | `-` / `+` buttons with the current bet amount displayed (e.g. `BET $1.00`).          |
+| Balance        | Bottom bar — right              | Displays `BALANCE $XX.XX`.                                                           |
+| Binance Button | Bottom bar — far left           | Green Binance logo button (platform integration).                                    |
+| Auto Button    | Bottom bar — left of bet        | Circular refresh icon; toggles auto-play mode.                                       |
+| Turbo Button   | Bottom bar — right of bet       | Lightning bolt icon; toggles turbo/fast-forward mode.                                |
 
 ---
 
@@ -182,13 +197,17 @@ At the end of every round a modal overlay displays:
 
 ## 11. Controls
 
-| Button               | Cost    | Action                                      |
-| -------------------- | ------- | ------------------------------------------- |
-| `BET $1.00`          | $1.00   | Starts a Standard Mode round                |
-| `NO BOOM ($100)`     | $100.00 | Activates No Boom Bonus and auto-starts     |
-| `START CLONE ($170)` | $170.00 | Activates Start Clone Bonus and auto-starts |
+| Control              | Type          | Action                                                       |
+| -------------------- | ------------- | ------------------------------------------------------------ |
+| **PLAY**             | Green button  | Starts a Standard Mode round at the current bet amount       |
+| **`−` / `+`**        | Bet controls  | Decreases / increases the bet amount                         |
+| **Auto**             | Toggle button | Enables auto-play; rounds run continuously until toggled off |
+| **Turbo**            | Toggle button | Speeds up ball movement for faster rounds                    |
+| **Binance**          | Icon button   | Opens platform/wallet integration (Binance)                  |
+| `NO BOOM ($100)`     | Bonus buy     | Activates No Boom Bonus and auto-starts a round              |
+| `START CLONE ($170)` | Bonus buy     | Activates Start Clone Bonus and auto-starts with two balls   |
 
-> The Bet button is **disabled during an active round** and re-enabled after CONTINUE is pressed.
+> The **PLAY** button is disabled during an active round and re-enabled when the round ends.
 
 ---
 
