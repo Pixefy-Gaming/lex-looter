@@ -15,7 +15,7 @@ class GameConfig(Config):
         self.working_name = "lexlooter"
         self.wincap = 2
         self.win_type = "other"
-        self.rtp = 0
+        self.rtp = 0.965
         self.construct_paths()
 
         # Game Dimensions
