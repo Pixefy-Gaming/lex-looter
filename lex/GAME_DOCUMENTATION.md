@@ -31,12 +31,12 @@
 
 ```
 ┌─────────────────────────────────────────────────┐
-│ [chest x2 — TL]               [chest x2 — TR]  │
+│ [chest x2 — TL]               [chest x2 — TR]   │
 │                                                 │
 │      ·  Lex bounces freely here  ·              │
 │        Objects spawn in this zone               │
 │                                                 │
-│ [chest x0.2 — BL]             [chest x2 — BR]  │
+│ [chest x0.2 — BL]             [chest x2 — BR]   │
 └─────────────────────────────────────────────────┘
 ```
 

@@ -13,7 +13,7 @@ class GameConfig(Config):
         self.game_id = "lexlooter"
         self.provider_numer = 0
         self.working_name = "lexlooter"
-        self.wincap = 2
+        self.wincap = 10000
         self.win_type = "other"
         self.rtp = 0.965
         self.construct_paths()
