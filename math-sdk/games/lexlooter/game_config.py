@@ -1,52 +1,127 @@
-"""Template game configuration file, detailing required user-specified inputs."""
+"""Lex Looter configuration for a custom event-based game."""
 
-from src.config.config import Config
+from src.config.config import BetMode, Config
 from src.config.distributions import Distribution
-from src.config.config import BetMode
 
 
 class GameConfig(Config):
-    """Template configuration class."""
+    """Configure Lex Looter bet modes and round-level simulation settings."""
 
     def __init__(self):
         super().__init__()
         self.game_id = "lexlooter"
-        self.provider_numer = 0
+        self.provider_number = 0
+        self.provider_name = "stake"
         self.working_name = "lexlooter"
-        self.wincap = 10000
+        self.game_name = "Lex Looter"
+        self.wincap = 50000
         self.win_type = "other"
         self.rtp = 0.965
         self.construct_paths()
 
-        # Game Dimensions
         self.num_reels = 0
-        self.num_rows = [0] * self.num_reels
+        self.num_rows = []
         self.paytable = {}
         self.include_padding = False
-        self.special_symbols = {"wild": [], "scatter": [], "multiplier": []}
+        self.special_symbols = {None: []}
 
         self.freespin_triggers = {self.basegame_type: {}, self.freegame_type: {}}
         self.anticipation_triggers = {self.basegame_type: 0, self.freegame_type: 0}
 
         self.bet_modes = [
-            BetMode(
+            self._build_bet_mode(
                 name="base",
                 cost=1.0,
-                rtp=self.rtp,
-                max_win=self.wincap,
-                auto_close_disabled=False,
-                is_feature=True,
                 is_buybonus=False,
-                distributions=[
-                    Distribution(
-                        criteria="basegame",
-                        quota=1.0,
-                        conditions={
-                            "reel_weights": {},
-                            "force_wincap": False,
-                            "force_freegame": False,
-                        },
-                    ),
-                ],
+                spawn_mode="base",
+                high_mult_corners=False,
+                start_with_slayer=False,
+                start_clone_count=0,
+                start_multiplier=1.0,
+                spawn_chance_per_turn=0.28,
+                start_slayer_delay_min=1,
+                start_slayer_delay_max=1,
+            ),
+            self._build_bet_mode(
+                name="no_slayer",
+                cost=100.0,
+                is_buybonus=True,
+                spawn_mode="no_slayer",
+                high_mult_corners=True,
+                start_with_slayer=True,
+                start_clone_count=0,
+                start_multiplier=1.0,
+                spawn_chance_per_turn=0.30,
+                start_slayer_delay_min=20,
+                start_slayer_delay_max=30,
+            ),
+            self._build_bet_mode(
+                name="start_clone",
+                cost=170.0,
+                is_buybonus=True,
+                spawn_mode="start_clone",
+                high_mult_corners=True,
+                start_with_slayer=True,
+                start_clone_count=1,
+                start_multiplier=1.0,
+                spawn_chance_per_turn=0.30,
+                start_slayer_delay_min=4,
+                start_slayer_delay_max=8,
+            ),
+            self._build_bet_mode(
+                name="lucky_lex",
+                cost=250.0,
+                is_buybonus=True,
+                spawn_mode="lucky_lex",
+                high_mult_corners=True,
+                start_with_slayer=True,
+                start_clone_count=1,
+                start_multiplier=5.0,
+                spawn_chance_per_turn=0.34,
+                start_slayer_delay_min=3,
+                start_slayer_delay_max=6,
             ),
         ]
+
+    def _build_bet_mode(
+        self,
+        name: str,
+        cost: float,
+        is_buybonus: bool,
+        spawn_mode: str,
+        high_mult_corners: bool,
+        start_with_slayer: bool,
+        start_clone_count: int,
+        start_multiplier: float,
+        spawn_chance_per_turn: float,
+        start_slayer_delay_min: int,
+        start_slayer_delay_max: int,
+    ) -> BetMode:
+        return BetMode(
+            name=name,
+            cost=cost,
+            rtp=self.rtp,
+            max_win=self.wincap,
+            auto_close_disabled=False,
+            is_feature=is_buybonus,
+            is_buybonus=is_buybonus,
+            distributions=[
+                Distribution(
+                    criteria="main",
+                    quota=1.0,
+                    conditions={
+                        "reel_weights": {},
+                        "force_wincap": False,
+                        "force_freegame": False,
+                        "spawn_mode": spawn_mode,
+                        "high_mult_corners": high_mult_corners,
+                        "start_with_slayer": start_with_slayer,
+                        "start_clone_count": start_clone_count,
+                        "start_multiplier": start_multiplier,
+                        "spawn_chance_per_turn": spawn_chance_per_turn,
+                        "start_slayer_delay_min": start_slayer_delay_min,
+                        "start_slayer_delay_max": start_slayer_delay_max,
+                    },
+                )
+            ],
+        )

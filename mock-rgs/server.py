@@ -1,8 +1,8 @@
 """Mock RGS Server - Bridge between web-sdk and math-sdk."""
 
-import sys
 import os
-import json
+import re
+import sys
 import uuid
 from datetime import datetime
 from flask import Flask, request, jsonify
@@ -30,8 +30,27 @@ CORS(app)  # Enable CORS for web-sdk frontend
 
 # In-memory session storage
 sessions = {}
-game_instances = {}
 INITIAL_BALANCE = 1000000000  # $1000 with 6 decimal precision
+API_AMOUNT_MULTIPLIER = 1_000_000
+SUPPORTED_BET_LEVELS = [API_AMOUNT_MULTIPLIER]
+
+MODE_ALIAS_OVERRIDES = {
+    "default": "base",
+    "no slayer": "no_slayer",
+    "no-slayer": "no_slayer",
+    "noslayer": "no_slayer",
+    "start clone": "start_clone",
+    "start-clone": "start_clone",
+    "startclone": "start_clone",
+    "lucky lex": "lucky_lex",
+    "lucky-lex": "lucky_lex",
+    "luckylex": "lucky_lex",
+}
+
+
+def normalize_mode_key(value):
+    """Convert user-facing mode labels into a stable internal lookup key."""
+    return re.sub(r"[^a-z0-9]+", "_", str(value or "").strip().lower()).strip("_")
 
 
 class Session:
@@ -42,6 +61,7 @@ class Session:
         self.balance = INITIAL_BALANCE
         self.currency = "USD"
         self.language = "en"
+        self.current_base_bet_amount = None
         self.current_bet_amount = None
         self.current_book = None
         self.current_book_raw = None
@@ -62,6 +82,71 @@ class Session:
                 print(f"✅ Initialized game for session {self.session_id}")
             except Exception as e:
                 print(f"❌ Failed to initialize game: {e}")
+
+    def get_available_betmodes(self):
+        """Return the current math-sdk betmodes keyed by name."""
+        if not self.config:
+            self.initialize_game()
+        if not self.config:
+            return {}
+        return {betmode.get_name(): betmode for betmode in self.config.bet_modes}
+
+    def get_base_mode_name(self):
+        """Return the primary mode used as the cost baseline."""
+        available_betmodes = self.get_available_betmodes()
+        if "base" in available_betmodes:
+            return "base"
+        return next(iter(available_betmodes), None)
+
+    def resolve_mode_name(self, requested_mode):
+        """Resolve a frontend mode label to an available math-sdk betmode."""
+        available_betmodes = self.get_available_betmodes()
+        if not available_betmodes:
+            return None
+
+        aliases = {}
+        for mode_name in available_betmodes:
+            normalized_name = normalize_mode_key(mode_name)
+            aliases[normalized_name] = mode_name
+            aliases[mode_name.lower()] = mode_name
+            aliases[mode_name.upper()] = mode_name
+
+        for alias, mode_name in MODE_ALIAS_OVERRIDES.items():
+            if mode_name in available_betmodes:
+                aliases[normalize_mode_key(alias)] = mode_name
+
+        normalized_requested = normalize_mode_key(requested_mode)
+        return aliases.get(normalized_requested, self.get_base_mode_name())
+
+    def get_mode_cost_multiplier(self, mode_name):
+        """Return the buy cost multiplier relative to the base mode cost."""
+        available_betmodes = self.get_available_betmodes()
+        base_mode_name = self.get_base_mode_name()
+        if mode_name not in available_betmodes or base_mode_name not in available_betmodes:
+            return 1.0
+
+        base_cost = float(available_betmodes[base_mode_name].get_cost())
+        if base_cost <= 0:
+            return 1.0
+
+        return float(available_betmodes[mode_name].get_cost()) / base_cost
+
+    def get_mode_display_name(self, mode_name):
+        """Return the RGS-facing display form of a mode name."""
+        return str(mode_name).upper()
+
+    def get_rgs_bet_modes_config(self):
+        """Expose math-sdk betmodes in the authenticate payload."""
+        available_betmodes = self.get_available_betmodes()
+        bet_modes = {}
+        for mode_name, betmode in available_betmodes.items():
+            display_name = self.get_mode_display_name(mode_name)
+            bet_modes[display_name] = {
+                "mode": display_name,
+                "costMultiplier": self.get_mode_cost_multiplier(mode_name),
+                "feature": bool(betmode.get_feature() or betmode.get_buybonus()),
+            }
+        return bet_modes
     
     def run_game_round(self, sim_number=None, mode='base'):
         """Run actual game round using math-sdk."""
@@ -75,30 +160,12 @@ class Session:
             import random as rnd
             if sim_number is None:
                 sim_number = rnd.randint(1, 1000000)
-            
-            # Set betmode based on requested mode
-            # Maps frontend mode names → math-sdk betmode names
-            mode_map = {
-                'base': 'base',
-                'BASE': 'base',
-                'low': 'low',
-                'LOW': 'low',
-                'medium': 'medium',
-                'MEDIUM': 'medium',
-                'high': 'high',
-                'HIGH': 'high',
-                'extreme': 'extreme',
-                'EXTREME': 'extreme',
-                # Buy bonus modes
-                'arcane_ascension': 'arcane_ascension',
-                'ARCANE_ASCENSION': 'arcane_ascension',
-                'overlord_enhancement': 'overlord_enhancement',
-                'OVERLORD_ENHANCEMENT': 'overlord_enhancement',
-            }
-            # Fall back to first available betmode if unknown
-            available_betmodes = [bm.get_name() for bm in self.game_state.config.bet_modes]
-            desired = mode_map.get(mode, mode.lower())
-            self.game_state.betmode = desired if desired in available_betmodes else available_betmodes[0]
+
+            resolved_mode = self.resolve_mode_name(mode)
+            if resolved_mode is None:
+                raise RuntimeError("No betmodes available from math-sdk config")
+
+            self.game_state.betmode = resolved_mode
             
             # Apply per-betmode wincap (mirrors run_sims.py behaviour)
             betmode_obj = self.game_state.get_current_betmode()
@@ -159,15 +226,26 @@ def authenticate():
             "currency": session.currency
         },
         "config": {
-            "minBet": 100000,  # $0.10
-            "maxBet": 1000000000,  # $1000
-            "stepBet": 10000,
-            "defaultBetLevel": 1000000,
-            "betLevels": [100000, 200000, 400000, 600000, 800000, 1000000],
+            "gameID": GAME_ID,
+            "minBet": SUPPORTED_BET_LEVELS[0],
+            "maxBet": SUPPORTED_BET_LEVELS[-1],
+            "stepBet": SUPPORTED_BET_LEVELS[0],
+            "defaultBetLevel": SUPPORTED_BET_LEVELS[0],
+            "betLevels": SUPPORTED_BET_LEVELS,
+            "betModes": session.get_rgs_bet_modes_config(),
             "jurisdiction": {
                 "socialCasino": False,
                 "disabledFullscreen": False,
-                "disabledTurbo": False
+                "disabledTurbo": False,
+                "disabledSuperTurbo": False,
+                "disabledAutoplay": False,
+                "disabledSlamstop": False,
+                "disabledSpacebar": False,
+                "disabledBuyFeature": False,
+                "displayNetPosition": False,
+                "displayRTP": False,
+                "displaySessionTimer": False,
+                "minimumRoundDuration": 0,
             }
         }
     }
@@ -176,7 +254,8 @@ def authenticate():
     if session.round_active and session.current_book:
         response["round"] = {
             "roundID": session.round_id,
-            "amount": session.current_bet_amount,
+            "amount": session.current_base_bet_amount,
+            "debitAmount": session.current_bet_amount,
             "payout": session.win_amount,
             "payoutMultiplier": session.current_book.get('payoutMultiplier', 0),
             "active": True,
@@ -194,22 +273,28 @@ def play():
     """Place a bet and start a round - uses real math-sdk game engine."""
     data = request.json
     session_id = data.get('sessionID')
-    amount = int(data.get('amount', 1000000))
+    amount = int(data.get('amount', SUPPORTED_BET_LEVELS[0]))
     mode = data.get('mode', 'BASE')
-
-    # Buy-bonus cost multipliers: portal expects base bet and applies multiplier internally.
-    # Mock-rgs mirrors this: receive base bet, compute total_debit = base_bet * multiplier.
-    _BUY_BONUS_COST = {
-        'arcane_ascension': 50, 'ARCANE_ASCENSION': 50,
-        'overlord_enhancement': 100, 'OVERLORD_ENHANCEMENT': 100,
-    }
-    _cost_mult = _BUY_BONUS_COST.get(mode, 1)
-    total_debit = amount * _cost_mult
 
     if session_id not in sessions:
         return jsonify({"error": "Invalid session"}), 400
 
     session = sessions[session_id]
+
+    resolved_mode = session.resolve_mode_name(mode)
+    if resolved_mode is None:
+        return jsonify({"error": "Game engine error", "message": "No betmodes available"}), 500
+
+    if amount not in SUPPORTED_BET_LEVELS:
+        return jsonify(
+            {
+                "error": "UNSUPPORTED_BET",
+                "message": "Mock RGS currently supports only the fixed $1 base bet for Lex Looter.",
+            }
+        ), 400
+
+    cost_multiplier = session.get_mode_cost_multiplier(resolved_mode)
+    total_debit = int(round(amount * cost_multiplier, 0))
 
     # Check balance against TOTAL cost (base bet × cost multiplier)
     if session.balance < total_debit:
@@ -217,16 +302,15 @@ def play():
 
     # Deduct total cost
     session.balance -= total_debit
+    session.current_base_bet_amount = amount
     session.current_bet_amount = total_debit
     session.round_id = str(uuid.uuid4())
     session.round_active = True
-    session.current_mode = mode.upper()
+    session.current_mode = session.get_mode_display_name(resolved_mode)
     session.current_event_index = 0
     
     # Run actual game round using math-sdk
-    book = session.run_game_round(
-        mode=mode
-    )
+    book = session.run_game_round(mode=resolved_mode)
     
     if not book:
         # Restore balance if game failed
@@ -240,42 +324,12 @@ def play():
     # payoutMultiplier in book is in basis points (100 = 1x)
     payout_multiplier_raw = book.get('payoutMultiplier', 0)
     payout_multiplier_decimal = payout_multiplier_raw / 100.0
-
-    # For buy-bonus modes, amount = base_bet (portal/mock applies the cost multiplier).
-    # For standard modes, amount = base_bet = total_debit.
-    is_buy_bonus_mode = mode in {'arcane_ascension', 'ARCANE_ASCENSION',
-                                  'overlord_enhancement', 'OVERLORD_ENHANCEMENT'}
-
-    if is_buy_bonus_mode:
-        # amount is the base bet; win = base_bet × payoutMultiplier
-        base_bet = amount
-        win_amount = int(base_bet * payout_multiplier_decimal)
-    else:
-        # Standard mode: Win = bet × payoutMultiplier
-        win_amount = int(amount * payout_multiplier_decimal)
+    win_amount = int(round(amount * payout_multiplier_decimal, 0))
     session.win_amount = win_amount
-    
-    # Extract item details from the game event for frontend matching
-    events = book.get('events', [])
-    buy_bonus_modes = {'arcane_ascension', 'overlord_enhancement',
-                       'arcane-ascension', 'overlord-enhancement',
-                       'ARCANE_ASCENSION', 'OVERLORD_ENHANCEMENT'}
-    is_buy_bonus = mode in buy_bonus_modes
 
-    if is_buy_bonus:
-        # For buy bonus: read overall payout from multiplierInfo event
-        mult_event = next((e for e in events if e.get('type') == 'multiplierInfo'), None)
-        win_events = [e for e in events if e.get('type') == 'winInfo']
-        # tier/itemName come from the first card for legacy fields
-        first_card = win_events[0] if win_events else None
-        item_tier = first_card.get('tier', 'common') if first_card else 'common'
-        item_name = first_card.get('itemName', '') if first_card else ''
-        event_multiplier = mult_event.get('payoutMultiplier', payout_multiplier_raw) if mult_event else payout_multiplier_raw
-    else:
-        win_event = next((e for e in events if e.get('type') == 'winInfo'), None)
-        item_tier = win_event.get('tier', 'common') if win_event else 'common'
-        item_name = win_event.get('itemName', '') if win_event else ''
-        event_multiplier = win_event.get('payoutMultiplier', payout_multiplier_raw) if win_event else payout_multiplier_raw
+    events = book.get('events', [])
+    round_end_event = next((event for event in reversed(events) if event.get('type') == 'roundEnd'), None)
+    round_reason = round_end_event.get('reason', '') if round_end_event else ''
     
     # Match math-sdk mock_rgs response format
     # NOTE: 'state' is what the web-sdk expects (contains book events array)
@@ -288,22 +342,23 @@ def play():
         },
         "round": {
             "roundID": session.round_id,
-            "mode": mode.upper(),
-            "amount": total_debit,
+            "mode": session.current_mode,
+            "amount": amount,
             "debitAmount": total_debit,
             "payoutMultiplier": payout_multiplier_raw,
             "payout": win_amount,
             "active": True,
             "state": book.get('events', []),  # web-sdk expects 'state' not 'events'
-            "tier": item_tier,  # Pass tier for frontend rarity mapping
-            "itemName": item_name,  # Pass item name for frontend display
         }
     }
     
     all_events = book.get('events', [])
     event_types = [e.get('type') for e in all_events]
-    print(f"🎰 Bet: ${amount/1000000:.2f} | Multiplier: {payout_multiplier_decimal:.2f}x | Win: ${win_amount/1000000:.2f} | Mode: {mode}")
-    print(f"   Item: {item_name} ({item_tier}) | Event Mult: {event_multiplier}")
+    print(
+        f"🎰 Bet: ${amount/API_AMOUNT_MULTIPLIER:.2f} | Debit: ${total_debit/API_AMOUNT_MULTIPLIER:.2f} "
+        f"| Payout: ${win_amount/API_AMOUNT_MULTIPLIER:.2f} | Mode: {session.current_mode}"
+    )
+    print(f"   End reason: {round_reason or 'unknown'} | Book payout raw: {payout_multiplier_raw}")
     print(f"📝 Events ({len(event_types)}): {event_types}")
     return jsonify(response)
 
@@ -326,6 +381,7 @@ def end_round():
     session.balance += session.win_amount
     
     session.round_active = False
+    session.current_base_bet_amount = None
     session.current_book = None
     session.round_id = None
     session.current_event_index = 0
@@ -398,13 +454,13 @@ def bet_event():
     return jsonify({"error": "Invalid event index"}), 400
 
 
-@app.route('/api/teams/pixefy-gaming/approvals/weapon-ascension', methods=['GET'])
-def approvals():
+@app.route('/api/teams/pixefy-gaming/approvals/<game_slug>', methods=['GET'])
+def approvals(game_slug):
     """Approval check endpoint."""
     return jsonify({
         "status": "APPROVED",
         "team": "pixefy-gaming",
-        "game": "weapon-ascension"
+        "game": game_slug,
     })
 
 
@@ -414,6 +470,7 @@ def health():
     return jsonify({
         "status": "ok",
         "server": "mock-rgs",
+        "game": GAME_ID,
         "sessions": len(sessions),
         "timestamp": datetime.now().isoformat()
     })
