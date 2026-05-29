@@ -18,7 +18,7 @@
 | `character (clone).png`       | **Clone**         | A duplicate of Lex spawned during the Start Clone Bonus or by collecting the Clone Orb. Has a limited lifespan of 15 hits. |
 | `clone main character x1.png` | **Clone Orb**     | A green magic orb that spawns a Clone when collected.                                                                      |
 | `escape (cashout).png`        | **Escape Ladder** | A wooden ladder. Collecting it immediately cashes out the current tumble value and ends the round.                         |
-| `-50 balance.png`             | **Blue Blob**     | A cursed slime. Hitting it halves the current tumble value (−50%).                                                         |
+| `-50 balance.png`             | **Blue Blob**     | A cursed slime. Hitting it removes 50% of the current tumble value.                                                        |
 | `slayer.png`                  | **Slayer**        | An armoured goblin warrior. Hitting it destroys the ball. If no balls remain, the round ends with a $0.00 payout.          |
 
 ---
@@ -52,7 +52,7 @@ The **tumble value** is the running prize pot accumulated during a round. It sta
 | Lex bounces off a wall          | **+$0.12**                                   |
 | Clone bounces off a wall        | **+$0.08**                                   |
 | Clone expires (15 hits reached) | **+$0.50** bonus on top of accumulated value |
-| Blue Blob collected             | **× 0.50** (halved)                          |
+| Blue Blob collected             | **−50%** of tumble value                     |
 
 The tumble value is displayed live at the top-centre of the arena alongside the bounce counter.
 
@@ -114,7 +114,7 @@ Up to **3 objects** can exist on the field at any one time. Each game loop tick 
 | Object            | Spawn Conditions                                  | Effect on Collection                |
 | ----------------- | ------------------------------------------------- | ----------------------------------- |
 | **Slayer**        | Standard Mode and Start Clone Bonus               | Destroys the ball that touched it   |
-| **Blue Blob**     | All modes                                         | Halves tumble value                 |
+| **Blue Blob**     | All modes                                         | −50% of tumble value                |
 | **Escape Ladder** | Standard Mode only (disabled in both bonus modes) | Cashes out tumble value immediately |
 | **Clone Orb**     | All modes                                         | Spawns a new Clone ball             |
 
