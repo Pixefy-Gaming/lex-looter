@@ -229,3 +229,146 @@ The game canvas scales uniformly to fit smaller screens. The scale factor is com
 $$\text{scale} = \min\left(1,\ \frac{\text{viewport width} - 20}{800}\right)$$
 
 The arena always renders at the native 800 × 500 internal resolution; only the visual presentation is scaled.
+
+---
+
+## 14. Math SDK / Web SDK Responsibility Split
+
+The Math SDK owns every decision that can affect the final result. The Web SDK owns only presentation, animation timing, interpolation, sound, and visual effects between the result-bearing events.
+
+| Responsibility                                      | Math SDK | Web SDK |
+| --------------------------------------------------- | :------: | :-----: |
+| Select active game mode and charged bet cost        |    ✓     |         |
+| Decide corner multipliers and when they refresh     |    ✓     |         |
+| Decide if a corner is hit and which corner wins     |    ✓     |         |
+| Decide object type, spawn turn, and normalized x/y  |    ✓     |         |
+| Decide object outcome: collect, cashout, destroy    |    ✓     |         |
+| Update tumble value, mode multiplier, and payout    |    ✓     |         |
+| Track main ball, clone count, and terminal reason   |    ✓     |         |
+| Animate ball travel between authored events         |          |    ✓    |
+| Render object, corner, collect, and destroy effects |          |    ✓    |
+| Play sound and camera/UI feedback                   |          |    ✓    |
+| Convert normalized positions into screen positions  |          |    ✓    |
+
+Everything that changes the payout is in the book. Everything purely visual is the frontend's job.
+
+---
+
+## 15. Book Event Contract
+
+All money amounts in book events are integer cents. Object positions are normalized coordinates in the playable field, where `x` and `y` are in the `0–1` range. The frontend should use event order as the authoritative playback order.
+
+### `roundStart`
+
+Starts a Lex Looter round and defines the mode-level settings.
+
+| Field              | Type    | Description                                            |
+| ------------------ | ------- | ------------------------------------------------------ |
+| `mode`             | string  | Active bet mode key/name.                              |
+| `betCost`          | number  | Cost/value unit for this round, in cents.              |
+| `modeMultiplier`   | number  | Mode multiplier applied to final payouts.              |
+| `cloneCount`       | number  | Number of clones alive at round start.                 |
+| `startsWithSlayer` | boolean | Whether a start-authored Slayer spawn should be shown. |
+
+### `cornerUpdate`
+
+Refreshes the visible corner multipliers. This event is emitted at round start and after each main Lex bounce.
+
+| Field         | Type   | Description                                      |
+| ------------- | ------ | ------------------------------------------------ |
+| `mainBounces` | number | Main Lex wall-bounce count after the update.     |
+| `corners`     | object | `{ tl, tr, bl, br }`, each number or `null`.     |
+
+`null` means that corner is inactive. Non-null values are live multipliers that may end the round if hit.
+
+### `bounceUpdate`
+
+Publishes the current bounce-state snapshot after bounce/object processing for a turn.
+
+| Field            | Type    | Description                                        |
+| ---------------- | ------- | -------------------------------------------------- |
+| `turn`           | number  | Simulation turn number.                            |
+| `mainBounces`    | number  | Main Lex bounce count.                             |
+| `tumbleValue`    | number  | Current tumble value, in cents.                    |
+| `mainAlive`      | boolean | Whether the main Lex ball is still active.         |
+| `cloneCount`     | number  | Number of currently active clones.                 |
+| `modeMultiplier` | number  | Current mode multiplier for display/reference.     |
+
+The frontend can animate a bounce path leading into this state, but must not invent additional bounce-value changes.
+
+### `objectSpawn`
+
+Creates a visible object in the arena. The Math SDK decides what spawned, when it spawned, and where it appears.
+
+| Field      | Type   | Description                                                 |
+| ---------- | ------ | ----------------------------------------------------------- |
+| `objectId` | string | Stable ID used to match the later resolve event.            |
+| `object`   | string | One of `coin`, `diamond`, `blue_blob`, `chest`, `escape`, `slayer`, `clone_orb`, `heart`. |
+| `turn`     | number | Turn when the object appears.                               |
+| `x`        | number | Normalized horizontal position in the playable field.       |
+| `y`        | number | Normalized vertical position in the playable field.         |
+| `source`   | string | `random` or `start`.                                        |
+
+### `objectResolve`
+
+Applies the authored outcome for an object. This is where the result changes, if the object affects money or live balls.
+
+| Object      | `result`   | Extra fields                                                        |
+| ----------- | ---------- | ------------------------------------------------------------------- |
+| `coin`      | `collect`  | `amount`, `tumbleValue`                                             |
+| `diamond`   | `collect`  | `amount`, `tumbleValue`                                             |
+| `blue_blob` | `halve`    | `delta`, `tumbleValue`                                              |
+| `chest`     | `multiply` | `multiplier`, `tumbleValue`                                         |
+| `escape`    | `cashout`  | `totalWin`, `tumbleValue`                                           |
+| `slayer`    | `destroy`  | `target`, `remainingBalls`                                          |
+| `slayer`    | `shieldBlock` | `target`, `shieldCount`, `remainingBalls`                        |
+| `slayer`    | `noTarget` | No extra fields                                                     |
+| `clone_orb` | `spawnClone` | `ballId`, `hitsRemaining`, `cloneCount`                           |
+| `heart`     | `shield`   | `shieldCount`                                                       |
+
+The Web SDK should animate the object being collected/destroyed, then display the exact authored value change from this event.
+
+### `cloneExpire`
+
+Removes an expired clone and adds its expiry bonus.
+
+| Field         | Type   | Description                                  |
+| ------------- | ------ | -------------------------------------------- |
+| `ballId`      | string | Clone ID, such as `clone_1`.                 |
+| `turn`        | number | Turn when the clone expires.                 |
+| `addedAmount` | number | Expiry bonus added to tumble value, in cents. |
+| `tumbleValue` | number | Updated tumble value, in cents.              |
+
+### `roundEnd`
+
+Ends playback and defines the final result.
+
+| Field            | Type   | Description                                             |
+| ---------------- | ------ | ------------------------------------------------------- |
+| `reason`         | string | `cornerHit`, `escape`, `bounceLimit`, `slayer`, `allBallsLost`, or `safetyStop`. |
+| `totalWin`       | number | Final payout, in cents.                                 |
+| `tumbleValue`    | number | Final tumble value before/at settlement, in cents.      |
+| `mainBounces`    | number | Final main Lex bounce count.                            |
+| `modeMultiplier` | number | Mode multiplier used for settlement.                    |
+
+Optional fields depend on the reason:
+
+| Reason      | Optional fields                                      |
+| ----------- | ---------------------------------------------------- |
+| `cornerHit` | `corner`, `cornerMultiplier`                         |
+| `escape`    | `objectId`                                           |
+| `slayer`    | `objectId`, `target`                                 |
+
+### Example Event Sequence
+
+```json
+[
+  { "type": "roundStart", "mode": "BASE", "betCost": 100, "modeMultiplier": 1, "cloneCount": 0, "startsWithSlayer": false },
+  { "type": "cornerUpdate", "mainBounces": 0, "corners": { "tl": null, "tr": null, "bl": null, "br": null } },
+  { "type": "cornerUpdate", "mainBounces": 5, "corners": { "tl": null, "tr": 2.5, "bl": null, "br": null } },
+  { "type": "objectSpawn", "objectId": "coin_1", "object": "coin", "turn": 6, "x": 0.45, "y": 0.25, "source": "random" },
+  { "type": "objectResolve", "objectId": "coin_1", "object": "coin", "turn": 8, "result": "collect", "amount": 50, "tumbleValue": 146 },
+  { "type": "bounceUpdate", "turn": 8, "mainBounces": 8, "tumbleValue": 146, "mainAlive": true, "cloneCount": 0, "modeMultiplier": 1 },
+  { "type": "roundEnd", "reason": "cornerHit", "totalWin": 365, "tumbleValue": 146, "mainBounces": 8, "modeMultiplier": 1, "corner": "tr", "cornerMultiplier": 2.5 }
+]
+```

@@ -84,6 +84,9 @@ Cargo.lock
 .DS_Store
 Thumbs.db
 
+# Command Code
+.commandcode/
+
 # Temporary files
 *.tmp
 *.temp

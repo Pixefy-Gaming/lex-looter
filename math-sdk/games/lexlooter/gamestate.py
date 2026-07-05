@@ -96,6 +96,8 @@ class GameState(GameStateOverride):
             "main_alive": True,
             "main_bounces": 0,
             "clones": clones,
+            "shield_count": 0,
+            "next_clone_id": len(clones) + 1,
             "tumble_value": 0.0,
             "corners": self.roll_corners(0, bool(conditions["high_mult_corners"])),
             "active_objects": [],
@@ -326,6 +328,32 @@ class GameState(GameStateOverride):
             )
             return
 
+        if object_name == "clone_orb":
+            clone = self._add_clone(state)
+            object_resolve_event(
+                self,
+                object_id=object_state["id"],
+                object_name=object_name,
+                turn=state["turn"],
+                result="spawnClone",
+                ballId=clone["id"],
+                hitsRemaining=clone["hitsRemaining"],
+                cloneCount=len(state["clones"]),
+            )
+            return
+
+        if object_name == "heart":
+            state["shield_count"] += 1
+            object_resolve_event(
+                self,
+                object_id=object_state["id"],
+                object_name=object_name,
+                turn=state["turn"],
+                result="shield",
+                shieldCount=state["shield_count"],
+            )
+            return
+
         if object_name == "escape":
             payout = state["tumble_value"] * state["mode_multiplier"]
             object_resolve_event(
@@ -357,6 +385,20 @@ class GameState(GameStateOverride):
                 )
                 return
 
+            if state["shield_count"] > 0:
+                state["shield_count"] -= 1
+                object_resolve_event(
+                    self,
+                    object_id=object_state["id"],
+                    object_name=object_name,
+                    turn=state["turn"],
+                    result="shieldBlock",
+                    target=target_ball,
+                    shieldCount=state["shield_count"],
+                    remainingBalls=self._live_ball_count(state),
+                )
+                return
+
             if target_ball == "main":
                 state["main_alive"] = False
             else:
@@ -382,6 +424,16 @@ class GameState(GameStateOverride):
             return
 
         raise RuntimeError(f"Unsupported object type: {object_name}")
+
+    def _add_clone(self, state: dict) -> dict:
+        """Add a new clone ball and return its state."""
+        clone = {
+            "id": f"clone_{state['next_clone_id']}",
+            "hitsRemaining": self.CLONE_LIFETIME,
+        }
+        state["next_clone_id"] += 1
+        state["clones"].append(clone)
+        return clone
 
     def _maybe_hit_corner(self, state: dict) -> None:
         """Resolve a winning corner hit before the next bounce step."""

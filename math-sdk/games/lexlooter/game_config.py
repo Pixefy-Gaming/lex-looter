@@ -48,7 +48,7 @@ class GameConfig(Config):
                 is_buybonus=True,
                 spawn_mode="no_slayer",
                 high_mult_corners=True,
-                start_with_slayer=True,
+                start_with_slayer=False,
                 start_clone_count=0,
                 start_multiplier=1.0,
                 spawn_chance_per_turn=0.30,
