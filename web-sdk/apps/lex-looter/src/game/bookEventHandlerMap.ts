@@ -2,11 +2,12 @@ import _ from 'lodash';
 
 import { recordBookEvent, checkIsMultipleRevealEvents, type BookEventHandlerMap } from 'utils-book';
 import { stateBet } from 'state-shared';
+import { waitForTimeout } from 'utils-shared/wait';
 
 import { eventEmitter } from './eventEmitter';
 import { playBookEvent } from './utils';
 import { winLevelMap, type WinLevel, type WinLevelData } from './winLevelMap';
-import { stateGame, stateGameDerived } from './stateGame.svelte';
+import { createInitialLexPlaybackState, stateGame, stateGameDerived } from './stateGame.svelte';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 import type { Position } from './types';
 
@@ -42,7 +43,127 @@ const animateSymbols = async ({ positions }: { positions: Position[] }) => {
 	});
 };
 
+const waitLexPlaybackStep = async (duration = 220) => {
+	await waitForTimeout(stateBet.isTurbo ? Math.round(duration * 0.35) : duration);
+};
+
 export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContext> = {
+	roundStart: async (bookEvent: BookEventOfType<'roundStart'>) => {
+		const nextRoundSerial = stateGame.lex.roundSerial + 1;
+		stateGame.lex = {
+			...createInitialLexPlaybackState(),
+			roundSerial: nextRoundSerial,
+			mode: bookEvent.mode,
+			board: bookEvent.board,
+			lexNotation: bookEvent.lexStart,
+			lexPath: [bookEvent.lexStart],
+			lexVector: bookEvent.lexVector,
+			betCost: bookEvent.betCost,
+			modeMultiplier: bookEvent.modeMultiplier,
+			mainAlive: true,
+			cloneCount: bookEvent.cloneCount,
+		};
+		stateBet.winBookEventAmount = 0;
+		eventEmitter.broadcast({ type: 'tumbleWinAmountReset' });
+		await waitLexPlaybackStep(250);
+	},
+	cornerUpdate: async (bookEvent: BookEventOfType<'cornerUpdate'>) => {
+		stateGame.lex.mainBounces = bookEvent.mainBounces;
+		stateGame.lex.corners = { ...bookEvent.corners };
+		await waitLexPlaybackStep(120);
+	},
+	bounceUpdate: async (bookEvent: BookEventOfType<'bounceUpdate'>) => {
+		stateGame.lex.lexPath = bookEvent.path?.length ? [...bookEvent.path] : [bookEvent.from, bookEvent.to];
+		stateGame.lex.lexNotation = bookEvent.to;
+		stateGame.lex.mainBounces = bookEvent.mainBounces;
+		stateGame.lex.tumbleValue = bookEvent.tumbleValue;
+		stateGame.lex.mainAlive = bookEvent.mainAlive;
+		stateGame.lex.cloneCount = bookEvent.cloneCount;
+		stateGame.lex.modeMultiplier = bookEvent.modeMultiplier;
+		stateGame.lex.lastResolvedObjectId = undefined;
+		await waitLexPlaybackStep(260);
+	},
+	objectSpawn: async (bookEvent: BookEventOfType<'objectSpawn'>) => {
+		stateGame.lex.activeObjects = {
+			...stateGame.lex.activeObjects,
+			[bookEvent.objectId]: {
+				objectId: bookEvent.objectId,
+				object: bookEvent.object,
+				turn: bookEvent.turn,
+				notation: bookEvent.notation,
+				x: bookEvent.x,
+				y: bookEvent.y,
+				source: bookEvent.source,
+				resolved: false,
+			},
+		};
+		await waitLexPlaybackStep(260);
+	},
+	objectResolve: async (bookEvent: BookEventOfType<'objectResolve'>) => {
+		stateGame.lex.lexNotation = bookEvent.lexAt;
+		stateGame.lex.lexPath = [bookEvent.lexAt];
+		const activeObject = stateGame.lex.activeObjects[bookEvent.objectId];
+		if (activeObject) {
+			stateGame.lex.activeObjects = {
+				...stateGame.lex.activeObjects,
+				[bookEvent.objectId]: {
+					...activeObject,
+					resolved: true,
+					result: bookEvent.result,
+				},
+			};
+		}
+		stateGame.lex.lastResolvedObjectId = bookEvent.objectId;
+
+		if ('tumbleValue' in bookEvent) {
+			stateGame.lex.tumbleValue = bookEvent.tumbleValue;
+		}
+		if ('totalWin' in bookEvent) {
+			stateGame.lex.totalWin = bookEvent.totalWin;
+			stateBet.winBookEventAmount = bookEvent.totalWin;
+		}
+		if (bookEvent.result === 'spawnClone') {
+			stateGame.lex.cloneCount = bookEvent.cloneCount;
+		}
+		if (bookEvent.result === 'shield' || bookEvent.result === 'shieldBlock') {
+			stateGame.lex.shieldCount = bookEvent.shieldCount;
+		}
+		if (bookEvent.result === 'destroy') {
+			if (bookEvent.target === 'main') stateGame.lex.mainAlive = false;
+			stateGame.lex.cloneCount = Math.max(
+				bookEvent.remainingBalls - (stateGame.lex.mainAlive ? 1 : 0),
+				0,
+			);
+		}
+		if (bookEvent.result === 'shieldBlock') {
+			stateGame.lex.cloneCount = Math.max(
+				bookEvent.remainingBalls - (stateGame.lex.mainAlive ? 1 : 0),
+				0,
+			);
+		}
+		await waitLexPlaybackStep(420);
+	},
+	cloneExpire: async (bookEvent: BookEventOfType<'cloneExpire'>) => {
+		stateGame.lex.tumbleValue = bookEvent.tumbleValue;
+		stateGame.lex.cloneCount = Math.max(stateGame.lex.cloneCount - 1, 0);
+		await waitLexPlaybackStep(320);
+	},
+	roundEnd: async (bookEvent: BookEventOfType<'roundEnd'>) => {
+		stateGame.lex.lexNotation = bookEvent.lexAt;
+		stateGame.lex.lexPath = [bookEvent.lexAt];
+		stateGame.lex.roundEnded = true;
+		stateGame.lex.roundEndReason = bookEvent.reason;
+		stateGame.lex.totalWin = bookEvent.totalWin;
+		stateGame.lex.tumbleValue = bookEvent.tumbleValue;
+		stateGame.lex.mainBounces = bookEvent.mainBounces;
+		stateGame.lex.modeMultiplier = bookEvent.modeMultiplier;
+		stateGame.lex.corner = bookEvent.corner;
+		stateGame.lex.cornerMultiplier = bookEvent.cornerMultiplier;
+		stateGame.lex.cornerAt = bookEvent.cornerAt;
+		stateGame.lex.target = bookEvent.target;
+		stateBet.winBookEventAmount = bookEvent.totalWin;
+		await waitLexPlaybackStep(650);
+	},
 	reveal: async (bookEvent: BookEventOfType<'reveal'>, { bookEvents }: BookEventContext) => {
 		eventEmitter.broadcast({ type: 'tumbleWinAmountReset' });
 		const isBonusGame = checkIsMultipleRevealEvents({ bookEvents });

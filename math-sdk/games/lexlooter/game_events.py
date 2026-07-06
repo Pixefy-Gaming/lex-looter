@@ -21,6 +21,9 @@ def round_start_event(
 	mode_multiplier: float,
 	clone_count: int,
 	starts_with_slayer: bool,
+	board: dict,
+	lex_start: str,
+	lex_vector: dict,
 ) -> None:
 	add_game_event(
 		gamestate,
@@ -30,6 +33,9 @@ def round_start_event(
 		modeMultiplier=mode_multiplier,
 		cloneCount=clone_count,
 		startsWithSlayer=starts_with_slayer,
+		board=board,
+		lexStart=lex_start,
+		lexVector=lex_vector,
 	)
 
 
@@ -46,6 +52,9 @@ def bounce_update_event(
 	gamestate,
 	*,
 	turn: int,
+	from_notation: str,
+	to_notation: str,
+	path: list[str],
 	main_bounces: int,
 	tumble_value: float,
 	main_alive: bool,
@@ -56,6 +65,9 @@ def bounce_update_event(
 		gamestate,
 		"bounceUpdate",
 		turn=turn,
+		**{"from": from_notation},
+		to=to_notation,
+		path=path,
 		mainBounces=main_bounces,
 		tumbleValue=gamestate.to_cents(tumble_value),
 		mainAlive=main_alive,
@@ -70,6 +82,7 @@ def object_spawn_event(
 	object_id: str,
 	object_name: str,
 	turn: int,
+	notation: str,
 	x: float,
 	y: float,
 	source: str,
@@ -80,6 +93,7 @@ def object_spawn_event(
 		objectId=object_id,
 		object=object_name,
 		turn=turn,
+		notation=notation,
 		x=x,
 		y=y,
 		source=source,

@@ -7,12 +7,24 @@ import runpy
 
 from src.calculations.statistics import get_random_outcome
 from src.executables.executables import Executables
+from notation import (
+    BOARD_COLS,
+    BOARD_ROWS,
+    CANVAS_HEIGHT,
+    CANVAS_WIDTH,
+    CORNER_NOTATION,
+    board_payload,
+    cell_to_notation,
+    notation_to_cell,
+    notation_to_normalized,
+)
 
 
 class GameCalculations(Executables):
     MAX_MAIN_BOUNCES = 40
     CLONE_LIFETIME = 15
     MAX_ACTIVE_OBJECTS = 3
+    OBJECT_HIT_RADIUS_CELLS = 1
 
     MAIN_BOUNCE_INCREMENT = 0.12
     CLONE_BOUNCE_INCREMENT = 0.08
@@ -21,6 +33,15 @@ class GameCalculations(Executables):
     DIAMOND_BONUS = 5.0
 
     CORNER_KEYS = ("tl", "tr", "bl", "br")
+    BOARD_COLS = BOARD_COLS
+    BOARD_ROWS = BOARD_ROWS
+    CANVAS_WIDTH = CANVAS_WIDTH
+    CANVAS_HEIGHT = CANVAS_HEIGHT
+    CORNER_NOTATION = CORNER_NOTATION
+
+    def board_payload(self) -> dict:
+        """Return the notation board definition used by emitted books."""
+        return board_payload()
 
     @staticmethod
     @lru_cache(maxsize=1)
@@ -101,6 +122,82 @@ class GameCalculations(Executables):
             round(random.uniform(0.15, 0.85), 4),
             round(random.uniform(0.18, 0.82), 4),
         )
+
+    def draw_spawn_cell(self) -> dict:
+        """Return a notation-backed spawn cell inside the playfield."""
+        col = random.randint(6, self.BOARD_COLS - 7)
+        row = random.randint(4, self.BOARD_ROWS - 5)
+        return {
+            "col": col,
+            "row": row,
+            "notation": cell_to_notation(col, row),
+        }
+
+    def notation_to_normalized(self, notation: str) -> tuple[float, float]:
+        """Convert board notation to normalized canvas coordinates."""
+        return notation_to_normalized(notation)
+
+    def initial_lex_state(self) -> dict:
+        """Create the main Lex state in board cells."""
+        col = self.BOARD_COLS // 2
+        row = self.BOARD_ROWS // 2
+        dx = self.choice([-1, 1])
+        dy = self.choice([-1, 1])
+        return {
+            "col": col,
+            "row": row,
+            "dx": dx,
+            "dy": dy,
+            "notation": cell_to_notation(col, row),
+        }
+
+    def advance_lex_path(self, lex: dict) -> dict:
+        """Move Lex one cell, reflecting vectors at board walls."""
+        from_notation = lex["notation"]
+        next_col = lex["col"] + lex["dx"]
+        next_row = lex["row"] + lex["dy"]
+        bounced = False
+
+        if next_col < 0 or next_col >= self.BOARD_COLS:
+            lex["dx"] *= -1
+            next_col = lex["col"] + lex["dx"]
+            bounced = True
+        if next_row < 0 or next_row >= self.BOARD_ROWS:
+            lex["dy"] *= -1
+            next_row = lex["row"] + lex["dy"]
+            bounced = True
+
+        lex["col"] = next_col
+        lex["row"] = next_row
+        lex["notation"] = cell_to_notation(next_col, next_row)
+        return {
+            "from": from_notation,
+            "to": lex["notation"],
+            "path": [from_notation, lex["notation"]],
+            "bounced": bounced,
+        }
+
+    def corner_for_notation(self, notation: str) -> str | None:
+        """Return the corner key when a notation reaches a 3x3 corner zone."""
+        cell = notation_to_cell(notation)
+        col = cell["col"]
+        row = cell["row"]
+        zone_size = 3
+        if col < zone_size and row >= self.BOARD_ROWS - zone_size:
+            return "tl"
+        if col >= self.BOARD_COLS - zone_size and row >= self.BOARD_ROWS - zone_size:
+            return "tr"
+        if col < zone_size and row < zone_size:
+            return "bl"
+        if col >= self.BOARD_COLS - zone_size and row < zone_size:
+            return "br"
+        return None
+
+    def notation_distance(self, a: str, b: str) -> int:
+        """Chebyshev cell distance between two notation positions."""
+        cell_a = notation_to_cell(a)
+        cell_b = notation_to_cell(b)
+        return max(abs(cell_a["col"] - cell_b["col"]), abs(cell_a["row"] - cell_b["row"]))
 
     def draw_object_resolution_delay(self, min_turns: int = 1, max_turns: int = 4) -> int:
         """Delay object resolution to keep spawn and collect events visually separate."""

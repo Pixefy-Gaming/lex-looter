@@ -1,10 +1,18 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import * as PIXI from 'pixi.js';
 	import { getContextParent } from 'pixi-svelte';
+	import { stateBet } from 'state-shared';
 
 	import { getContext } from '../game/context';
 	import { BOARD_SIZES } from '../game/constants';
+	import {
+		CANVAS_HEIGHT,
+		CANVAS_WIDTH,
+		notationToPixelCenter,
+		type PixelPoint,
+	} from '../game/notation';
+	import type { LexCornerKey, LexObjectName } from '../game/typesBookEvent';
 
 	type Props = {
 		betAmount?: number;
@@ -14,113 +22,82 @@
 		onComplete?: (data: { payout: number }) => void;
 	};
 
-	const {
-		betAmount = 1.0,
-		highMultMode = false,
-		noBoomActive = false,
-		onCornerHit,
-		onComplete,
-	}: Props = $props();
+	const _props: Props = $props();
 
 	const context = getContext();
 	const parentCtx = getContextParent();
 
-	// Game dimensions match HTML prototype exactly
-	const W = 800;
-	const H = 500;
+	const W = CANVAS_WIDTH;
+	const H = CANVAS_HEIGHT;
 	const BALL_SIZE = 35;
-	const BALL_HALF = BALL_SIZE / 2;
-	const OBJ_SIZE = 40;
-	const OBJ_HALF = OBJ_SIZE / 2;
-	const SPEED = 4.4;
-	const CORNER_SIZE = 50;
+	const OBJ_SIZE = 44;
+	const ESCAPE_OBJ_SIZE = 64;
+	const CORNER_SIZE = 58;
 	const MAX_BOUNCES = 40;
-	const WARMUP = 5;
-	const OBJ_HIT_DIST = 35;
-	const MAX_OBJECTS = 3;
-	const SPAWN_CHANCE = 0.012;
 
-	// --- game state ---
-	type BallState = {
-		isClone: boolean;
-		x: number;
-		y: number;
-		vx: number;
-		vy: number;
-		hits: number;
-		sprite: PIXI.Sprite;
-	};
+	const LEX_ASSETS = {
+		lex: '/assets/lex/runtime/lex-main.png',
+		cloneBall: '/assets/lex/runtime/lex-clone.png',
+		slayer: '/assets/lex/runtime/slayer.png',
+		halve: '/assets/lex/runtime/blue-blob.png',
+		escape: '/assets/lex/runtime/escape.png',
+		cloneOrb: '/assets/lex/runtime/clone-orb.png',
+		coin: '/assets/lex/runtime/coin.png',
+		diamond: '/assets/lex/runtime/diamond.png',
+		chest: '/assets/lex/runtime/chest.png',
+		heart: '/assets/lex/runtime/heart.png',
+	} as const;
 
-	type ObjectType = 'boom' | 'minus' | 'sticky' | 'special';
-	type ObjectState = { type: ObjectType; x: number; y: number; container: PIXI.Container };
+	const root = new PIXI.Container();
+	const objectLayer = new PIXI.Container();
+	const ballLayer = new PIXI.Container();
+	const _SCALE = Math.min(BOARD_SIZES.width / W, BOARD_SIZES.height / H);
+	root.scale.set(_SCALE);
+	root.x = Math.round((BOARD_SIZES.width - W * _SCALE) / 2);
+	root.y = Math.round((BOARD_SIZES.height - H * _SCALE) / 2);
+
+	const bg = new PIXI.Graphics();
+	bg.rect(0, 0, W, H);
+	bg.fill({ color: 0x07141d });
+	bg.stroke({ color: 0x2f4553, width: 4 });
+	root.addChild(bg);
 
 	type CornerState = {
-		mult: string;
+		key: LexCornerKey;
 		boxX: number;
 		boxY: number;
 		gfx: PIXI.Graphics;
 		label: PIXI.Text;
 	};
 
-	let balls: BallState[] = [];
-	let objects: ObjectState[] = [];
-	let tumbleValue = 0;
-	let bounceCount = 0;
-	let gameActive = false;
-
-	// loaded textures
-	let texBall: PIXI.Texture;
-	let texClone: PIXI.Texture;
-	let texBoom: PIXI.Texture;
-	let texMinus: PIXI.Texture;
-	let texSticky: PIXI.Texture;
-	let texSpecial: PIXI.Texture;
-
-	// --- PIXI root — scaled to fit board while preserving 8:5 aspect ratio ---
-	const root = new PIXI.Container();
-	const _SCALE = Math.min(BOARD_SIZES.width / W, BOARD_SIZES.height / H);
-	root.scale.set(_SCALE);
-	root.x = Math.round((BOARD_SIZES.width - W * _SCALE) / 2);
-	root.y = Math.round((BOARD_SIZES.height - H * _SCALE) / 2);
-
-	const _bg = new PIXI.Graphics();
-	_bg.rect(0, 0, W, H);
-	_bg.fill({ color: 0x07141d });
-	_bg.stroke({ color: 0x2f4553, width: 4 });
-	root.addChild(_bg);
-
-	// --- Corners ---
-	const cornerDefs = [
-		{ boxX: 0, boxY: 0 },
-		{ boxX: W - CORNER_SIZE, boxY: 0 },
-		{ boxX: 0, boxY: H - CORNER_SIZE },
-		{ boxX: W - CORNER_SIZE, boxY: H - CORNER_SIZE },
-	];
-
-	const cornersState: CornerState[] = cornerDefs.map((d) => {
+	const cornerStates: CornerState[] = [
+		{ key: 'tl', boxX: 0, boxY: 0 },
+		{ key: 'tr', boxX: W - CORNER_SIZE, boxY: 0 },
+		{ key: 'bl', boxX: 0, boxY: H - CORNER_SIZE },
+		{ key: 'br', boxX: W - CORNER_SIZE, boxY: H - CORNER_SIZE },
+	].map((corner) => {
 		const gfx = new PIXI.Graphics();
 		const label = new PIXI.Text({
 			text: 'NONE',
 			style: { fill: 0x666666, fontSize: 13, fontWeight: 'bold' },
 		});
-		label.anchor.set(0.5, 0.5);
+		label.anchor.set(0.5);
 		root.addChild(gfx);
 		root.addChild(label);
-		return { mult: 'NONE', ...d, gfx, label };
+		return { ...corner, gfx, label };
 	});
 
-	// --- HUD ---
-	const valText = new PIXI.Text({
+	const valueText = new PIXI.Text({
 		text: '$0.00',
 		style: { fill: 0x00e701, fontSize: 26, fontWeight: 'bold' },
 	});
-	valText.anchor.set(0.5, 0);
-	valText.x = W / 2;
-	valText.y = 12;
-	root.addChild(valText);
+	valueText.anchor.set(0.5, 0);
+	valueText.x = W / 2;
+	valueText.y = 12;
+	root.addChild(valueText);
 
 	const bounceText = new PIXI.Text({
-		text: `0 / ${MAX_BOUNCES} Stealth`,
+		text: `0 / ${MAX_BOUNCES} STEALTH`,
 		style: { fill: 0xb1bad3, fontSize: 14 },
 	});
 	bounceText.anchor.set(0.5, 0);
@@ -128,309 +105,341 @@
 	bounceText.y = 44;
 	root.addChild(bounceText);
 
-	// --- Draw helpers ---
+	const metaText = new PIXI.Text({
+		text: '',
+		style: { fill: 0xffffff, fontSize: 13, fontWeight: 'bold' },
+	});
+	metaText.anchor.set(0.5, 0);
+	metaText.x = W / 2;
+	metaText.y = 66;
+	root.addChild(metaText);
 
-	const drawCorner = (c: CornerState) => {
-		let borderColor = 0x2f4553,
-			fillColor = 0x1a2c38,
-			textColor = 0x666666;
-		if (c.mult !== 'NONE') {
-			const val = parseFloat(c.mult);
-			if (highMultMode) {
-				if (val >= 5) {
-					borderColor = 0xffd700;
-					fillColor = 0x1a1500;
-					textColor = 0xffd700;
-				} else {
-					borderColor = 0x00e701;
-					fillColor = 0x082010;
-					textColor = 0x00e701;
-				}
-			} else {
-				if (val >= 2) {
-					borderColor = 0x00e701;
-					fillColor = 0x082010;
-					textColor = 0x00e701;
-				} else {
-					borderColor = 0xff4d4d;
-					fillColor = 0x2a0808;
-					textColor = 0xff4d4d;
-				}
-			}
-		}
-		c.gfx.clear();
-		c.gfx.roundRect(c.boxX, c.boxY, CORNER_SIZE, CORNER_SIZE, 4);
-		c.gfx.fill({ color: fillColor, alpha: 0.95 });
-		c.gfx.stroke({ color: borderColor, width: 2 });
-		c.label.text = c.mult;
-		c.label.style.fill = textColor;
-		c.label.x = c.boxX + CORNER_SIZE / 2;
-		c.label.y = c.boxY + CORNER_SIZE / 2;
+	root.addChild(objectLayer);
+	root.addChild(ballLayer);
+
+	let app: PIXI.Application | undefined;
+	let textures: Partial<Record<keyof typeof LEX_ASSETS, PIXI.Texture>> = {};
+	let mainBall: PIXI.Sprite | PIXI.Graphics | undefined;
+	let cloneBalls: (PIXI.Sprite | PIXI.Graphics)[] = [];
+	let objectContainers: Record<string, PIXI.Container> = {};
+	let renderedRoundSerial = 0;
+	let currentPathKey = '';
+	let pathTargets: PixelPoint[] = [];
+
+	const formatMoney = (amount: number) => `$${(amount / 100).toFixed(2)}`;
+
+	const setDisplayCenter = (display: PIXI.Sprite | PIXI.Graphics, point: PixelPoint) => {
+		display.x = point.x - display.width / 2;
+		display.y = point.y - display.height / 2;
 	};
 
-	const randomizeCorners = () => {
-		for (const c of cornersState) {
-			if (bounceCount < WARMUP) {
-				c.mult = 'NONE';
-			} else {
-				const r = Math.random() * 100;
-				if (highMultMode) {
-					if (r < 70) c.mult = 'NONE';
-					else if (r < 90) c.mult = (Math.random() * 2 + 2.0).toFixed(1) + 'x';
-					else c.mult = (Math.random() * 15 + 5).toFixed(1) + 'x';
-				} else {
-					if (r < 75) c.mult = 'NONE';
-					else if (r < 92) c.mult = (Math.random() * 0.9 + 0.1).toFixed(1) + 'x';
-					else c.mult = (Math.random() * 10 + 2).toFixed(1) + 'x';
-				}
-			}
-			drawCorner(c);
-		}
-	};
-
-	// Corner detection — exact HTML logic: 30px proximity zone in each corner
-	const getCornerMult = (x: number, y: number): string | null => {
-		const s = 30;
-		if (x < s && y < s) return cornersState[0].mult; // TL
-		if (x > W - s - BALL_SIZE && y < s) return cornersState[1].mult; // TR
-		if (x < s && y > H - s - BALL_SIZE) return cornersState[2].mult; // BL
-		if (x > W - s - BALL_SIZE && y > H - s - BALL_SIZE) return cornersState[3].mult; // BR
-		return null;
-	};
-
-	// --- Ball/object creation ---
-
-	const makeBallSprite = (isClone: boolean): PIXI.Sprite => {
-		const s = new PIXI.Sprite(isClone ? texClone : texBall);
-		s.width = BALL_SIZE;
-		s.height = BALL_SIZE;
-		root.addChild(s);
-		return s;
-	};
-
-	const spawnBall = (isClone = false) => {
-		const sprite = makeBallSprite(isClone);
-		const ball: BallState = {
-			isClone,
-			x: W / 2 - BALL_HALF,
-			y: H / 2 - BALL_HALF,
-			vx: Math.random() > 0.5 ? SPEED : -SPEED,
-			vy: Math.random() > 0.5 ? SPEED : -SPEED,
-			hits: isClone ? 15 : 999,
-			sprite,
+	const getDisplayCenter = (display: PIXI.Sprite | PIXI.Graphics): PixelPoint => {
+		return {
+			x: display.x + display.width / 2,
+			y: display.y + display.height / 2,
 		};
-		sprite.x = ball.x;
-		sprite.y = ball.y;
-		balls.push(ball);
 	};
 
-	const OBJ_TEXTURES: Record<ObjectType, () => PIXI.Texture> = {
-		boom: () => texBoom,
-		minus: () => texMinus,
-		sticky: () => texSticky,
-		special: () => texSpecial,
+	const updateBounceText = () => {
+		bounceText.text = `${Math.min(context.stateGame.lex.mainBounces, MAX_BOUNCES)} / ${MAX_BOUNCES} STEALTH`;
 	};
 
-	const MIN_OBJ_DIST = OBJ_SIZE * 2.5; // minimum centre-to-centre distance between objects
+	const drawCorner = (corner: CornerState, multiplier: number | null) => {
+		let borderColor = 0x2f4553;
+		let fillColor = 0x1a2c38;
+		let textColor = 0x666666;
+		let text = 'NONE';
 
-	const findSpawnPosition = (): { ox: number; oy: number } | null => {
-		const MAX_ATTEMPTS = 20;
-		for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-			// HTML ranges: x in [100, 700], y in [100, 400]
-			const ox = Math.random() * 600 + 100;
-			const oy = Math.random() * 300 + 100;
-			// Check against every existing object
-			const tooClose = objects.some((o) => Math.hypot(ox - o.x, oy - o.y) < MIN_OBJ_DIST);
-			if (!tooClose) return { ox, oy };
-		}
-		return null; // couldn't find a free spot — skip this spawn
-	};
-
-	const spawnObj = () => {
-		if (!gameActive || objects.length >= MAX_OBJECTS) return;
-		const types: ObjectType[] = ['boom', 'minus', 'sticky', 'special'];
-		const type = types[Math.floor(Math.random() * types.length)];
-		if (type === 'boom' && noBoomActive) return;
-		if (type === 'sticky' && highMultMode) return;
-
-		const pos = findSpawnPosition();
-		if (!pos) return;
-		const { ox, oy } = pos;
-
-		const sprite = new PIXI.Sprite(OBJ_TEXTURES[type]());
-		sprite.width = OBJ_SIZE;
-		sprite.height = OBJ_SIZE;
-		sprite.anchor.set(0.5);
-		sprite.x = ox;
-		sprite.y = oy;
-		root.addChild(sprite);
-		objects.push({ type, x: ox, y: oy, container: sprite });
-	};
-
-	// --- Destruction ---
-
-	const destroyBall = (ball: BallState) => {
-		ball.sprite.destroy();
-		balls = balls.filter((b) => b !== ball);
-	};
-
-	const destroyObj = (obj: ObjectState) => {
-		obj.container.destroy();
-		objects = objects.filter((o) => o !== obj);
-	};
-
-	const endGame = (payout: number) => {
-		gameActive = false;
-		onComplete?.({ payout });
-	};
-
-	// --- Ball update (matches HTML Ball.update + onBounce logic) ---
-
-	const onBounce = (ball: BallState): boolean => {
-		// Returns true if the game ended during this bounce
-		if (!ball.isClone) {
-			bounceCount++;
-			tumbleValue += 0.12 * betAmount;
-			bounceText.text = `${bounceCount} / ${MAX_BOUNCES} Stealth`;
-			randomizeCorners();
-			valText.text = `$${tumbleValue.toFixed(2)}`;
-			if (bounceCount >= MAX_BOUNCES) {
-				endGame(tumbleValue);
-				return true;
-			}
-		} else {
-			ball.hits--;
-			tumbleValue += 0.08 * betAmount;
-			valText.text = `$${tumbleValue.toFixed(2)}`;
-			if (ball.hits <= 0) {
-				tumbleValue += 0.5 * betAmount;
-				valText.text = `$${tumbleValue.toFixed(2)}`;
-				destroyBall(ball);
-				if (balls.length === 0) endGame(0);
-				return true;
+		if (multiplier !== null) {
+			text = `${multiplier}x`;
+			if (multiplier >= 5) {
+				borderColor = 0xffd700;
+				fillColor = 0x1a1500;
+				textColor = 0xffd700;
+			} else if (multiplier >= 2) {
+				borderColor = 0x00e701;
+				fillColor = 0x082010;
+				textColor = 0x00e701;
+			} else {
+				borderColor = 0xff4d4d;
+				fillColor = 0x2a0808;
+				textColor = 0xff4d4d;
 			}
 		}
-		return false;
+
+		corner.gfx.clear();
+		corner.gfx.roundRect(corner.boxX, corner.boxY, CORNER_SIZE, CORNER_SIZE, 4);
+		corner.gfx.fill({ color: fillColor, alpha: 0.95 });
+		corner.gfx.stroke({ color: borderColor, width: 2 });
+		corner.label.text = text;
+		corner.label.style.fill = textColor;
+		corner.label.x = corner.boxX + CORNER_SIZE / 2;
+		corner.label.y = corner.boxY + CORNER_SIZE / 2;
 	};
 
-	// updateBall — exact copy of HTML Ball.update()
-	const updateBall = (ball: BallState) => {
-		if (!gameActive) return;
+	const fitSprite = (sprite: PIXI.Sprite, maxWidth: number, maxHeight: number) => {
+		const scale = Math.min(maxWidth / sprite.texture.width, maxHeight / sprite.texture.height);
+		sprite.width = sprite.texture.width * scale;
+		sprite.height = sprite.texture.height * scale;
+	};
 
-		ball.x += ball.vx;
-		ball.y += ball.vy;
+	const createFallbackBall = (color: number) => {
+		const ball = new PIXI.Graphics();
+		ball.circle(BALL_SIZE / 2, BALL_SIZE / 2, BALL_SIZE / 2);
+		ball.fill({ color });
+		return ball;
+	};
 
-		// Corner check first, position-only 30px zone (matches HTML getCornerMult)
-		const multStr = getCornerMult(ball.x, ball.y);
-		if (multStr !== null && multStr !== 'NONE') {
-			const mult = parseFloat(multStr);
-			const payout = tumbleValue * mult;
-			onCornerHit?.({ payout, multiplier: mult });
-			destroyBall(ball);
-			endGame(payout);
+	const createBall = (isClone: boolean) => {
+		const texture = isClone ? textures.cloneBall : textures.lex;
+		const ball = texture ? new PIXI.Sprite(texture) : createFallbackBall(isClone ? 0x00e701 : 0xffffff);
+		if (ball instanceof PIXI.Sprite) {
+			fitSprite(ball, BALL_SIZE, BALL_SIZE);
+		}
+		setDisplayCenter(ball, notationToPixelCenter(context.stateGame.lex.lexNotation));
+		ballLayer.addChild(ball);
+		return ball;
+	};
+
+	const objectStyle: Record<LexObjectName, { color: number; label: string }> = {
+		coin: { color: 0xffd24a, label: '+$' },
+		diamond: { color: 0x4dffb8, label: '5x' },
+		blue_blob: { color: 0x4aa3ff, label: '-50%' },
+		chest: { color: 0xb87836, label: 'CHEST' },
+		escape: { color: 0xc28a4b, label: 'EXIT' },
+		slayer: { color: 0xff3d3d, label: 'SLAYER' },
+		clone_orb: { color: 0x00e701, label: 'CLONE' },
+		heart: { color: 0xff5a7a, label: 'HEART' },
+	};
+
+	const createObjectContainer = (object: LexObjectName) => {
+		const container = new PIXI.Container();
+		const texture =
+			object === 'coin'
+				? textures.coin
+				: object === 'diamond'
+					? textures.diamond
+					: object === 'chest'
+						? textures.chest
+						: object === 'heart'
+							? textures.heart
+							: object === 'slayer'
+								? textures.slayer
+								: object === 'blue_blob'
+									? textures.halve
+									: object === 'escape'
+										? textures.escape
+										: object === 'clone_orb'
+											? textures.cloneOrb
+											: undefined;
+
+		if (texture) {
+			const sprite = new PIXI.Sprite(texture);
+			sprite.anchor.set(0.5);
+			const spriteSize = object === 'escape' || object === 'slayer' ? ESCAPE_OBJ_SIZE : OBJ_SIZE;
+			fitSprite(sprite, spriteSize, spriteSize);
+			container.addChild(sprite);
+			return container;
+		}
+
+		const style = objectStyle[object];
+		const gfx = new PIXI.Graphics();
+		gfx.roundRect(-OBJ_SIZE / 2, -OBJ_SIZE / 2, OBJ_SIZE, OBJ_SIZE, 6);
+		gfx.fill({ color: style.color, alpha: 0.95 });
+		gfx.stroke({ color: 0xffffff, alpha: 0.45, width: 2 });
+		container.addChild(gfx);
+
+		const label = new PIXI.Text({
+			text: style.label,
+			style: { fill: 0x07141d, fontSize: style.label.length > 4 ? 8 : 12, fontWeight: 'bold' },
+		});
+		label.anchor.set(0.5);
+		container.addChild(label);
+		return container;
+	};
+
+	const setObjectPosition = (container: PIXI.Container, notation: string, x: number, y: number) => {
+		const point = notation ? notationToPixelCenter(notation) : { x: x * W, y: y * H };
+		container.x = point.x;
+		container.y = point.y;
+	};
+
+	const renderObjects = () => {
+		const activeObjects = context.stateGame.lex.activeObjects;
+		for (const objectId of Object.keys(objectContainers)) {
+			if (!activeObjects[objectId]) {
+				objectContainers[objectId].destroy({ children: true });
+				delete objectContainers[objectId];
+			}
+		}
+
+		for (const activeObject of Object.values(activeObjects)) {
+			let container = objectContainers[activeObject.objectId];
+			if (!container) {
+				container = createObjectContainer(activeObject.object);
+				objectContainers[activeObject.objectId] = container;
+				objectLayer.addChild(container);
+			}
+			container.alpha = activeObject.resolved ? 0.15 : 1;
+			container.scale.set(activeObject.resolved ? 1.35 : 1);
+			setObjectPosition(container, activeObject.notation, activeObject.x, activeObject.y);
+		}
+	};
+
+	const renderBalls = () => {
+		if (renderedRoundSerial !== context.stateGame.lex.roundSerial) {
+			renderedRoundSerial = context.stateGame.lex.roundSerial;
+			currentPathKey = '';
+			pathTargets = [];
+			mainBall?.destroy();
+			mainBall = undefined;
+			for (const clone of cloneBalls) clone.destroy();
+			cloneBalls = [];
+		}
+
+		if (context.stateGame.lex.mainAlive) {
+			if (!mainBall) mainBall = createBall(false);
+			if (pathTargets.length === 0) {
+				setDisplayCenter(mainBall, notationToPixelCenter(context.stateGame.lex.lexNotation));
+			}
+		} else if (mainBall) {
+			mainBall.destroy();
+			mainBall = undefined;
+		}
+
+		while (cloneBalls.length < context.stateGame.lex.cloneCount) {
+			cloneBalls.push(createBall(true));
+		}
+		while (cloneBalls.length > context.stateGame.lex.cloneCount) {
+			cloneBalls.pop()?.destroy();
+		}
+	};
+
+	const queueLexPath = () => {
+		const path = context.stateGame.lex.lexPath?.length
+			? context.stateGame.lex.lexPath
+			: [context.stateGame.lex.lexNotation];
+		const pathKey = `${context.stateGame.lex.roundSerial}:${path.join('>')}`;
+		if (pathKey === currentPathKey) return;
+
+		currentPathKey = pathKey;
+		const targets = path.map((notation) => notationToPixelCenter(notation));
+		if (!mainBall) {
+			pathTargets = targets;
 			return;
 		}
 
-		// Two independent ifs — matches HTML exactly (corner hit counts as 2 bounces)
-		if (ball.x <= 0 || ball.x >= W - BALL_SIZE) {
-			ball.vx *= -1;
-			if (onBounce(ball)) return;
-		}
-		if (!gameActive) return;
-		if (ball.y <= 0 || ball.y >= H - BALL_SIZE) {
-			ball.vy *= -1;
-			if (onBounce(ball)) return;
-		}
-
-		ball.sprite.x = ball.x;
-		ball.sprite.y = ball.y;
+		const currentCenter = getDisplayCenter(mainBall);
+		pathTargets = targets.filter((target, index) => {
+			if (index > 0) return true;
+			return Math.hypot(target.x - currentCenter.x, target.y - currentCenter.y) > 1;
+		});
 	};
 
-	// --- Collision check (mirrors HTML checkCollisions) ---
+	const renderFromBookState = () => {
+		const lex = context.stateGame.lex;
+		valueText.text = formatMoney(lex.tumbleValue);
+		updateBounceText();
+		metaText.text = lex.roundEnded
+			? `${lex.roundEndReason ?? 'roundEnd'} | WIN ${formatMoney(lex.totalWin)}`
+			: `${lex.mode || 'waiting'} | clones ${lex.cloneCount} | shields ${lex.shieldCount}`;
 
-	const checkCollisions = () => {
-		for (let bi = balls.length - 1; bi >= 0; bi--) {
-			if (!gameActive) return;
-			const b = balls[bi];
-			const bcx = b.x + BALL_HALF;
-			const bcy = b.y + BALL_HALF;
-			for (let oi = objects.length - 1; oi >= 0; oi--) {
-				const o = objects[oi];
-				if (Math.hypot(bcx - o.x, bcy - o.y) < OBJ_HIT_DIST) {
-					if (o.type === 'boom') {
-						destroyBall(b);
-						destroyObj(o);
-						if (balls.length === 0) endGame(0);
-						break;
-					}
-					if (o.type === 'minus') {
-						tumbleValue *= 0.5;
-						valText.text = `$${tumbleValue.toFixed(2)}`;
-						destroyObj(o);
-					}
-					if (o.type === 'sticky') {
-						const payout = tumbleValue;
-						destroyBall(b);
-						destroyObj(o);
-						onCornerHit?.({ payout, multiplier: 1 });
-						endGame(payout);
-						return;
-					}
-					if (o.type === 'special') {
-						spawnBall(true);
-						destroyObj(o);
-					}
-				}
+		for (const corner of cornerStates) drawCorner(corner, lex.corners[corner.key]);
+		if (lex.roundEnded && lex.roundEndReason === 'cornerHit') {
+			const winningCorner = cornerStates.find((corner) => corner.key === lex.corner);
+			if (winningCorner) winningCorner.gfx.stroke({ color: 0xffffff, width: 5, alpha: 0.95 });
+		}
+		renderObjects();
+		renderBalls();
+		queueLexPath();
+	};
+
+	const tick = () => {
+		if (mainBall && pathTargets.length > 0) {
+			const target = pathTargets[0];
+			const current = getDisplayCenter(mainBall);
+			const dx = target.x - current.x;
+			const dy = target.y - current.y;
+			const distance = Math.hypot(dx, dy);
+			const speed = stateBet.isTurbo ? 72 : 42;
+			if (distance <= speed) {
+				setDisplayCenter(mainBall, target);
+				pathTargets.shift();
+			} else {
+				mainBall.x += (dx / distance) * speed;
+				mainBall.y += (dy / distance) * speed;
 			}
 		}
+
+		const center = mainBall
+			? getDisplayCenter(mainBall)
+			: notationToPixelCenter(context.stateGame.lex.lexNotation);
+		cloneBalls.forEach((clone, index) => {
+			const angle = performance.now() / 360 + index * 1.8;
+			setDisplayCenter(clone, {
+				x: center.x + Math.cos(angle) * (28 + index * 5),
+				y: center.y + Math.sin(angle) * (22 + index * 4),
+			});
+		});
 	};
 
-	// --- Game tick ---
-	const tick = () => {
-		if (!gameActive) return;
-		for (let i = balls.length - 1; i >= 0; i--) updateBall(balls[i]);
-		if (gameActive) checkCollisions();
-		if (gameActive && Math.random() < SPAWN_CHANCE) spawnObj();
-	};
-
-	// Draw initial corners
-	for (const c of cornersState) drawCorner(c);
+	$effect(() => {
+		context.stateGame.lex.roundSerial;
+		context.stateGame.lex.lexNotation;
+		context.stateGame.lex.lexPath;
+		context.stateGame.lex.tumbleValue;
+		context.stateGame.lex.mainBounces;
+		context.stateGame.lex.mainAlive;
+		context.stateGame.lex.cloneCount;
+		context.stateGame.lex.shieldCount;
+		context.stateGame.lex.roundEnded;
+		context.stateGame.lex.totalWin;
+		context.stateGame.lex.corner;
+		context.stateGame.lex.lastResolvedObjectId;
+		context.stateGame.lex.activeObjects;
+		context.stateGame.lex.corners;
+		renderFromBookState();
+	});
 
 	onMount(async () => {
-		const app = context.stateApp.pixiApplication;
+		app = context.stateApp.pixiApplication;
 		if (!app) return;
 
-		// Load sprite assets
-		const loaded = await PIXI.Assets.load([
-			'/assets/lex/ball.png',
-			'/assets/lex/clone2.png',
-			'/assets/lex/boom.png',
-			'/assets/lex/50.png',
-			'/assets/lex/escape.png',
-			'/assets/lex/clone.png',
-		]);
-		texBall = loaded['/assets/lex/ball.png'];
-		texClone = loaded['/assets/lex/clone2.png'];
-		texBoom = loaded['/assets/lex/boom.png'];
-		texMinus = loaded['/assets/lex/50.png'];
-		texSticky = loaded['/assets/lex/escape.png'];
-		texSpecial = loaded['/assets/lex/clone.png'];
+		try {
+			const loaded = await PIXI.Assets.load(Object.values(LEX_ASSETS));
+			textures = {
+				lex: loaded[LEX_ASSETS.lex],
+				cloneBall: loaded[LEX_ASSETS.cloneBall],
+				slayer: loaded[LEX_ASSETS.slayer],
+				halve: loaded[LEX_ASSETS.halve],
+				escape: loaded[LEX_ASSETS.escape],
+				cloneOrb: loaded[LEX_ASSETS.cloneOrb],
+				coin: loaded[LEX_ASSETS.coin],
+				diamond: loaded[LEX_ASSETS.diamond],
+				chest: loaded[LEX_ASSETS.chest],
+				heart: loaded[LEX_ASSETS.heart],
+			};
+		} catch (error) {
+			console.warn('Lex assets failed to load; using fallback drawings.', error);
+			textures = {};
+		}
 
-		// Start game
-		gameActive = true;
-		spawnBall();
-		randomizeCorners();
+		mainBall?.destroy();
+		mainBall = undefined;
+		for (const clone of cloneBalls) clone.destroy();
+		cloneBalls = [];
+
+		renderFromBookState();
 		app.ticker.add(tick);
 	});
 
 	onDestroy(() => {
-		const app = context.stateApp.pixiApplication;
 		if (app) app.ticker.remove(tick);
-		gameActive = false;
-		for (const b of balls) b.sprite.destroy();
-		for (const o of objects) o.container.destroy();
-		balls = [];
-		objects = [];
+		mainBall?.destroy();
+		for (const clone of cloneBalls) clone.destroy();
+		for (const container of Object.values(objectContainers)) container.destroy({ children: true });
+		cloneBalls = [];
+		objectContainers = {};
 	});
 
 	parentCtx.addToParent(root);

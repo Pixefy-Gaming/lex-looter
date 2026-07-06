@@ -6,6 +6,14 @@ import { createEnhanceBoard, createReelForCascading } from 'utils-slots';
 import { createGetWinLevelDataByWinLevelAlias } from 'utils-shared/winLevel';
 
 import type { GameType, RawSymbol, SymbolState } from './types';
+import type {
+	BoardNotation,
+	BookEventOfType,
+	LexBoardDefinition,
+	LexCornerKey,
+	LexObjectName,
+	LexRoundEndReason,
+} from './typesBookEvent';
 import { stateLayoutDerived } from './stateLayout';
 import { winLevelMap } from './winLevelMap';
 import { eventEmitter } from './eventEmitter';
@@ -79,6 +87,85 @@ export type MultiplierSymbol = {
 	oncomplete: () => void;
 };
 
+export type LexActiveObject = {
+	objectId: string;
+	object: LexObjectName;
+	turn: number;
+	notation: BoardNotation;
+	x: number;
+	y: number;
+	source: string;
+	resolved: boolean;
+	result?: string;
+};
+
+export type LexPlaybackState = {
+	roundSerial: number;
+	mode: string;
+	board?: LexBoardDefinition;
+	lexNotation: BoardNotation;
+	lexPath: BoardNotation[];
+	lexVector: { dx: number; dy: number };
+	betCost: number;
+	modeMultiplier: number;
+	tumbleValue: number;
+	mainBounces: number;
+	mainAlive: boolean;
+	cloneCount: number;
+	shieldCount: number;
+	corners: Record<LexCornerKey, number | null>;
+	activeObjects: Record<string, LexActiveObject>;
+	lastResolvedObjectId?: string;
+	roundEnded: boolean;
+	roundEndReason?: LexRoundEndReason;
+	totalWin: number;
+	corner?: LexCornerKey;
+	cornerMultiplier?: number;
+	cornerAt?: BoardNotation;
+	target?: string;
+	pendingObjectResolve?: BookEventOfType<'objectResolve'>;
+	pendingRoundEnd?: {
+		reason: LexRoundEndReason;
+		totalWin: number;
+		tumbleValue: number;
+		mainBounces: number;
+		modeMultiplier: number;
+		corner?: LexCornerKey;
+		cornerMultiplier?: number;
+		cornerAt?: BoardNotation;
+		objectId?: string;
+		target?: string;
+	};
+};
+
+export const createInitialLexPlaybackState = (): LexPlaybackState => ({
+	roundSerial: 0,
+	mode: '',
+	board: undefined,
+	lexNotation: 'U13',
+	lexPath: ['U13'],
+	lexVector: { dx: 1, dy: 1 },
+	betCost: 0,
+	modeMultiplier: 1,
+	tumbleValue: 0,
+	mainBounces: 0,
+	mainAlive: false,
+	cloneCount: 0,
+	shieldCount: 0,
+	corners: { tl: null, tr: null, bl: null, br: null },
+	activeObjects: {},
+	lastResolvedObjectId: undefined,
+	roundEnded: false,
+	roundEndReason: undefined,
+	totalWin: 0,
+	corner: undefined,
+	cornerMultiplier: undefined,
+	cornerAt: undefined,
+	target: undefined,
+	pendingObjectResolve: undefined,
+	pendingRoundEnd: undefined,
+});
+
 export const stateGame = $state({
 	board,
 	gameType: 'basegame' as GameType,
@@ -86,6 +173,7 @@ export const stateGame = $state({
 	tumbleBoardBase: [] as TumbleSymbol[][],
 	multiplierBoard: [] as (MultiplierSymbol | undefined)[][],
 	scatterCounter: 0,
+	lex: createInitialLexPlaybackState(),
 });
 
 const boardLayout = () => ({
