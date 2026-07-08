@@ -20,6 +20,7 @@ def round_start_event(
 	bet_cost: float,
 	mode_multiplier: float,
 	clone_count: int,
+	clones: list[dict] | None = None,
 	starts_with_slayer: bool,
 	board: dict,
 	lex_start: str,
@@ -32,6 +33,7 @@ def round_start_event(
 		betCost=gamestate.to_cents(bet_cost),
 		modeMultiplier=mode_multiplier,
 		cloneCount=clone_count,
+		clones=clones or [],
 		startsWithSlayer=starts_with_slayer,
 		board=board,
 		lexStart=lex_start,
@@ -55,6 +57,7 @@ def bounce_update_event(
 	from_notation: str,
 	to_notation: str,
 	path: list[str],
+	clones: list[dict] | None = None,
 	main_bounces: int,
 	tumble_value: float,
 	main_alive: bool,
@@ -68,6 +71,7 @@ def bounce_update_event(
 		**{"from": from_notation},
 		to=to_notation,
 		path=path,
+		clones=clones or [],
 		mainBounces=main_bounces,
 		tumbleValue=gamestate.to_cents(tumble_value),
 		mainAlive=main_alive,
@@ -127,6 +131,7 @@ def clone_expire_event(
 	turn: int,
 	added_amount: float,
 	tumble_value: float,
+	notation: str | None = None,
 ) -> None:
 	add_game_event(
 		gamestate,
@@ -135,6 +140,7 @@ def clone_expire_event(
 		turn=turn,
 		addedAmount=gamestate.to_cents(added_amount),
 		tumbleValue=gamestate.to_cents(tumble_value),
+		notation=notation,
 	)
 
 

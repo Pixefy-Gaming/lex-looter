@@ -29,11 +29,16 @@
 
 	const W = CANVAS_WIDTH;
 	const H = CANVAS_HEIGHT;
+	const CELL_SIZE = 20;
 	const BALL_SIZE = 35;
-	const OBJ_SIZE = 44;
-	const ESCAPE_OBJ_SIZE = 64;
+	const OBJ_SIZE = 30;
+	const ESCAPE_OBJ_SIZE = 44;
 	const CORNER_SIZE = 58;
+	const CORNER_TAB_WIDTH = 42;
+	const CORNER_TAB_HEIGHT = 28;
 	const MAX_BOUNCES = 40;
+	const NORMAL_SPEED_PER_SECOND = 1100;
+	const TURBO_SPEED_PER_SECOND = 1900;
 
 	const LEX_ASSETS = {
 		lex: '/assets/lex/runtime/lex-main.png',
@@ -49,6 +54,7 @@
 	} as const;
 
 	const root = new PIXI.Container();
+	const hudLayer = new PIXI.Container();
 	const objectLayer = new PIXI.Container();
 	const ballLayer = new PIXI.Container();
 	const _SCALE = Math.min(BOARD_SIZES.width / W, BOARD_SIZES.height / H);
@@ -57,9 +63,30 @@
 	root.y = Math.round((BOARD_SIZES.height - H * _SCALE) / 2);
 
 	const bg = new PIXI.Graphics();
-	bg.rect(0, 0, W, H);
-	bg.fill({ color: 0x07141d });
-	bg.stroke({ color: 0x2f4553, width: 4 });
+	const drawBoardSurface = () => {
+		bg.clear();
+		bg.rect(0, 0, W, H);
+		bg.fill({ color: 0x101417 });
+		for (let row = 0; row < H / CELL_SIZE; row += 1) {
+			for (let col = 0; col < W / CELL_SIZE; col += 1) {
+				const x = col * CELL_SIZE;
+				const y = row * CELL_SIZE;
+				const shade = (row + col) % 2 === 0 ? 0x161b1f : 0x12171b;
+				bg.roundRect(x + 1, y + 1, CELL_SIZE - 2, CELL_SIZE - 2, 2);
+				bg.fill({ color: shade, alpha: 0.98 });
+				bg.stroke({ color: 0x050708, alpha: 0.75, width: 1 });
+				if ((row * 7 + col * 11) % 17 === 0) {
+					bg.moveTo(x + 4, y + 12);
+					bg.lineTo(x + 10, y + 8);
+					bg.lineTo(x + 15, y + 13);
+					bg.stroke({ color: 0x2a3035, alpha: 0.45, width: 1 });
+				}
+			}
+		}
+		bg.rect(0, 0, W, H);
+		bg.stroke({ color: 0xffffff, alpha: 0.9, width: 2 });
+	};
+	drawBoardSurface();
 	root.addChild(bg);
 
 	type CornerState = {
@@ -67,6 +94,7 @@
 		boxX: number;
 		boxY: number;
 		gfx: PIXI.Graphics;
+		chest: PIXI.Graphics;
 		label: PIXI.Text;
 	};
 
@@ -77,56 +105,120 @@
 		{ key: 'br', boxX: W - CORNER_SIZE, boxY: H - CORNER_SIZE },
 	].map((corner) => {
 		const gfx = new PIXI.Graphics();
+		const chest = new PIXI.Graphics();
 		const label = new PIXI.Text({
 			text: 'NONE',
-			style: { fill: 0x666666, fontSize: 13, fontWeight: 'bold' },
+			style: { fill: 0x07110b, fontSize: 15, fontWeight: '900' },
 		});
 		label.anchor.set(0.5);
 		root.addChild(gfx);
+		root.addChild(chest);
 		root.addChild(label);
-		return { ...corner, gfx, label };
+		return { ...corner, gfx, chest, label };
 	});
+
+	const logoText = new PIXI.Text({
+		text: 'LEX\nLOOTER',
+		style: {
+			fill: 0x00ff4a,
+			fontSize: 42,
+			fontWeight: '900',
+			lineHeight: 34,
+			align: 'center',
+			stroke: { color: 0x5e00a8, width: 5 },
+			dropShadow: { color: 0x000000, distance: 3, blur: 2, alpha: 0.8 },
+		},
+	});
+	logoText.anchor.set(0.5);
+	logoText.rotation = -0.08;
+	logoText.x = 145;
+	logoText.y = -42;
+	hudLayer.addChild(logoText);
 
 	const valueText = new PIXI.Text({
 		text: '$0.00',
-		style: { fill: 0x00e701, fontSize: 26, fontWeight: 'bold' },
+		style: {
+			fill: 0xffffff,
+			fontSize: 34,
+			fontWeight: '900',
+			stroke: { color: 0x000000, width: 4 },
+		},
 	});
 	valueText.anchor.set(0.5, 0);
 	valueText.x = W / 2;
-	valueText.y = 12;
-	root.addChild(valueText);
+	valueText.y = -62;
+	hudLayer.addChild(valueText);
+
+	const stealthPill = new PIXI.Graphics();
+	hudLayer.addChild(stealthPill);
 
 	const bounceText = new PIXI.Text({
 		text: `0 / ${MAX_BOUNCES} STEALTH`,
-		style: { fill: 0xb1bad3, fontSize: 14 },
+		style: {
+			fill: 0xffffff,
+			fontSize: 19,
+			fontWeight: '900',
+			stroke: { color: 0x000000, width: 3 },
+		},
 	});
 	bounceText.anchor.set(0.5, 0);
 	bounceText.x = W / 2;
-	bounceText.y = 44;
-	root.addChild(bounceText);
+	bounceText.y = -21;
+	hudLayer.addChild(bounceText);
 
 	const metaText = new PIXI.Text({
 		text: '',
-		style: { fill: 0xffffff, fontSize: 13, fontWeight: 'bold' },
+		style: { fill: 0xffffff, fontSize: 12, fontWeight: 'bold' },
 	});
 	metaText.anchor.set(0.5, 0);
 	metaText.x = W / 2;
-	metaText.y = 66;
-	root.addChild(metaText);
+	metaText.y = 6;
+	hudLayer.addChild(metaText);
 
 	root.addChild(objectLayer);
 	root.addChild(ballLayer);
+	root.addChild(hudLayer);
+
+	const heartHud = [0, 1, 2].map((index) => {
+		const heart = new PIXI.Text({
+			text: '♥',
+			style: {
+				fill: 0xff2738,
+				fontSize: 34,
+				fontWeight: '900',
+				stroke: { color: 0xffffff, width: 3 },
+			},
+		});
+		heart.anchor.set(0.5);
+		heart.x = W / 2 + 145 + index * 40;
+		heart.y = -38;
+		hudLayer.addChild(heart);
+		return heart;
+	});
 
 	let app: PIXI.Application | undefined;
 	let textures: Partial<Record<keyof typeof LEX_ASSETS, PIXI.Texture>> = {};
 	let mainBall: PIXI.Sprite | PIXI.Graphics | undefined;
-	let cloneBalls: (PIXI.Sprite | PIXI.Graphics)[] = [];
+	let cloneDisplays: Record<
+		string,
+		{
+			display: PIXI.Sprite | PIXI.Graphics;
+			currentPathKey: string;
+			pathTargets: PixelPoint[];
+		}
+	> = {};
 	let objectContainers: Record<string, PIXI.Container> = {};
 	let renderedRoundSerial = 0;
 	let currentPathKey = '';
 	let pathTargets: PixelPoint[] = [];
 
 	const formatMoney = (amount: number) => `$${(amount / 100).toFixed(2)}`;
+
+	const smoothTexture = (texture: PIXI.Texture | undefined) => {
+		if (!texture) return;
+		const source = texture.source as { scaleMode?: string } | undefined;
+		if (source) source.scaleMode = 'linear';
+	};
 
 	const setDisplayCenter = (display: PIXI.Sprite | PIXI.Graphics, point: PixelPoint) => {
 		display.x = point.x - display.width / 2;
@@ -144,37 +236,60 @@
 		bounceText.text = `${Math.min(context.stateGame.lex.mainBounces, MAX_BOUNCES)} / ${MAX_BOUNCES} STEALTH`;
 	};
 
+	const updateHud = () => {
+		stealthPill.clear();
+		stealthPill.roundRect(W / 2 - 78, -28, 156, 40, 20);
+		stealthPill.fill({ color: 0x151515, alpha: 0.95 });
+		stealthPill.stroke({ color: 0x00ff4a, width: 2, alpha: 0.95 });
+		const shieldCount = Math.min(context.stateGame.lex.shieldCount, heartHud.length);
+		heartHud.forEach((heart, index) => {
+			heart.alpha = index < shieldCount ? 1 : 0.35;
+			heart.style.fill = index < shieldCount ? 0xff2738 : 0xffffff;
+		});
+	};
+
 	const drawCorner = (corner: CornerState, multiplier: number | null) => {
-		let borderColor = 0x2f4553;
-		let fillColor = 0x1a2c38;
-		let textColor = 0x666666;
+		let fillColor = 0x20242a;
+		let textColor = 0x444444;
 		let text = 'NONE';
 
 		if (multiplier !== null) {
 			text = `${multiplier}x`;
 			if (multiplier >= 5) {
-				borderColor = 0xffd700;
-				fillColor = 0x1a1500;
-				textColor = 0xffd700;
+				fillColor = 0x00ff4a;
+				textColor = 0x031009;
 			} else if (multiplier >= 2) {
-				borderColor = 0x00e701;
-				fillColor = 0x082010;
-				textColor = 0x00e701;
+				fillColor = 0x00ff4a;
+				textColor = 0x031009;
 			} else {
-				borderColor = 0xff4d4d;
-				fillColor = 0x2a0808;
-				textColor = 0xff4d4d;
+				fillColor = 0xd66b83;
+				textColor = 0x18040a;
 			}
 		}
 
+		const isRight = corner.key === 'tr' || corner.key === 'br';
+		const tabX = isRight ? W : -CORNER_TAB_WIDTH;
+		const tabY = corner.key === 'tl' || corner.key === 'tr' ? 0 : H - CORNER_TAB_HEIGHT;
+		const chestX = isRight ? W - 30 : 30;
+		const chestY = corner.key === 'tl' || corner.key === 'tr' ? 20 : H - 20;
+
 		corner.gfx.clear();
-		corner.gfx.roundRect(corner.boxX, corner.boxY, CORNER_SIZE, CORNER_SIZE, 4);
+		corner.gfx.rect(tabX, tabY, CORNER_TAB_WIDTH, CORNER_TAB_HEIGHT);
 		corner.gfx.fill({ color: fillColor, alpha: 0.95 });
-		corner.gfx.stroke({ color: borderColor, width: 2 });
+		corner.gfx.stroke({ color: 0x080808, width: 2 });
 		corner.label.text = text;
 		corner.label.style.fill = textColor;
-		corner.label.x = corner.boxX + CORNER_SIZE / 2;
-		corner.label.y = corner.boxY + CORNER_SIZE / 2;
+		corner.label.x = tabX + CORNER_TAB_WIDTH / 2;
+		corner.label.y = tabY + CORNER_TAB_HEIGHT / 2;
+
+		corner.chest.clear();
+		corner.chest.roundRect(chestX - 16, chestY - 12, 32, 24, 2);
+		corner.chest.fill({ color: 0x8a4c1e, alpha: 0.96 });
+		corner.chest.stroke({ color: 0xffc36a, width: 2, alpha: 0.8 });
+		corner.chest.rect(chestX - 14, chestY - 4, 28, 5);
+		corner.chest.fill({ color: 0x4b2a12, alpha: 0.9 });
+		corner.chest.rect(chestX - 3, chestY - 11, 6, 22);
+		corner.chest.fill({ color: 0xffd06a, alpha: 0.75 });
 	};
 
 	const fitSprite = (sprite: PIXI.Sprite, maxWidth: number, maxHeight: number) => {
@@ -190,13 +305,17 @@
 		return ball;
 	};
 
-	const createBall = (isClone: boolean) => {
+	const createBall = (isClone: boolean, notation = context.stateGame.lex.lexNotation) => {
 		const texture = isClone ? textures.cloneBall : textures.lex;
-		const ball = texture ? new PIXI.Sprite(texture) : createFallbackBall(isClone ? 0x00e701 : 0xffffff);
+		const ball = texture
+			? new PIXI.Sprite(texture)
+			: createFallbackBall(isClone ? 0x00e701 : 0xffffff);
 		if (ball instanceof PIXI.Sprite) {
+			smoothTexture(ball.texture);
 			fitSprite(ball, BALL_SIZE, BALL_SIZE);
 		}
-		setDisplayCenter(ball, notationToPixelCenter(context.stateGame.lex.lexNotation));
+		ball.alpha = isClone ? 0.9 : 1;
+		setDisplayCenter(ball, notationToPixelCenter(notation));
 		ballLayer.addChild(ball);
 		return ball;
 	};
@@ -234,6 +353,7 @@
 											: undefined;
 
 		if (texture) {
+			smoothTexture(texture);
 			const sprite = new PIXI.Sprite(texture);
 			sprite.anchor.set(0.5);
 			const spriteSize = object === 'escape' || object === 'slayer' ? ESCAPE_OBJ_SIZE : OBJ_SIZE;
@@ -293,8 +413,8 @@
 			pathTargets = [];
 			mainBall?.destroy();
 			mainBall = undefined;
-			for (const clone of cloneBalls) clone.destroy();
-			cloneBalls = [];
+			for (const clone of Object.values(cloneDisplays)) clone.display.destroy();
+			cloneDisplays = {};
 		}
 
 		if (context.stateGame.lex.mainAlive) {
@@ -307,11 +427,21 @@
 			mainBall = undefined;
 		}
 
-		while (cloneBalls.length < context.stateGame.lex.cloneCount) {
-			cloneBalls.push(createBall(true));
+		const clones = context.stateGame.lex.clones;
+		for (const cloneId of Object.keys(cloneDisplays)) {
+			if (!clones[cloneId]) {
+				cloneDisplays[cloneId].display.destroy();
+				delete cloneDisplays[cloneId];
+			}
 		}
-		while (cloneBalls.length > context.stateGame.lex.cloneCount) {
-			cloneBalls.pop()?.destroy();
+		for (const clone of Object.values(clones)) {
+			if (!cloneDisplays[clone.id]) {
+				cloneDisplays[clone.id] = {
+					display: createBall(true, clone.notation),
+					currentPathKey: '',
+					pathTargets: [],
+				};
+			}
 		}
 	};
 
@@ -336,13 +466,32 @@
 		});
 	};
 
+	const queueClonePaths = () => {
+		for (const clone of Object.values(context.stateGame.lex.clones)) {
+			const cloneDisplay = cloneDisplays[clone.id];
+			if (!cloneDisplay) continue;
+			const path = clone.path?.length ? clone.path : [clone.notation];
+			const pathKey = `${context.stateGame.lex.roundSerial}:${clone.id}:${path.join('>')}`;
+			if (pathKey === cloneDisplay.currentPathKey) continue;
+
+			cloneDisplay.currentPathKey = pathKey;
+			const targets = path.map((notation) => notationToPixelCenter(notation));
+			const currentCenter = getDisplayCenter(cloneDisplay.display);
+			cloneDisplay.pathTargets = targets.filter((target, index) => {
+				if (index > 0) return true;
+				return Math.hypot(target.x - currentCenter.x, target.y - currentCenter.y) > 1;
+			});
+		}
+	};
+
 	const renderFromBookState = () => {
 		const lex = context.stateGame.lex;
 		valueText.text = formatMoney(lex.tumbleValue);
 		updateBounceText();
+		updateHud();
 		metaText.text = lex.roundEnded
 			? `${lex.roundEndReason ?? 'roundEnd'} | WIN ${formatMoney(lex.totalWin)}`
-			: `${lex.mode || 'waiting'} | clones ${lex.cloneCount} | shields ${lex.shieldCount}`;
+			: '';
 
 		for (const corner of cornerStates) drawCorner(corner, lex.corners[corner.key]);
 		if (lex.roundEnded && lex.roundEndReason === 'cornerHit') {
@@ -352,35 +501,38 @@
 		renderObjects();
 		renderBalls();
 		queueLexPath();
+		queueClonePaths();
 	};
 
-	const tick = () => {
-		if (mainBall && pathTargets.length > 0) {
-			const target = pathTargets[0];
-			const current = getDisplayCenter(mainBall);
-			const dx = target.x - current.x;
-			const dy = target.y - current.y;
-			const distance = Math.hypot(dx, dy);
-			const speed = stateBet.isTurbo ? 72 : 42;
-			if (distance <= speed) {
-				setDisplayCenter(mainBall, target);
-				pathTargets.shift();
-			} else {
-				mainBall.x += (dx / distance) * speed;
-				mainBall.y += (dy / distance) * speed;
-			}
+	const moveDisplayTowardTargets = (
+		display: PIXI.Sprite | PIXI.Graphics,
+		targets: PixelPoint[],
+		speed: number,
+	) => {
+		if (targets.length === 0) return;
+
+		const target = targets[0];
+		const current = getDisplayCenter(display);
+		const dx = target.x - current.x;
+		const dy = target.y - current.y;
+		const distance = Math.hypot(dx, dy);
+		if (distance <= speed) {
+			setDisplayCenter(display, target);
+			targets.shift();
+			return;
 		}
 
-		const center = mainBall
-			? getDisplayCenter(mainBall)
-			: notationToPixelCenter(context.stateGame.lex.lexNotation);
-		cloneBalls.forEach((clone, index) => {
-			const angle = performance.now() / 360 + index * 1.8;
-			setDisplayCenter(clone, {
-				x: center.x + Math.cos(angle) * (28 + index * 5),
-				y: center.y + Math.sin(angle) * (22 + index * 4),
-			});
-		});
+		display.x += (dx / distance) * speed;
+		display.y += (dy / distance) * speed;
+	};
+
+	const tick = (ticker: PIXI.Ticker) => {
+		const baseSpeed = stateBet.isTurbo ? TURBO_SPEED_PER_SECOND : NORMAL_SPEED_PER_SECOND;
+		const speed = baseSpeed * (ticker.deltaMS / 1000);
+		if (mainBall) moveDisplayTowardTargets(mainBall, pathTargets, speed);
+		for (const clone of Object.values(cloneDisplays)) {
+			moveDisplayTowardTargets(clone.display, clone.pathTargets, speed);
+		}
 	};
 
 	$effect(() => {
@@ -397,6 +549,7 @@
 		context.stateGame.lex.corner;
 		context.stateGame.lex.lastResolvedObjectId;
 		context.stateGame.lex.activeObjects;
+		context.stateGame.lex.clones;
 		context.stateGame.lex.corners;
 		renderFromBookState();
 	});
@@ -419,6 +572,7 @@
 				chest: loaded[LEX_ASSETS.chest],
 				heart: loaded[LEX_ASSETS.heart],
 			};
+			Object.values(textures).forEach(smoothTexture);
 		} catch (error) {
 			console.warn('Lex assets failed to load; using fallback drawings.', error);
 			textures = {};
@@ -426,8 +580,8 @@
 
 		mainBall?.destroy();
 		mainBall = undefined;
-		for (const clone of cloneBalls) clone.destroy();
-		cloneBalls = [];
+		for (const clone of Object.values(cloneDisplays)) clone.display.destroy();
+		cloneDisplays = {};
 
 		renderFromBookState();
 		app.ticker.add(tick);
@@ -436,9 +590,9 @@
 	onDestroy(() => {
 		if (app) app.ticker.remove(tick);
 		mainBall?.destroy();
-		for (const clone of cloneBalls) clone.destroy();
+		for (const clone of Object.values(cloneDisplays)) clone.display.destroy();
 		for (const container of Object.values(objectContainers)) container.destroy({ children: true });
-		cloneBalls = [];
+		cloneDisplays = {};
 		objectContainers = {};
 	});
 

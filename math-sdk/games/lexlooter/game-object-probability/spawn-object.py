@@ -52,7 +52,7 @@ spawn_tables = {
             "blue_blob": 100,
             "escape":    70,
             "chest":     60,
-            "slayer":    0,    # still not yet
+            "slayer":    35,   # mid-game threat starts here
         },
         "phase_3": {  # bounce 25+  (late — slayer unlocked, high risk/reward)
             "from_bounce": 25,
@@ -63,7 +63,7 @@ spawn_tables = {
             "blue_blob": 100,
             "escape":    60,
             "chest":     80,
-            "slayer":    40,
+            "slayer":    90,
         },
     },
 
@@ -115,7 +115,7 @@ spawn_tables = {
             "blue_blob": 100,
             "escape":    0,    # disabled in bonus modes
             "chest":     0,
-            "slayer":    30,   # slayer active from the start
+            "slayer":    60,   # slayer active from the start
         },
         "phase_2": {  # bounce 10–24
             "from_bounce": 10,
@@ -126,7 +126,7 @@ spawn_tables = {
             "blue_blob": 100,
             "escape":    0,
             "chest":     60,
-            "slayer":    50,
+            "slayer":    85,
         },
         "phase_3": {  # bounce 25+
             "from_bounce": 25,
@@ -137,7 +137,7 @@ spawn_tables = {
             "blue_blob": 80,
             "escape":    0,
             "chest":     100,
-            "slayer":    70,
+            "slayer":    120,
         },
     },
 
@@ -154,7 +154,7 @@ spawn_tables = {
             "blue_blob": 80,
             "escape":    0,    # disabled in bonus modes
             "chest":     30,   # chest available earlier due to high tumble start
-            "slayer":    40,
+            "slayer":    70,
         },
         "phase_2": {  # bounce 10–24
             "from_bounce": 10,
@@ -165,7 +165,7 @@ spawn_tables = {
             "blue_blob": 80,
             "escape":    0,
             "chest":     80,
-            "slayer":    60,
+            "slayer":    100,
         },
         "phase_3": {  # bounce 25+
             "from_bounce": 25,
@@ -176,7 +176,7 @@ spawn_tables = {
             "blue_blob": 60,
             "escape":    0,
             "chest":     120,
-            "slayer":    80,
+            "slayer":    130,
         },
     },
 

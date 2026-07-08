@@ -47,6 +47,26 @@ const waitLexPlaybackStep = async (duration = 220) => {
 	await waitForTimeout(stateBet.isTurbo ? Math.round(duration * 0.35) : duration);
 };
 
+const applyCloneSnapshots = (clones: BookEventOfType<'bounceUpdate'>['clones'] = []) => {
+	let nextClones = { ...stateGame.lex.clones };
+	for (const clone of clones) {
+		if (!clone.alive) {
+			delete nextClones[clone.id];
+			continue;
+		}
+		nextClones[clone.id] = {
+			id: clone.id,
+			notation: clone.notation,
+			path: clone.path?.length ? [...clone.path] : [clone.from, clone.to],
+			vector: clone.vector,
+			hitsRemaining: clone.hitsRemaining,
+			alive: clone.alive,
+		};
+	}
+	stateGame.lex.clones = nextClones;
+	stateGame.lex.cloneCount = Object.keys(nextClones).length;
+};
+
 export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContext> = {
 	roundStart: async (bookEvent: BookEventOfType<'roundStart'>) => {
 		const nextRoundSerial = stateGame.lex.roundSerial + 1;
@@ -62,7 +82,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			modeMultiplier: bookEvent.modeMultiplier,
 			mainAlive: true,
 			cloneCount: bookEvent.cloneCount,
+			clones: {},
 		};
+		applyCloneSnapshots(bookEvent.clones);
+		stateGame.lex.cloneCount = bookEvent.cloneCount;
 		stateBet.winBookEventAmount = 0;
 		eventEmitter.broadcast({ type: 'tumbleWinAmountReset' });
 		await waitLexPlaybackStep(250);
@@ -73,11 +96,14 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		await waitLexPlaybackStep(120);
 	},
 	bounceUpdate: async (bookEvent: BookEventOfType<'bounceUpdate'>) => {
-		stateGame.lex.lexPath = bookEvent.path?.length ? [...bookEvent.path] : [bookEvent.from, bookEvent.to];
+		stateGame.lex.lexPath = bookEvent.path?.length
+			? [...bookEvent.path]
+			: [bookEvent.from, bookEvent.to];
 		stateGame.lex.lexNotation = bookEvent.to;
 		stateGame.lex.mainBounces = bookEvent.mainBounces;
 		stateGame.lex.tumbleValue = bookEvent.tumbleValue;
 		stateGame.lex.mainAlive = bookEvent.mainAlive;
+		applyCloneSnapshots(bookEvent.clones);
 		stateGame.lex.cloneCount = bookEvent.cloneCount;
 		stateGame.lex.modeMultiplier = bookEvent.modeMultiplier;
 		stateGame.lex.lastResolvedObjectId = undefined;
@@ -100,8 +126,21 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		await waitLexPlaybackStep(260);
 	},
 	objectResolve: async (bookEvent: BookEventOfType<'objectResolve'>) => {
-		stateGame.lex.lexNotation = bookEvent.lexAt;
-		stateGame.lex.lexPath = [bookEvent.lexAt];
+		const collectorId = bookEvent.collectorId ?? 'main';
+		const collectorAt = bookEvent.collectorAt ?? bookEvent.lexAt;
+		if (collectorId === 'main') {
+			stateGame.lex.lexNotation = collectorAt;
+			stateGame.lex.lexPath = [collectorAt];
+		} else if (stateGame.lex.clones[collectorId]) {
+			stateGame.lex.clones = {
+				...stateGame.lex.clones,
+				[collectorId]: {
+					...stateGame.lex.clones[collectorId],
+					notation: collectorAt,
+					path: [collectorAt],
+				},
+			};
+		}
 		const activeObject = stateGame.lex.activeObjects[bookEvent.objectId];
 		if (activeObject) {
 			stateGame.lex.activeObjects = {
@@ -123,13 +162,38 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			stateBet.winBookEventAmount = bookEvent.totalWin;
 		}
 		if (bookEvent.result === 'spawnClone') {
+			const cloneStart = bookEvent.cloneStart ?? bookEvent.objectAt ?? collectorAt;
+			const collectorVector =
+				collectorId === 'main'
+					? stateGame.lex.lexVector
+					: stateGame.lex.clones[collectorId]?.vector;
 			stateGame.lex.cloneCount = bookEvent.cloneCount;
+			stateGame.lex.clones = {
+				...stateGame.lex.clones,
+				[bookEvent.ballId]: {
+					id: bookEvent.ballId,
+					notation: cloneStart,
+					path: bookEvent.clonePath?.length ? [...bookEvent.clonePath] : [cloneStart],
+					vector:
+						bookEvent.cloneVector ??
+						(collectorVector
+							? { dx: -collectorVector.dy, dy: collectorVector.dx }
+							: { dx: -stateGame.lex.lexVector.dy, dy: stateGame.lex.lexVector.dx }),
+					hitsRemaining: bookEvent.hitsRemaining,
+					alive: true,
+				},
+			};
 		}
 		if (bookEvent.result === 'shield' || bookEvent.result === 'shieldBlock') {
 			stateGame.lex.shieldCount = bookEvent.shieldCount;
 		}
 		if (bookEvent.result === 'destroy') {
 			if (bookEvent.target === 'main') stateGame.lex.mainAlive = false;
+			if (bookEvent.target !== 'main') {
+				const nextClones = { ...stateGame.lex.clones };
+				delete nextClones[bookEvent.target];
+				stateGame.lex.clones = nextClones;
+			}
 			stateGame.lex.cloneCount = Math.max(
 				bookEvent.remainingBalls - (stateGame.lex.mainAlive ? 1 : 0),
 				0,
@@ -145,7 +209,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	},
 	cloneExpire: async (bookEvent: BookEventOfType<'cloneExpire'>) => {
 		stateGame.lex.tumbleValue = bookEvent.tumbleValue;
-		stateGame.lex.cloneCount = Math.max(stateGame.lex.cloneCount - 1, 0);
+		const nextClones = { ...stateGame.lex.clones };
+		delete nextClones[bookEvent.ballId];
+		stateGame.lex.clones = nextClones;
+		stateGame.lex.cloneCount = Object.keys(nextClones).length;
 		await waitLexPlaybackStep(320);
 	},
 	roundEnd: async (bookEvent: BookEventOfType<'roundEnd'>) => {

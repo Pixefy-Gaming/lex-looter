@@ -22,7 +22,7 @@ from notation import (
 
 class GameCalculations(Executables):
     MAX_MAIN_BOUNCES = 40
-    CLONE_LIFETIME = 15
+    CLONE_LIFETIME = 10
     MAX_ACTIVE_OBJECTS = 3
     OBJECT_HIT_RADIUS_CELLS = 1
 

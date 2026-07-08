@@ -10,6 +10,7 @@ from game_events import (
     round_end_event,
     round_start_event,
 )
+from notation import notation_to_cell
 from src.events.events import set_total_event
 
 
@@ -29,6 +30,7 @@ class GameState(GameStateOverride):
                 bet_cost=state["bet_cost"],
                 mode_multiplier=state["mode_multiplier"],
                 clone_count=len(state["clones"]),
+                clones=self._clone_snapshots(state["clones"]),
                 starts_with_slayer=state["start_with_slayer"],
                 board=self.board_payload(),
                 lex_start=state["lex"]["notation"],
@@ -80,11 +82,14 @@ class GameState(GameStateOverride):
     def _create_round_state(self) -> dict:
         """Initialize the custom Lex Looter round state."""
         conditions = self.get_mode_conditions()
+        lex = self.initial_lex_state()
         clones = [
-            {
-                "id": f"clone_{index + 1}",
-                "hitsRemaining": self.CLONE_LIFETIME,
-            }
+            self._create_clone_state(
+                clone_id=f"clone_{index + 1}",
+                source_lex=lex,
+                hits_remaining=self.CLONE_LIFETIME,
+                vector_index=index,
+            )
             for index in range(conditions["start_clone_count"])
         ]
 
@@ -104,8 +109,10 @@ class GameState(GameStateOverride):
             "next_clone_id": len(clones) + 1,
             "tumble_value": 0.0,
             "corners": self.roll_corners(0, bool(conditions["high_mult_corners"])),
-            "lex": self.initial_lex_state(),
+            "lex": lex,
             "last_step": None,
+            "last_clone_steps": [],
+            "clone_expirations": [],
             "active_objects": [],
             "next_object_id": 1,
             "finished": False,
@@ -123,26 +130,28 @@ class GameState(GameStateOverride):
             state["turn"] += 1
 
             self._process_main_step(state)
+            if not state["finished"]:
+                self._process_clone_bounces(state)
+            else:
+                state["last_clone_steps"] = self._clone_snapshots(state["clones"])
             bounce_update_event(
                 self,
                 turn=state["turn"],
                 from_notation=state["last_step"]["from"],
                 to_notation=state["last_step"]["to"],
                 path=state["last_step"]["path"],
+                clones=state["last_clone_steps"],
                 main_bounces=state["main_bounces"],
                 tumble_value=state["tumble_value"],
                 main_alive=state["main_alive"],
                 clone_count=len(state["clones"]),
                 mode_multiplier=state["mode_multiplier"],
             )
+            self._emit_clone_expirations(state)
             if state["finished"]:
                 break
 
             self._maybe_hit_corner(state)
-            if state["finished"]:
-                break
-
-            self._process_clone_bounces(state)
             if state["finished"]:
                 break
 
@@ -202,35 +211,52 @@ class GameState(GameStateOverride):
             )
 
     def _process_clone_bounces(self, state: dict) -> None:
-        """Advance all active clones and expire them when they run out of hits."""
+        """Advance all active clones and expire them after their own wall bounces."""
+        state["last_clone_steps"] = []
+        state["clone_expirations"] = []
         if not state["clones"]:
-            return
-        if state["main_alive"] and not state["last_step"].get("bounced"):
             return
 
         surviving_clones = []
         for clone in state["clones"]:
-            state["tumble_value"] = self.round_amount(
-                state["tumble_value"] + self.CLONE_BOUNCE_INCREMENT * state["bet_cost"]
-            )
-            clone["hitsRemaining"] -= 1
+            clone_step = self.advance_lex_path(clone)
+            clone_update = self._clone_snapshot(clone, clone_step)
+
+            if clone_step["bounced"]:
+                state["tumble_value"] = self.round_amount(
+                    state["tumble_value"] + self.CLONE_BOUNCE_INCREMENT * state["bet_cost"]
+                )
+                clone["hitsRemaining"] -= 1
+                clone_update["hitsRemaining"] = clone["hitsRemaining"]
+                clone_update["bounced"] = True
+
             if clone["hitsRemaining"] <= 0:
                 state["tumble_value"] = self.round_amount(
                     state["tumble_value"] + self.CLONE_EXPIRY_BONUS * state["bet_cost"]
                 )
-                clone_expire_event(
-                    self,
-                    ball_id=clone["id"],
-                    turn=state["turn"],
-                    added_amount=self.CLONE_EXPIRY_BONUS * state["bet_cost"],
-                    tumble_value=state["tumble_value"],
-                )
+                clone_update["alive"] = False
+                state["last_clone_steps"].append(clone_update)
+                state["clone_expirations"].append({
+                    "ball_id": clone["id"],
+                    "turn": state["turn"],
+                    "added_amount": self.CLONE_EXPIRY_BONUS * state["bet_cost"],
+                    "tumble_value": state["tumble_value"],
+                    "notation": clone["notation"],
+                })
                 continue
+
+            state["last_clone_steps"].append(clone_update)
             surviving_clones.append(clone)
 
         state["clones"] = surviving_clones
         if not self._has_live_balls(state):
             self._finish_round(state, reason="allBallsLost", payout=0.0)
+
+    def _emit_clone_expirations(self, state: dict) -> None:
+        """Emit clone expiration events after movement snapshots reach the book."""
+        for expiration in state.get("clone_expirations", []):
+            clone_expire_event(self, **expiration)
+        state["clone_expirations"] = []
 
     def _maybe_spawn_random_object(self, state: dict) -> None:
         """Spawn at most one random object for the current turn."""
@@ -308,50 +334,73 @@ class GameState(GameStateOverride):
         return self.draw_spawn_cell()
 
     def _future_path_spawn_candidates(self, state: dict) -> list[dict]:
-        """Prefer object cells Lex can actually reach soon."""
+        """Prefer object cells a live ball can actually reach soon."""
         reserved_notations = set(self.CORNER_NOTATION.values())
         min_cell_distance = 3
-        lex = dict(state["lex"])
         candidates = []
-        for step_index in range(1, 90):
-            step = self.advance_lex_path(lex)
-            notation = step["to"]
-            if step_index < 8 or notation in reserved_notations:
-                continue
-            if any(
-                self.notation_distance(notation, obj["notation"]) < min_cell_distance
-                for obj in state["active_objects"]
-            ):
-                continue
-            candidates.append({
-                "col": lex["col"],
-                "row": lex["row"],
-                "notation": notation,
-            })
+        future_balls = [state["lex"], *state["clones"]]
+        for source_ball in future_balls:
+            ball = dict(source_ball)
+            for step_index in range(1, 90):
+                step = self.advance_lex_path(ball)
+                notation = step["to"]
+                if step_index < 8 or notation in reserved_notations:
+                    continue
+                if any(
+                    self.notation_distance(notation, obj["notation"]) < min_cell_distance
+                    for obj in state["active_objects"]
+                ):
+                    continue
+                candidates.append({
+                    "col": ball["col"],
+                    "row": ball["row"],
+                    "notation": notation,
+                })
 
         return candidates
 
     def _resolve_due_objects(self, state: dict) -> None:
         """Resolve any objects whose collision window has been reached."""
-        due_objects = [
-            obj
-            for obj in state["active_objects"]
-            if obj["resolve_turn"] <= state["turn"] and self._is_lex_near_object(state, obj)
-        ]
-        for obj in due_objects:
+        due_collisions = []
+        for obj in state["active_objects"]:
+            if obj["resolve_turn"] > state["turn"]:
+                continue
+            collector = self._find_object_collector(state, obj)
+            if collector is not None:
+                due_collisions.append((obj, collector))
+
+        for obj, collector in due_collisions:
             if state["finished"]:
                 break
-            self._resolve_object(state, obj)
+            if obj not in state["active_objects"]:
+                continue
+            self._resolve_object(state, obj, collector)
             state["active_objects"] = [active for active in state["active_objects"] if active["id"] != obj["id"]]
 
-    def _is_lex_near_object(self, state: dict, object_state: dict) -> bool:
-        """Return true when Lex is close enough to collect a notation object."""
-        return (
-            self.notation_distance(state["lex"]["notation"], object_state["notation"])
-            <= self.OBJECT_HIT_RADIUS_CELLS
-        )
+    def _find_object_collector(self, state: dict, object_state: dict) -> dict | None:
+        """Return the first live ball close enough to collect a notation object."""
+        collectors = []
+        if state["main_alive"]:
+            collectors.append({"id": "main", **state["lex"]})
+        collectors.extend(state["clones"])
 
-    def _object_resolve_event(self, state: dict, object_state: dict, *, result: str, **payload) -> None:
+        for collector in collectors:
+            if (
+                self.notation_distance(collector["notation"], object_state["notation"])
+                <= self.OBJECT_HIT_RADIUS_CELLS
+            ):
+                return collector
+        return None
+
+    def _object_resolve_event(
+        self,
+        state: dict,
+        object_state: dict,
+        collector: dict,
+        *,
+        result: str,
+        **payload,
+    ) -> None:
         """Emit an object resolution with the authoritative Lex/object notation."""
         object_resolve_event(
             self,
@@ -361,10 +410,12 @@ class GameState(GameStateOverride):
             result=result,
             lexAt=state["lex"]["notation"],
             objectAt=object_state["notation"],
+            collectorId=collector["id"],
+            collectorAt=collector["notation"],
             **payload,
         )
 
-    def _resolve_object(self, state: dict, object_state: dict) -> None:
+    def _resolve_object(self, state: dict, object_state: dict, collector: dict) -> None:
         """Apply a single object effect to the round state."""
         object_name = object_state["object"]
         bet_cost = state["bet_cost"]
@@ -375,6 +426,7 @@ class GameState(GameStateOverride):
             self._object_resolve_event(
                 state,
                 object_state,
+                collector,
                 result="collect",
                 amount=self.to_cents(added_amount),
                 tumbleValue=self.to_cents(state["tumble_value"]),
@@ -387,6 +439,7 @@ class GameState(GameStateOverride):
             self._object_resolve_event(
                 state,
                 object_state,
+                collector,
                 result="collect",
                 amount=self.to_cents(added_amount),
                 tumbleValue=self.to_cents(state["tumble_value"]),
@@ -399,6 +452,7 @@ class GameState(GameStateOverride):
             self._object_resolve_event(
                 state,
                 object_state,
+                collector,
                 result="halve",
                 delta=self.to_cents(state["tumble_value"] - previous_tumble),
                 tumbleValue=self.to_cents(state["tumble_value"]),
@@ -411,6 +465,7 @@ class GameState(GameStateOverride):
             self._object_resolve_event(
                 state,
                 object_state,
+                collector,
                 result="multiply",
                 multiplier=chest_multiplier,
                 tumbleValue=self.to_cents(state["tumble_value"]),
@@ -418,14 +473,18 @@ class GameState(GameStateOverride):
             return
 
         if object_name == "clone_orb":
-            clone = self._add_clone(state)
+            clone = self._add_clone(state, object_state, collector)
             self._object_resolve_event(
                 state,
                 object_state,
+                collector,
                 result="spawnClone",
                 ballId=clone["id"],
                 hitsRemaining=clone["hitsRemaining"],
                 cloneCount=len(state["clones"]),
+                cloneStart=clone["notation"],
+                cloneVector={"dx": clone["dx"], "dy": clone["dy"]},
+                clonePath=[clone["notation"]],
             )
             return
 
@@ -434,6 +493,7 @@ class GameState(GameStateOverride):
             self._object_resolve_event(
                 state,
                 object_state,
+                collector,
                 result="shield",
                 shieldCount=state["shield_count"],
             )
@@ -444,6 +504,7 @@ class GameState(GameStateOverride):
             self._object_resolve_event(
                 state,
                 object_state,
+                collector,
                 result="cashout",
                 totalWin=self.to_cents(payout),
                 tumbleValue=self.to_cents(state["tumble_value"]),
@@ -462,6 +523,7 @@ class GameState(GameStateOverride):
                 self._object_resolve_event(
                     state,
                     object_state,
+                    collector,
                     result="noTarget",
                 )
                 return
@@ -471,6 +533,7 @@ class GameState(GameStateOverride):
                 self._object_resolve_event(
                     state,
                     object_state,
+                    collector,
                     result="shieldBlock",
                     target=target_ball,
                     shieldCount=state["shield_count"],
@@ -486,6 +549,7 @@ class GameState(GameStateOverride):
             self._object_resolve_event(
                 state,
                 object_state,
+                collector,
                 result="destroy",
                 target=target_ball,
                 remainingBalls=self._live_ball_count(state),
@@ -502,15 +566,64 @@ class GameState(GameStateOverride):
 
         raise RuntimeError(f"Unsupported object type: {object_name}")
 
-    def _add_clone(self, state: dict) -> dict:
+    def _add_clone(self, state: dict, object_state: dict, collector: dict) -> dict:
         """Add a new clone ball and return its state."""
-        clone = {
-            "id": f"clone_{state['next_clone_id']}",
-            "hitsRemaining": self.CLONE_LIFETIME,
-        }
+        clone = self._create_clone_state(
+            clone_id=f"clone_{state['next_clone_id']}",
+            source_lex=collector,
+            hits_remaining=self.CLONE_LIFETIME,
+            spawn_notation=object_state["notation"],
+            vector_index=state["next_clone_id"],
+        )
         state["next_clone_id"] += 1
         state["clones"].append(clone)
         return clone
+
+    def _create_clone_state(
+        self,
+        *,
+        clone_id: str,
+        source_lex: dict,
+        hits_remaining: int,
+        vector_index: int = 0,
+        spawn_notation: str | None = None,
+    ) -> dict:
+        """Create a clone with its own board position and vector."""
+        spawn_cell = notation_to_cell(spawn_notation or source_lex["notation"])
+        vector_options = [
+            {"dx": -source_lex["dy"], "dy": source_lex["dx"]},
+            {"dx": source_lex["dy"], "dy": -source_lex["dx"]},
+            {"dx": -source_lex["dx"], "dy": source_lex["dy"]},
+            {"dx": source_lex["dx"], "dy": -source_lex["dy"]},
+        ]
+        vector = vector_options[vector_index % len(vector_options)]
+        return {
+            "id": clone_id,
+            "col": spawn_cell["col"],
+            "row": spawn_cell["row"],
+            "dx": vector["dx"],
+            "dy": vector["dy"],
+            "notation": spawn_notation or source_lex["notation"],
+            "hitsRemaining": hits_remaining,
+        }
+
+    def _clone_snapshot(self, clone: dict, step: dict | None = None) -> dict:
+        """Return the clone state in book-event form."""
+        return {
+            "id": clone["id"],
+            "notation": clone["notation"],
+            "path": step["path"] if step else [clone["notation"]],
+            "from": step["from"] if step else clone["notation"],
+            "to": step["to"] if step else clone["notation"],
+            "vector": {"dx": clone["dx"], "dy": clone["dy"]},
+            "hitsRemaining": clone["hitsRemaining"],
+            "bounced": bool(step and step["bounced"]),
+            "alive": True,
+        }
+
+    def _clone_snapshots(self, clones: list[dict]) -> list[dict]:
+        """Return all live clone states in book-event form."""
+        return [self._clone_snapshot(clone) for clone in clones]
 
     def _maybe_hit_corner(self, state: dict) -> None:
         """Resolve a winning corner only when Lex reaches its notation."""

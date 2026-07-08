@@ -134,6 +134,17 @@ export type LexBoardDefinition = {
 	height: number;
 	corners: Record<LexCornerKey, BoardNotation>;
 };
+export type LexCloneBookState = {
+	id: string;
+	notation: BoardNotation;
+	path: BoardNotation[];
+	from: BoardNotation;
+	to: BoardNotation;
+	vector: { dx: number; dy: number };
+	hitsRemaining: number;
+	bounced: boolean;
+	alive: boolean;
+};
 
 type BookEventRoundStart = {
 	index: number;
@@ -142,6 +153,7 @@ type BookEventRoundStart = {
 	betCost: number;
 	modeMultiplier: number;
 	cloneCount: number;
+	clones?: LexCloneBookState[];
 	startsWithSlayer: boolean;
 	board: LexBoardDefinition;
 	lexStart: BoardNotation;
@@ -162,6 +174,7 @@ type BookEventBounceUpdate = {
 	from: BoardNotation;
 	to: BoardNotation;
 	path: BoardNotation[];
+	clones?: LexCloneBookState[];
 	mainBounces: number;
 	tumbleValue: number;
 	mainAlive: boolean;
@@ -184,6 +197,8 @@ type BookEventObjectSpawn = {
 type BookEventObjectResolveBase = {
 	lexAt: BoardNotation;
 	objectAt: BoardNotation;
+	collectorId?: string;
+	collectorAt?: BoardNotation;
 };
 
 type BookEventObjectResolveCollect = BookEventObjectResolveBase & {
@@ -272,6 +287,9 @@ type BookEventObjectResolveSpawnClone = BookEventObjectResolveBase & {
 	ballId: string;
 	hitsRemaining: number;
 	cloneCount: number;
+	cloneStart?: BoardNotation;
+	cloneVector?: { dx: number; dy: number };
+	clonePath?: BoardNotation[];
 };
 
 type BookEventObjectResolveShield = BookEventObjectResolveBase & {
@@ -302,6 +320,7 @@ type BookEventCloneExpire = {
 	turn: number;
 	addedAmount: number;
 	tumbleValue: number;
+	notation?: BoardNotation;
 };
 
 type BookEventRoundEnd = {
