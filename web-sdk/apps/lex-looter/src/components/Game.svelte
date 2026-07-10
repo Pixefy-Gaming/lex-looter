@@ -5,7 +5,6 @@
 	import { EnableHotkey } from 'components-shared';
 	import { MainContainer } from 'components-layout';
 	import { App, Text, REM } from 'pixi-svelte';
-	import { stateModal } from 'state-shared';
 
 	import { UI, UiGameName } from 'components-ui-pixi';
 	import { GameVersion, Modals } from 'components-ui-html';
@@ -33,19 +32,17 @@
 	import I18nTest from './I18nTest.svelte';
 	import BouncingLex from './BouncingLex.svelte';
 	import BoardContainer from './BoardContainer.svelte';
+	import BonusModal from './BonusModal.svelte';
 
 	const context = getContext();
 
-	onMount(() => (context.stateLayout.showLoadingScreen = true));
-
-	context.eventEmitter.subscribeOnMount({
-		buyBonusConfirm: () => {
-			stateModal.modal = { name: 'buyBonusConfirm' };
-		},
+	onMount(() => {
+		context.stateLayout.showLoadingScreen = true;
 	});
 </script>
 
 <App>
+	<BonusModal />
 	<EnableSound />
 	<EnableHotkey />
 	<EnableGameActor />

@@ -37,8 +37,8 @@
 	const CORNER_TAB_WIDTH = 42;
 	const CORNER_TAB_HEIGHT = 28;
 	const MAX_BOUNCES = 40;
-	const NORMAL_SPEED_PER_SECOND = 1100;
-	const TURBO_SPEED_PER_SECOND = 1900;
+	const NORMAL_SPEED_PER_SECOND = 1900;
+	const TURBO_SPEED_PER_SECOND = 3200;
 
 	const LEX_ASSETS = {
 		lex: '/assets/lex/runtime/lex-main.png',
@@ -57,10 +57,11 @@
 	const hudLayer = new PIXI.Container();
 	const objectLayer = new PIXI.Container();
 	const ballLayer = new PIXI.Container();
+	const CANVAS_Y_OFFSET = -35;
 	const _SCALE = Math.min(BOARD_SIZES.width / W, BOARD_SIZES.height / H);
 	root.scale.set(_SCALE);
 	root.x = Math.round((BOARD_SIZES.width - W * _SCALE) / 2);
-	root.y = Math.round((BOARD_SIZES.height - H * _SCALE) / 2);
+	root.y = Math.round((BOARD_SIZES.height - H * _SCALE) / 2) + CANVAS_Y_OFFSET;
 
 	const bg = new PIXI.Graphics();
 	const drawBoardSurface = () => {
@@ -180,20 +181,11 @@
 	root.addChild(hudLayer);
 
 	const heartHud = [0, 1, 2].map((index) => {
-		const heart = new PIXI.Text({
-			text: '♥',
-			style: {
-				fill: 0xff2738,
-				fontSize: 34,
-				fontWeight: '900',
-				stroke: { color: 0xffffff, width: 3 },
-			},
-		});
-		heart.anchor.set(0.5);
-		heart.x = W / 2 + 145 + index * 40;
-		heart.y = -38;
-		hudLayer.addChild(heart);
-		return heart;
+		const heartSlot = new PIXI.Container();
+		heartSlot.x = W / 2 + 145 + index * 40;
+		heartSlot.y = -38;
+		hudLayer.addChild(heartSlot);
+		return heartSlot;
 	});
 
 	let app: PIXI.Application | undefined;
@@ -220,6 +212,26 @@
 		if (source) source.scaleMode = 'linear';
 	};
 
+	const renderHeartHudAssets = () => {
+		for (const heartSlot of heartHud) {
+			for (const child of heartSlot.removeChildren()) child.destroy();
+			if (textures.heart) {
+				const sprite = new PIXI.Sprite(textures.heart);
+				sprite.anchor.set(0.5);
+				smoothTexture(sprite.texture);
+				const scale = Math.min(32 / sprite.texture.width, 32 / sprite.texture.height);
+				sprite.scale.set(scale);
+				heartSlot.addChild(sprite);
+				continue;
+			}
+
+			const fallback = new PIXI.Graphics();
+			fallback.circle(0, 0, 13);
+			fallback.fill({ color: 0xff2738, alpha: 0.95 });
+			heartSlot.addChild(fallback);
+		}
+	};
+
 	const setDisplayCenter = (display: PIXI.Sprite | PIXI.Graphics, point: PixelPoint) => {
 		display.x = point.x - display.width / 2;
 		display.y = point.y - display.height / 2;
@@ -244,7 +256,6 @@
 		const shieldCount = Math.min(context.stateGame.lex.shieldCount, heartHud.length);
 		heartHud.forEach((heart, index) => {
 			heart.alpha = index < shieldCount ? 1 : 0.35;
-			heart.style.fill = index < shieldCount ? 0xff2738 : 0xffffff;
 		});
 	};
 
@@ -573,9 +584,11 @@
 				heart: loaded[LEX_ASSETS.heart],
 			};
 			Object.values(textures).forEach(smoothTexture);
+			renderHeartHudAssets();
 		} catch (error) {
 			console.warn('Lex assets failed to load; using fallback drawings.', error);
 			textures = {};
+			renderHeartHudAssets();
 		}
 
 		mainBall?.destroy();
