@@ -114,7 +114,10 @@ class GameCalculations(Executables):
         distribution = self.get_spawn_weights(main_bounces)
         if not distribution:
             return None
-        return str(get_random_outcome(distribution))
+        outcome = get_random_outcome(distribution)
+        if outcome in (None, "none", "nothing"):
+            return None
+        return str(outcome)
 
     def draw_spawn_position(self) -> tuple[float, float]:
         """Return a normalized x/y position inside the playfield."""

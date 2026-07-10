@@ -28,10 +28,10 @@ if __name__ == "__main__":
     profiling = False
 
     num_sim_args = {
-        "base": int(1e2),
-        "no_slayer": int(1e2),
-        "start_clone": int(1e2),
-        "lucky_lex": int(1e2),
+        "base": int(1e5),
+        "no_slayer": int(1e5),
+        "start_clone": int(1e5),
+        "lucky_lex": int(1e5),
     }
 
     run_conditions = {"run_sims": True}
