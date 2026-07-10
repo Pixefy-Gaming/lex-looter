@@ -16,12 +16,8 @@
 	import Sound from './Sound.svelte';
 	import Background from './Background.svelte';
 	import LoadingScreen from './LoadingScreen.svelte';
-	import BoardFrame from './BoardFrame.svelte';
-	import MultiplierGrid from './MultiplierGrid.svelte';
-	import Board from './Board.svelte';
 	import Anticipations from './Anticipations.svelte';
 	import ClusterWinAmounts from './ClusterWinAmounts.svelte';
-	import TumbleBoard from './TumbleBoard.svelte';
 	import TumbleWinAmount from './TumbleWinAmount.svelte';
 	import GlobalMultiplier from './GlobalMultiplier.svelte';
 	import Win from './Win.svelte';
@@ -62,15 +58,6 @@
 		<Sound />
 
 		<MainContainer>
-			<BoardFrame />
-		</MainContainer>
-
-		<MainContainer>
-			<MultiplierGrid />
-		</MainContainer>
-
-		<MainContainer>
-			<!-- <Board /> -->
 			<Anticipations />
 			<TumbleWinAmount />
 			<GlobalMultiplier />
@@ -80,7 +67,6 @@
 		</MainContainer>
 
 		<MainContainer>
-			<!-- <TumbleBoard /> -->
 			<ClusterWinAmounts />
 		</MainContainer>
 

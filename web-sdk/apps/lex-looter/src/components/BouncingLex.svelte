@@ -37,6 +37,9 @@
 	const CORNER_SIZE = 58;
 	const CORNER_TAB_WIDTH = 42;
 	const CORNER_TAB_HEIGHT = 28;
+	const CORNER_TAB_OUTSET = 5;
+	const CORNER_CHEST_WIDTH = 32;
+	const CORNER_CHEST_HEIGHT = 24;
 	const MAX_BOUNCES = 40;
 	const NORMAL_SPEED_PER_SECOND = 1900;
 	const TURBO_SPEED_PER_SECOND = 3200;
@@ -109,7 +112,7 @@
 		const chest = new PIXI.Graphics();
 		const label = new PIXI.Text({
 			text: 'NONE',
-			style: { fill: 0x07110b, fontSize: 15, fontWeight: '900' },
+			style: { fill: 0x07110b, fontSize: 12, fontWeight: '900' },
 		});
 		label.anchor.set(0.5);
 		root.addChild(gfx);
@@ -278,11 +281,12 @@
 			}
 		}
 
+		const isTop = corner.key === 'tl' || corner.key === 'tr';
 		const isRight = corner.key === 'tr' || corner.key === 'br';
-		const tabX = isRight ? W : -CORNER_TAB_WIDTH;
-		const tabY = corner.key === 'tl' || corner.key === 'tr' ? 0 : H - CORNER_TAB_HEIGHT;
-		const chestX = isRight ? W - 30 : 30;
-		const chestY = corner.key === 'tl' || corner.key === 'tr' ? 20 : H - 20;
+		const chestX = isRight ? W - CORNER_CHEST_WIDTH : 0;
+		const chestY = isTop ? 0 : H - CORNER_CHEST_HEIGHT;
+		const tabX = isRight ? W + CORNER_TAB_OUTSET : -CORNER_TAB_WIDTH - CORNER_TAB_OUTSET;
+		const tabY = chestY + (CORNER_CHEST_HEIGHT - CORNER_TAB_HEIGHT) / 2;
 
 		corner.gfx.clear();
 		corner.gfx.rect(tabX, tabY, CORNER_TAB_WIDTH, CORNER_TAB_HEIGHT);
@@ -294,12 +298,12 @@
 		corner.label.y = tabY + CORNER_TAB_HEIGHT / 2;
 
 		corner.chest.clear();
-		corner.chest.roundRect(chestX - 16, chestY - 12, 32, 24, 2);
+		corner.chest.roundRect(chestX, chestY, CORNER_CHEST_WIDTH, CORNER_CHEST_HEIGHT, 2);
 		corner.chest.fill({ color: 0x8a4c1e, alpha: 0.96 });
 		corner.chest.stroke({ color: 0xffc36a, width: 2, alpha: 0.8 });
-		corner.chest.rect(chestX - 14, chestY - 4, 28, 5);
+		corner.chest.rect(chestX + 2, chestY + 8, CORNER_CHEST_WIDTH - 4, 5);
 		corner.chest.fill({ color: 0x4b2a12, alpha: 0.9 });
-		corner.chest.rect(chestX - 3, chestY - 11, 6, 22);
+		corner.chest.rect(chestX + 13, chestY + 1, 6, CORNER_CHEST_HEIGHT - 2);
 		corner.chest.fill({ color: 0xffd06a, alpha: 0.75 });
 	};
 
