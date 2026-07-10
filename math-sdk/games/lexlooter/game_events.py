@@ -9,7 +9,7 @@ def add_game_event(gamestate, event_type: str, **payload) -> None:
 		"index": len(gamestate.book.events),
 		"type": event_type,
 	}
-	event.update(deepcopy(payload))
+	event.update(deepcopy({key: value for key, value in payload.items() if value is not None}))
 	gamestate.book.add_event(event)
 
 
@@ -33,7 +33,7 @@ def round_start_event(
 		betCost=gamestate.to_cents(bet_cost),
 		modeMultiplier=mode_multiplier,
 		cloneCount=clone_count,
-		clones=clones or [],
+		clones=clones or None,
 		startsWithSlayer=starts_with_slayer,
 		board=board,
 		lexStart=lex_start,
@@ -57,12 +57,12 @@ def bounce_update_event(
 	from_notation: str,
 	to_notation: str,
 	path: list[str],
-	clones: list[dict] | None = None,
+	clone_updates: list[dict] | None = None,
 	main_bounces: int,
 	tumble_value: float,
-	main_alive: bool,
-	clone_count: int,
-	mode_multiplier: float,
+	main_alive: bool | None = None,
+	clone_count: int | None = None,
+	mode_multiplier: float | None = None,
 ) -> None:
 	add_game_event(
 		gamestate,
@@ -70,8 +70,8 @@ def bounce_update_event(
 		turn=turn,
 		**{"from": from_notation},
 		to=to_notation,
-		path=path,
-		clones=clones or [],
+		path=path if len(path) > 2 else None,
+		cloneUpdates=clone_updates or None,
 		mainBounces=main_bounces,
 		tumbleValue=gamestate.to_cents(tumble_value),
 		mainAlive=main_alive,
@@ -87,8 +87,6 @@ def object_spawn_event(
 	object_name: str,
 	turn: int,
 	notation: str,
-	x: float,
-	y: float,
 	source: str,
 ) -> None:
 	add_game_event(
@@ -98,8 +96,6 @@ def object_spawn_event(
 		object=object_name,
 		turn=turn,
 		notation=notation,
-		x=x,
-		y=y,
 		source=source,
 	)
 

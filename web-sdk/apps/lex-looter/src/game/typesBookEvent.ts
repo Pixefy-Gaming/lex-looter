@@ -137,12 +137,12 @@ export type LexBoardDefinition = {
 export type LexCloneBookState = {
 	id: string;
 	notation: BoardNotation;
-	path: BoardNotation[];
+	path?: BoardNotation[];
 	from: BoardNotation;
 	to: BoardNotation;
-	vector: { dx: number; dy: number };
-	hitsRemaining: number;
-	bounced: boolean;
+	vector?: { dx: number; dy: number };
+	hitsRemaining?: number;
+	bounced?: boolean;
 	alive: boolean;
 };
 
@@ -173,13 +173,14 @@ type BookEventBounceUpdate = {
 	turn: number;
 	from: BoardNotation;
 	to: BoardNotation;
-	path: BoardNotation[];
+	path?: BoardNotation[];
 	clones?: LexCloneBookState[];
+	cloneUpdates?: LexCloneBookState[];
 	mainBounces: number;
 	tumbleValue: number;
-	mainAlive: boolean;
-	cloneCount: number;
-	modeMultiplier: number;
+	mainAlive?: boolean;
+	cloneCount?: number;
+	modeMultiplier?: number;
 };
 
 type BookEventObjectSpawn = {
@@ -189,8 +190,8 @@ type BookEventObjectSpawn = {
 	object: LexObjectName;
 	turn: number;
 	notation: BoardNotation;
-	x: number;
-	y: number;
+	x?: number;
+	y?: number;
 	source: 'random' | 'start' | string;
 };
 
@@ -289,7 +290,6 @@ type BookEventObjectResolveSpawnClone = BookEventObjectResolveBase & {
 	cloneCount: number;
 	cloneStart?: BoardNotation;
 	cloneVector?: { dx: number; dy: number };
-	clonePath?: BoardNotation[];
 };
 
 type BookEventObjectResolveShield = BookEventObjectResolveBase & {

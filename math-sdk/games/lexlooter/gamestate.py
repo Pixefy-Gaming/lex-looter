@@ -140,12 +140,9 @@ class GameState(GameStateOverride):
                 from_notation=state["last_step"]["from"],
                 to_notation=state["last_step"]["to"],
                 path=state["last_step"]["path"],
-                clones=state["last_clone_steps"],
+                clone_updates=state["last_clone_steps"],
                 main_bounces=state["main_bounces"],
                 tumble_value=state["tumble_value"],
-                main_alive=state["main_alive"],
-                clone_count=len(state["clones"]),
-                mode_multiplier=state["mode_multiplier"],
             )
             self._emit_clone_expirations(state)
             if state["finished"]:
@@ -304,8 +301,6 @@ class GameState(GameStateOverride):
             object_name=object_name,
             turn=state["turn"],
             notation=object_state["notation"],
-            x=x_pos,
-            y=y_pos,
             source=source,
         )
 
@@ -484,7 +479,6 @@ class GameState(GameStateOverride):
                 cloneCount=len(state["clones"]),
                 cloneStart=clone["notation"],
                 cloneVector={"dx": clone["dx"], "dy": clone["dy"]},
-                clonePath=[clone["notation"]],
             )
             return
 
@@ -609,17 +603,21 @@ class GameState(GameStateOverride):
 
     def _clone_snapshot(self, clone: dict, step: dict | None = None) -> dict:
         """Return the clone state in book-event form."""
-        return {
+        snapshot = {
             "id": clone["id"],
             "notation": clone["notation"],
-            "path": step["path"] if step else [clone["notation"]],
             "from": step["from"] if step else clone["notation"],
             "to": step["to"] if step else clone["notation"],
-            "vector": {"dx": clone["dx"], "dy": clone["dy"]},
-            "hitsRemaining": clone["hitsRemaining"],
-            "bounced": bool(step and step["bounced"]),
             "alive": True,
         }
+        if step and len(step["path"]) > 2:
+            snapshot["path"] = step["path"]
+        if step is None or step["bounced"]:
+            snapshot["vector"] = {"dx": clone["dx"], "dy": clone["dy"]}
+            snapshot["hitsRemaining"] = clone["hitsRemaining"]
+        if step and step["bounced"]:
+            snapshot["bounced"] = True
+        return snapshot
 
     def _clone_snapshots(self, clones: list[dict]) -> list[dict]:
         """Return all live clone states in book-event form."""

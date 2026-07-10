@@ -92,8 +92,8 @@ export type LexActiveObject = {
 	object: LexObjectName;
 	turn: number;
 	notation: BoardNotation;
-	x: number;
-	y: number;
+	x?: number;
+	y?: number;
 	source: string;
 	resolved: boolean;
 	result?: string;

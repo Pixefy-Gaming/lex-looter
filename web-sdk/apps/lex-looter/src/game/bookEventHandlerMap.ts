@@ -54,17 +54,22 @@ const applyCloneSnapshots = (clones: BookEventOfType<'bounceUpdate'>['clones'] =
 			delete nextClones[clone.id];
 			continue;
 		}
+		const existingClone = nextClones[clone.id];
 		nextClones[clone.id] = {
 			id: clone.id,
 			notation: clone.notation,
 			path: clone.path?.length ? [...clone.path] : [clone.from, clone.to],
-			vector: clone.vector,
-			hitsRemaining: clone.hitsRemaining,
+			vector: clone.vector ?? existingClone?.vector ?? { dx: 1, dy: 1 },
+			hitsRemaining: clone.hitsRemaining ?? existingClone?.hitsRemaining ?? 0,
 			alive: clone.alive,
 		};
 	}
 	stateGame.lex.clones = nextClones;
 	stateGame.lex.cloneCount = Object.keys(nextClones).length;
+};
+
+const applyCloneUpdates = (cloneUpdates: BookEventOfType<'bounceUpdate'>['cloneUpdates'] = []) => {
+	applyCloneSnapshots(cloneUpdates);
 };
 
 export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContext> = {
@@ -102,10 +107,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.lex.lexNotation = bookEvent.to;
 		stateGame.lex.mainBounces = bookEvent.mainBounces;
 		stateGame.lex.tumbleValue = bookEvent.tumbleValue;
-		stateGame.lex.mainAlive = bookEvent.mainAlive;
+		stateGame.lex.mainAlive = bookEvent.mainAlive ?? stateGame.lex.mainAlive;
 		applyCloneSnapshots(bookEvent.clones);
-		stateGame.lex.cloneCount = bookEvent.cloneCount;
-		stateGame.lex.modeMultiplier = bookEvent.modeMultiplier;
+		applyCloneUpdates(bookEvent.cloneUpdates);
+		stateGame.lex.cloneCount = bookEvent.cloneCount ?? Object.keys(stateGame.lex.clones).length;
+		stateGame.lex.modeMultiplier = bookEvent.modeMultiplier ?? stateGame.lex.modeMultiplier;
 		stateGame.lex.lastResolvedObjectId = undefined;
 		await waitLexPlaybackStep(260);
 	},
@@ -173,7 +179,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				[bookEvent.ballId]: {
 					id: bookEvent.ballId,
 					notation: cloneStart,
-					path: bookEvent.clonePath?.length ? [...bookEvent.clonePath] : [cloneStart],
+					path: [cloneStart],
 					vector:
 						bookEvent.cloneVector ??
 						(collectorVector

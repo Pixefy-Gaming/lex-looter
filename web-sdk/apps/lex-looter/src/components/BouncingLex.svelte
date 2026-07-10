@@ -5,6 +5,7 @@
 	import { stateBet } from 'state-shared';
 
 	import { getContext } from '../game/context';
+	import assets from '../game/assets';
 	import { BOARD_SIZES } from '../game/constants';
 	import {
 		CANVAS_HEIGHT,
@@ -39,18 +40,17 @@
 	const MAX_BOUNCES = 40;
 	const NORMAL_SPEED_PER_SECOND = 1900;
 	const TURBO_SPEED_PER_SECOND = 3200;
-
 	const LEX_ASSETS = {
-		lex: '/assets/lex/runtime/lex-main.png',
-		cloneBall: '/assets/lex/runtime/lex-clone.png',
-		slayer: '/assets/lex/runtime/slayer.png',
-		halve: '/assets/lex/runtime/blue-blob.png',
-		escape: '/assets/lex/runtime/escape.png',
-		cloneOrb: '/assets/lex/runtime/clone-orb.png',
-		coin: '/assets/lex/runtime/coin.png',
-		diamond: '/assets/lex/runtime/diamond.png',
-		chest: '/assets/lex/runtime/chest.png',
-		heart: '/assets/lex/runtime/heart.png',
+		lex: assets.lexMain.src,
+		cloneBall: assets.lexClone.src,
+		slayer: assets.lexSlayer.src,
+		halve: assets.lexBlueBlob.src,
+		escape: assets.lexEscape.src,
+		cloneOrb: assets.lexCloneOrb.src,
+		coin: assets.lexCoin.src,
+		diamond: assets.lexDiamond.src,
+		chest: assets.lexChest.src,
+		heart: assets.lexHeart.src,
 	} as const;
 
 	const root = new PIXI.Container();
@@ -389,8 +389,15 @@
 		return container;
 	};
 
-	const setObjectPosition = (container: PIXI.Container, notation: string, x: number, y: number) => {
-		const point = notation ? notationToPixelCenter(notation) : { x: x * W, y: y * H };
+	const setObjectPosition = (
+		container: PIXI.Container,
+		notation: string,
+		x?: number,
+		y?: number,
+	) => {
+		const point = notation
+			? notationToPixelCenter(notation)
+			: { x: (x ?? 0.5) * W, y: (y ?? 0.5) * H };
 		container.x = point.x;
 		container.y = point.y;
 	};
