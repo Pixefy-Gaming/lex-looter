@@ -2,6 +2,7 @@
 	import type { Snippet } from 'svelte';
 
 	type Props = {
+		image?: Snippet;
 		title: Snippet;
 		description: Snippet;
 		price: Snippet;
@@ -13,6 +14,9 @@
 
 <div class="bonus-card-wrap">
 	<div class="info">
+		{#if props.image}
+			{@render props.image()}
+		{/if}
 		{@render props.title()}
 		{@render props.description()}
 		{@render props.price()}
@@ -30,8 +34,8 @@
 		border-radius: 10px;
 		background: rgba(0, 0, 0, 0.5);
 		text-align: left;
-		min-width: 155px;
-		max-width: 180px;
+		min-width: 170px;
+		max-width: 205px;
 		gap: 0.5rem;
 	}
 

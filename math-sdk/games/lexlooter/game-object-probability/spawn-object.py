@@ -107,7 +107,7 @@ spawn_tables = {
     },
 
     "start_clone": {
-        # Starts with 1 clone ball. Slayer is active.
+        # Starts with 1 clone ball. Slayer disabled for the full bonus.
         # Escape disabled (high-mult bonus mode).
         "phase_1": {  # bounce 0–9
             "from_bounce": 0,
@@ -119,7 +119,7 @@ spawn_tables = {
             "blue_blob": 130,
             "escape":    0,    # disabled in bonus modes
             "chest":     0,
-            "slayer":   200,   # slayer active from the start
+            "slayer":    0,
         },
         "phase_2": {  # bounce 10–24
             "from_bounce": 10,
@@ -131,7 +131,7 @@ spawn_tables = {
             "blue_blob": 140,
             "escape":    0,
             "chest":      10,
-            "slayer":    225,
+            "slayer":    0,
         },
         "phase_3": {  # bounce 25+
             "from_bounce": 25,
@@ -143,13 +143,13 @@ spawn_tables = {
             "blue_blob": 160,
             "escape":    0,
             "chest":      18,
-            "slayer":    245,
+            "slayer":    0,
         },
     },
 
     "lucky_lex": {
         # Starts with 1 clone ball + tumble multiplier x5.
-        # Slayer active. Escape disabled.
+        # Slayer disabled. Escape disabled.
         # Higher chest weight to match the elevated starting value.
         "phase_1": {  # bounce 0–9
             "from_bounce": 0,
@@ -161,7 +161,7 @@ spawn_tables = {
             "blue_blob": 140,
             "escape":    0,    # disabled in bonus modes
             "chest":       6,   # chest available earlier due to high tumble start
-            "slayer":    246,
+            "slayer":    0,
         },
         "phase_2": {  # bounce 10–24
             "from_bounce": 10,
@@ -173,7 +173,7 @@ spawn_tables = {
             "blue_blob": 160,
             "escape":    0,
             "chest":      10,
-            "slayer":    268,
+            "slayer":    0,
         },
         "phase_3": {  # bounce 25+
             "from_bounce": 25,
@@ -185,7 +185,7 @@ spawn_tables = {
             "blue_blob": 180,
             "escape":    0,
             "chest":      15,
-            "slayer":    291,
+            "slayer":    0,
         },
     },
 

@@ -16,11 +16,39 @@
 
 	const props: Props = $props();
 	const { eventEmitter } = getContextEventEmitter<EmitterEventModal>();
+
+	const GAME_ASSET_URL = '/assets/lex/game-asset.png';
+	const GAME_ASSET_SIZE = { width: 1885, height: 1354 };
+	const BONUS_ICON_FRAMES: Record<string, { x: number; y: number; width: number; height: number }> =
+		{
+			'ante.png': { x: 505, y: 445, width: 300, height: 360 },
+			startClone: { x: 1320, y: 35, width: 400, height: 330 },
+			'startClone.png': { x: 1320, y: 35, width: 400, height: 330 },
+			luckylex: { x: 1375, y: 440, width: 475, height: 338 },
+			'luckylex.png': { x: 1375, y: 440, width: 475, height: 338 },
+		};
 </script>
 
 {#each props.list as betModeData}
 	{#if betModeData.type !== 'default'}
 		<BonusCard>
+			{#snippet image()}
+				{@const frame = BONUS_ICON_FRAMES[betModeData.assets.icon]}
+				{#if frame}
+					<svg
+						class="bonus-image"
+						viewBox={`${frame.x} ${frame.y} ${frame.width} ${frame.height}`}
+						preserveAspectRatio="xMidYMid meet"
+					>
+						<image
+							href={GAME_ASSET_URL}
+							width={GAME_ASSET_SIZE.width}
+							height={GAME_ASSET_SIZE.height}
+						/>
+					</svg>
+				{/if}
+			{/snippet}
+
 			{#snippet title()}
 				<div class="title">
 					{betModeData.text.title}
@@ -66,6 +94,15 @@
 		font-size: 1rem;
 		line-height: 1rem;
 		text-align: center;
+	}
+
+	.bonus-image {
+		width: min(9.25rem, 100%);
+		height: 6.5rem;
+		object-fit: contain;
+		align-self: center;
+		display: block;
+		overflow: hidden;
 	}
 
 	.description {

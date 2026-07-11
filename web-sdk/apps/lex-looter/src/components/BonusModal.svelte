@@ -40,7 +40,7 @@
 				parent: '',
 				children: '',
 				assets: {
-					icon: '',
+					icon: 'ante.png',
 					dialogImage: '',
 					dialogVolatility: '',
 					volatility: '',
@@ -65,7 +65,7 @@
 				parent: '',
 				children: '',
 				assets: {
-					icon: '',
+					icon: 'startClone.png',
 					dialogImage: '',
 					dialogVolatility: '',
 					volatility: '',
@@ -90,7 +90,7 @@
 				parent: '',
 				children: '',
 				assets: {
-					icon: '',
+					icon: 'luckylex.png',
 					dialogImage: '',
 					dialogVolatility: '',
 					volatility: '',
