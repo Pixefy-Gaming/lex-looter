@@ -1,0 +1,90 @@
+{
+	"frames": {
+		"ante.png": {
+			"frame": { "x": 445, "y": 410, "w": 434, "h": 450 },
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": { "x": 0, "y": 0, "w": 434, "h": 450 },
+			"sourceSize": { "w": 434, "h": 450 }
+		},
+		"chest.png": {
+			"frame": { "x": 543, "y": 860, "w": 518, "h": 433 },
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": { "x": 0, "y": 0, "w": 518, "h": 433 },
+			"sourceSize": { "w": 518, "h": 433 }
+		},
+		"cloneClover.png": {
+			"frame": { "x": 879, "y": 410, "w": 469, "h": 438 },
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": { "x": 0, "y": 0, "w": 469, "h": 438 },
+			"sourceSize": { "w": 469, "h": 438 }
+		},
+		"coin.png": {
+			"frame": { "x": 0, "y": 0, "w": 396, "h": 396 },
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": { "x": 0, "y": 0, "w": 396, "h": 396 },
+			"sourceSize": { "w": 396, "h": 396 }
+		},
+		"diamond.png": {
+			"frame": { "x": 0, "y": 860, "w": 543, "h": 403 },
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": { "x": 0, "y": 0, "w": 543, "h": 403 },
+			"sourceSize": { "w": 543, "h": 403 }
+		},
+		"escape.png": {
+			"frame": { "x": 0, "y": 410, "w": 445, "h": 431 },
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": { "x": 0, "y": 0, "w": 445, "h": 431 },
+			"sourceSize": { "w": 445, "h": 431 }
+		},
+		"noHeart.png": {
+			"frame": { "x": 396, "y": 0, "w": 442, "h": 408 },
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": { "x": 0, "y": 0, "w": 442, "h": 408 },
+			"sourceSize": { "w": 442, "h": 408 }
+		},
+		"heart.png": {
+			"frame": { "x": 838, "y": 0, "w": 443, "h": 410 },
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": { "x": 0, "y": 0, "w": 443, "h": 410 },
+			"sourceSize": { "w": 443, "h": 410 }
+		},
+		"logo.png": {
+			"frame": { "x": 1061, "y": 860, "w": 724, "h": 494 },
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": { "x": 50, "y": 27, "w": 724, "h": 494 },
+			"sourceSize": { "w": 833, "h": 568 }
+		},
+		"luckylex.png": {
+			"frame": { "x": 1348, "y": 410, "w": 537, "h": 400 },
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": { "x": 6, "y": 31, "w": 537, "h": 400 },
+			"sourceSize": { "w": 570, "h": 444 }
+		},
+		"startClone.png": {
+			"frame": { "x": 1281, "y": 0, "w": 486, "h": 385 },
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": { "x": 11, "y": 23, "w": 486, "h": 385 },
+			"sourceSize": { "w": 508, "h": 418 }
+		}
+	},
+	"meta": {
+		"app": "https://www.codeandweb.com/texturepacker",
+		"version": "1.1",
+		"image": "game-asset.png",
+		"format": "RGBA8888",
+		"size": { "w": 1885, "h": 1354 },
+		"scale": "1",
+		"smartupdate": "$TexturePacker:SmartUpdate:5bef861778da68554e4daa5da2a580a5:0facccdaef397598c8f66e1f82f124bd:9d5e5f69b13e84e69a49a3880710091c$"
+	}
+}

@@ -43,8 +43,16 @@
 	const MAX_BOUNCES = 40;
 	const NORMAL_SPEED_PER_SECOND = 1900;
 	const TURBO_SPEED_PER_SECOND = 3200;
+	const BOARD_ART_CROP = {
+		x: 335,
+		y: 335,
+		width: 2688,
+		height: 1680,
+	};
 	const LEX_ASSETS = {
 		lex: assets.lexMain.src,
+		board: assets.lexBoard.src,
+		gameAsset: assets.lexGameAsset.src,
 		cloneBall: assets.lexClone.src,
 		slayer: assets.lexSlayer.src,
 		halve: assets.lexBlueBlob.src,
@@ -55,6 +63,7 @@
 		chest: assets.lexChest.src,
 		heart: assets.lexHeart.src,
 	} as const;
+	type LexDisplay = PIXI.Sprite | PIXI.AnimatedSprite | PIXI.Graphics;
 
 	const root = new PIXI.Container();
 	const hudLayer = new PIXI.Container();
@@ -66,31 +75,21 @@
 	root.x = Math.round((BOARD_SIZES.width - W * _SCALE) / 2);
 	root.y = Math.round((BOARD_SIZES.height - H * _SCALE) / 2) + CANVAS_Y_OFFSET;
 
-	const bg = new PIXI.Graphics();
-	const drawBoardSurface = () => {
-		bg.clear();
-		bg.rect(0, 0, W, H);
-		bg.fill({ color: 0x101417 });
-		for (let row = 0; row < H / CELL_SIZE; row += 1) {
-			for (let col = 0; col < W / CELL_SIZE; col += 1) {
-				const x = col * CELL_SIZE;
-				const y = row * CELL_SIZE;
-				const shade = (row + col) % 2 === 0 ? 0x161b1f : 0x12171b;
-				bg.roundRect(x + 1, y + 1, CELL_SIZE - 2, CELL_SIZE - 2, 2);
-				bg.fill({ color: shade, alpha: 0.98 });
-				bg.stroke({ color: 0x050708, alpha: 0.75, width: 1 });
-				if ((row * 7 + col * 11) % 17 === 0) {
-					bg.moveTo(x + 4, y + 12);
-					bg.lineTo(x + 10, y + 8);
-					bg.lineTo(x + 15, y + 13);
-					bg.stroke({ color: 0x2a3035, alpha: 0.45, width: 1 });
-				}
-			}
-		}
-		bg.rect(0, 0, W, H);
-		bg.stroke({ color: 0xffffff, alpha: 0.9, width: 2 });
+	const bg = new PIXI.Container();
+	const bgFallback = new PIXI.Graphics();
+	const bgBorder = new PIXI.Graphics();
+	let boardSprite: PIXI.Sprite | undefined;
+	const drawBoardFallback = () => {
+		bgFallback.clear();
+		bgFallback.rect(0, 0, W, H);
+		bgFallback.fill({ color: 0x101417 });
+		bgBorder.clear();
+		bgBorder.rect(0, 0, W, H);
+		bgBorder.stroke({ color: 0xffffff, alpha: 0.9, width: 2 });
 	};
-	drawBoardSurface();
+	drawBoardFallback();
+	bg.addChild(bgFallback);
+	bg.addChild(bgBorder);
 	root.addChild(bg);
 
 	type CornerState = {
@@ -121,7 +120,8 @@
 		return { ...corner, gfx, chest, label };
 	});
 
-	const logoText = new PIXI.Text({
+	const logoContainer = new PIXI.Container();
+	const logoFallbackText = new PIXI.Text({
 		text: 'LEX\nLOOTER',
 		style: {
 			fill: 0x00ff4a,
@@ -133,11 +133,12 @@
 			dropShadow: { color: 0x000000, distance: 3, blur: 2, alpha: 0.8 },
 		},
 	});
-	logoText.anchor.set(0.5);
-	logoText.rotation = -0.08;
-	logoText.x = 145;
-	logoText.y = -42;
-	hudLayer.addChild(logoText);
+	logoFallbackText.anchor.set(0.5);
+	logoContainer.rotation = -0.08;
+	logoContainer.x = 145;
+	logoContainer.y = -42;
+	logoContainer.addChild(logoFallbackText);
+	hudLayer.addChild(logoContainer);
 
 	const valueText = new PIXI.Text({
 		text: '$0.00',
@@ -193,19 +194,27 @@
 
 	let app: PIXI.Application | undefined;
 	let textures: Partial<Record<keyof typeof LEX_ASSETS, PIXI.Texture>> = {};
-	let mainBall: PIXI.Sprite | PIXI.Graphics | undefined;
+	let lexSheet: PIXI.Spritesheet | undefined;
+	let cloneSheet: PIXI.Spritesheet | undefined;
+	let blueBlobSheet: PIXI.Spritesheet | undefined;
+	let slayerSheet: PIXI.Spritesheet | undefined;
+	let gameAssetSheet: PIXI.Spritesheet | undefined;
+	let mainBall: LexDisplay | undefined;
 	let cloneDisplays: Record<
 		string,
 		{
-			display: PIXI.Sprite | PIXI.Graphics;
+			display: LexDisplay;
+			animationName: string;
 			currentPathKey: string;
 			pathTargets: PixelPoint[];
 		}
 	> = {};
 	let objectContainers: Record<string, PIXI.Container> = {};
+	let objectRenderStates: Record<string, string> = {};
 	let renderedRoundSerial = 0;
 	let currentPathKey = '';
 	let pathTargets: PixelPoint[] = [];
+	let currentLexAnimation = 'unarmed_run_front';
 
 	const formatMoney = (amount: number) => `$${(amount / 100).toFixed(2)}`;
 
@@ -215,14 +224,40 @@
 		if (source) source.scaleMode = 'linear';
 	};
 
+	const renderBoardArt = () => {
+		boardSprite?.destroy();
+		boardSprite = undefined;
+		const texture = textures.board;
+		if (!texture) return;
+
+		const croppedTexture = new PIXI.Texture({
+			source: texture.source,
+			frame: new PIXI.Rectangle(
+				BOARD_ART_CROP.x,
+				BOARD_ART_CROP.y,
+				BOARD_ART_CROP.width,
+				BOARD_ART_CROP.height,
+			),
+		});
+		smoothTexture(croppedTexture);
+		boardSprite = new PIXI.Sprite(croppedTexture);
+		boardSprite.width = W;
+		boardSprite.height = H;
+		bg.addChildAt(boardSprite, 1);
+	};
+
 	const renderHeartHudAssets = () => {
-		for (const heartSlot of heartHud) {
+		const shieldCount = Math.min(context.stateGame.lex.shieldCount, heartHud.length);
+		const lifeTexture = gameAssetSheet?.textures['heart.png'];
+		const noLifeTexture = gameAssetSheet?.textures['noHeart.png'];
+		for (const [index, heartSlot] of heartHud.entries()) {
 			for (const child of heartSlot.removeChildren()) child.destroy();
-			if (textures.heart) {
-				const sprite = new PIXI.Sprite(textures.heart);
+			const texture = index < shieldCount ? lifeTexture : noLifeTexture;
+			if (texture) {
+				const sprite = new PIXI.Sprite(texture);
 				sprite.anchor.set(0.5);
 				smoothTexture(sprite.texture);
-				const scale = Math.min(32 / sprite.texture.width, 32 / sprite.texture.height);
+				const scale = Math.min(34 / sprite.texture.width, 34 / sprite.texture.height);
 				sprite.scale.set(scale);
 				heartSlot.addChild(sprite);
 				continue;
@@ -235,12 +270,24 @@
 		}
 	};
 
-	const setDisplayCenter = (display: PIXI.Sprite | PIXI.Graphics, point: PixelPoint) => {
+	const setDisplayCenter = (display: LexDisplay, point: PixelPoint) => {
+		if (display instanceof PIXI.Sprite || display instanceof PIXI.AnimatedSprite) {
+			display.anchor.set(0.5);
+			display.x = point.x;
+			display.y = point.y;
+			return;
+		}
 		display.x = point.x - display.width / 2;
 		display.y = point.y - display.height / 2;
 	};
 
-	const getDisplayCenter = (display: PIXI.Sprite | PIXI.Graphics): PixelPoint => {
+	const getDisplayCenter = (display: LexDisplay): PixelPoint => {
+		if (display instanceof PIXI.Sprite || display instanceof PIXI.AnimatedSprite) {
+			return {
+				x: display.x,
+				y: display.y,
+			};
+		}
 		return {
 			x: display.x + display.width / 2,
 			y: display.y + display.height / 2,
@@ -256,10 +303,7 @@
 		stealthPill.roundRect(W / 2 - 78, -28, 156, 40, 20);
 		stealthPill.fill({ color: 0x151515, alpha: 0.95 });
 		stealthPill.stroke({ color: 0x00ff4a, width: 2, alpha: 0.95 });
-		const shieldCount = Math.min(context.stateGame.lex.shieldCount, heartHud.length);
-		heartHud.forEach((heart, index) => {
-			heart.alpha = index < shieldCount ? 1 : 0.35;
-		});
+		renderHeartHudAssets();
 	};
 
 	const drawCorner = (corner: CornerState, multiplier: number | null) => {
@@ -307,10 +351,26 @@
 		corner.chest.fill({ color: 0xffd06a, alpha: 0.75 });
 	};
 
-	const fitSprite = (sprite: PIXI.Sprite, maxWidth: number, maxHeight: number) => {
+	const fitSprite = (
+		sprite: PIXI.Sprite | PIXI.AnimatedSprite,
+		maxWidth: number,
+		maxHeight: number,
+	) => {
 		const scale = Math.min(maxWidth / sprite.texture.width, maxHeight / sprite.texture.height);
 		sprite.width = sprite.texture.width * scale;
 		sprite.height = sprite.texture.height * scale;
+	};
+
+	const renderLogoAsset = () => {
+		const logoTexture = gameAssetSheet?.textures['logo.png'];
+		if (!logoTexture) return;
+
+		for (const child of logoContainer.removeChildren()) child.destroy();
+		const logoSprite = new PIXI.Sprite(logoTexture);
+		logoSprite.anchor.set(0.5);
+		smoothTexture(logoSprite.texture);
+		fitSprite(logoSprite, 205, 135);
+		logoContainer.addChild(logoSprite);
 	};
 
 	const createFallbackBall = (color: number) => {
@@ -320,14 +380,88 @@
 		return ball;
 	};
 
+	const getRunTextures = (
+		sheet: PIXI.Spritesheet | undefined,
+		animationName = 'unarmed_run_front',
+	) => {
+		if (!sheet) return [];
+		const animations = sheet.data?.animations as Record<string, string[]> | undefined;
+		const frameNames = animations?.[animationName];
+		if (frameNames?.length) {
+			return frameNames
+				.map((frameName) => sheet.textures[frameName])
+				.filter((texture): texture is PIXI.Texture => Boolean(texture));
+		}
+		return Object.entries(sheet.textures)
+			.filter(([name]) => name.startsWith(animationName))
+			.sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
+			.map(([, texture]) => texture);
+	};
+
+	const getSheetAnimationTextures = (
+		sheet: PIXI.Spritesheet | undefined,
+		animationName: string,
+	) => {
+		if (!sheet) return [];
+		const animations = sheet.data?.animations as Record<string, string[]> | undefined;
+		const frameNames = animations?.[animationName];
+		if (frameNames?.length) {
+			return frameNames
+				.map((frameName) => sheet.textures[frameName])
+				.filter((texture): texture is PIXI.Texture => Boolean(texture));
+		}
+		return Object.entries(sheet.textures)
+			.filter(([name]) => name.startsWith(animationName))
+			.sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
+			.map(([, texture]) => texture);
+	};
+
+	const getLexAnimationForDelta = (dx: number, dy: number) => {
+		if (Math.abs(dx) >= Math.abs(dy)) {
+			return dx < 0 ? 'unarmed_run_left' : 'unarmed_run_right';
+		}
+		return dy < 0 ? 'unarmed_run_back' : 'unarmed_run_front';
+	};
+
+	const setLexAnimation = (animationName: string) => {
+		if (!(mainBall instanceof PIXI.AnimatedSprite)) return;
+		if (currentLexAnimation === animationName) return;
+		const runTextures = getRunTextures(lexSheet, animationName);
+		if (runTextures.length === 0) return;
+		currentLexAnimation = animationName;
+		mainBall.textures = runTextures;
+		mainBall.gotoAndPlay(0);
+		fitSprite(mainBall, BALL_SIZE, BALL_SIZE);
+	};
+
+	const setCloneAnimation = (cloneId: string, animationName: string) => {
+		const clone = cloneDisplays[cloneId];
+		if (!clone || !(clone.display instanceof PIXI.AnimatedSprite)) return;
+		if (clone.animationName === animationName) return;
+		const runTextures = getRunTextures(cloneSheet, animationName);
+		if (runTextures.length === 0) return;
+		clone.animationName = animationName;
+		clone.display.textures = runTextures;
+		clone.display.gotoAndPlay(0);
+		fitSprite(clone.display, BALL_SIZE, BALL_SIZE);
+	};
+
 	const createBall = (isClone: boolean, notation = context.stateGame.lex.lexNotation) => {
+		const runTextures = getRunTextures(isClone ? cloneSheet : lexSheet);
 		const texture = isClone ? textures.cloneBall : textures.lex;
-		const ball = texture
-			? new PIXI.Sprite(texture)
-			: createFallbackBall(isClone ? 0x00e701 : 0xffffff);
+		const ball =
+			runTextures.length > 0
+				? new PIXI.AnimatedSprite(runTextures)
+				: texture
+					? new PIXI.Sprite(texture)
+					: createFallbackBall(isClone ? 0x00e701 : 0xffffff);
 		if (ball instanceof PIXI.Sprite) {
 			smoothTexture(ball.texture);
 			fitSprite(ball, BALL_SIZE, BALL_SIZE);
+		}
+		if (ball instanceof PIXI.AnimatedSprite) {
+			ball.animationSpeed = 0.22;
+			ball.play();
 		}
 		ball.alpha = isClone ? 0.9 : 1;
 		setDisplayCenter(ball, notationToPixelCenter(notation));
@@ -346,15 +480,28 @@
 		heart: { color: 0xff5a7a, label: 'HEART' },
 	};
 
-	const createObjectContainer = (object: LexObjectName) => {
+	const createObjectContainer = (object: LexObjectName, resolved = false) => {
 		const container = new PIXI.Container();
+		const animatedTextures =
+			object === 'blue_blob'
+				? getSheetAnimationTextures(blueBlobSheet, 'Frame')
+				: object === 'slayer' && resolved
+					? getSheetAnimationTextures(slayerSheet, 'Slayer')
+					: [];
+		const gameAssetObjectTextures: Partial<Record<LexObjectName, PIXI.Texture>> = {
+			coin: gameAssetSheet?.textures['coin.png'],
+			diamond: gameAssetSheet?.textures['diamond.png'],
+			chest: gameAssetSheet?.textures['chest.png'],
+			escape: gameAssetSheet?.textures['escape.png'],
+			clone_orb: gameAssetSheet?.textures['cloneClover.png'],
+		};
 		const texture =
 			object === 'coin'
-				? textures.coin
+				? (gameAssetObjectTextures.coin ?? textures.coin)
 				: object === 'diamond'
-					? textures.diamond
+					? (gameAssetObjectTextures.diamond ?? textures.diamond)
 					: object === 'chest'
-						? textures.chest
+						? (gameAssetObjectTextures.chest ?? textures.chest)
 						: object === 'heart'
 							? textures.heart
 							: object === 'slayer'
@@ -362,10 +509,22 @@
 								: object === 'blue_blob'
 									? textures.halve
 									: object === 'escape'
-										? textures.escape
+										? (gameAssetObjectTextures.escape ?? textures.escape)
 										: object === 'clone_orb'
-											? textures.cloneOrb
+											? (gameAssetObjectTextures.clone_orb ?? textures.cloneOrb)
 											: undefined;
+
+		if (animatedTextures.length > 0) {
+			const sprite = new PIXI.AnimatedSprite(animatedTextures);
+			sprite.anchor.set(0.5);
+			sprite.animationSpeed = object === 'slayer' ? 0.28 : 0.18;
+			sprite.loop = object !== 'slayer';
+			sprite.play();
+			const spriteSize = object === 'slayer' ? ESCAPE_OBJ_SIZE * 1.45 : OBJ_SIZE;
+			fitSprite(sprite, spriteSize, spriteSize);
+			container.addChild(sprite);
+			return container;
+		}
 
 		if (texture) {
 			smoothTexture(texture);
@@ -412,18 +571,22 @@
 			if (!activeObjects[objectId]) {
 				objectContainers[objectId].destroy({ children: true });
 				delete objectContainers[objectId];
+				delete objectRenderStates[objectId];
 			}
 		}
 
 		for (const activeObject of Object.values(activeObjects)) {
 			let container = objectContainers[activeObject.objectId];
-			if (!container) {
-				container = createObjectContainer(activeObject.object);
+			const renderState = `${activeObject.object}:${activeObject.resolved}:${activeObject.result ?? ''}`;
+			if (!container || objectRenderStates[activeObject.objectId] !== renderState) {
+				container?.destroy({ children: true });
+				container = createObjectContainer(activeObject.object, activeObject.resolved);
 				objectContainers[activeObject.objectId] = container;
+				objectRenderStates[activeObject.objectId] = renderState;
 				objectLayer.addChild(container);
 			}
-			container.alpha = activeObject.resolved ? 0.15 : 1;
-			container.scale.set(activeObject.resolved ? 1.35 : 1);
+			container.alpha = activeObject.resolved && activeObject.object !== 'slayer' ? 0.15 : 1;
+			container.scale.set(activeObject.resolved && activeObject.object !== 'slayer' ? 1.35 : 1);
 			setObjectPosition(container, activeObject.notation, activeObject.x, activeObject.y);
 		}
 	};
@@ -433,10 +596,15 @@
 			renderedRoundSerial = context.stateGame.lex.roundSerial;
 			currentPathKey = '';
 			pathTargets = [];
+			currentLexAnimation = 'unarmed_run_front';
 			mainBall?.destroy();
 			mainBall = undefined;
 			for (const clone of Object.values(cloneDisplays)) clone.display.destroy();
 			cloneDisplays = {};
+			for (const container of Object.values(objectContainers))
+				container.destroy({ children: true });
+			objectContainers = {};
+			objectRenderStates = {};
 		}
 
 		if (context.stateGame.lex.mainAlive) {
@@ -460,6 +628,7 @@
 			if (!cloneDisplays[clone.id]) {
 				cloneDisplays[clone.id] = {
 					display: createBall(true, clone.notation),
+					animationName: 'unarmed_run_front',
 					currentPathKey: '',
 					pathTargets: [],
 				};
@@ -527,9 +696,10 @@
 	};
 
 	const moveDisplayTowardTargets = (
-		display: PIXI.Sprite | PIXI.Graphics,
+		display: LexDisplay,
 		targets: PixelPoint[],
 		speed: number,
+		onMove?: (dx: number, dy: number) => void,
 	) => {
 		if (targets.length === 0) return;
 
@@ -538,6 +708,7 @@
 		const dx = target.x - current.x;
 		const dy = target.y - current.y;
 		const distance = Math.hypot(dx, dy);
+		if (distance > 0) onMove?.(dx, dy);
 		if (distance <= speed) {
 			setDisplayCenter(display, target);
 			targets.shift();
@@ -551,9 +722,15 @@
 	const tick = (ticker: PIXI.Ticker) => {
 		const baseSpeed = stateBet.isTurbo ? TURBO_SPEED_PER_SECOND : NORMAL_SPEED_PER_SECOND;
 		const speed = baseSpeed * (ticker.deltaMS / 1000);
-		if (mainBall) moveDisplayTowardTargets(mainBall, pathTargets, speed);
-		for (const clone of Object.values(cloneDisplays)) {
-			moveDisplayTowardTargets(clone.display, clone.pathTargets, speed);
+		if (mainBall) {
+			moveDisplayTowardTargets(mainBall, pathTargets, speed, (dx, dy) => {
+				setLexAnimation(getLexAnimationForDelta(dx, dy));
+			});
+		}
+		for (const [cloneId, clone] of Object.entries(cloneDisplays)) {
+			moveDisplayTowardTargets(clone.display, clone.pathTargets, speed, (dx, dy) => {
+				setCloneAnimation(cloneId, getLexAnimationForDelta(dx, dy));
+			});
 		}
 	};
 
@@ -582,11 +759,36 @@
 
 		try {
 			const loaded = await PIXI.Assets.load(Object.values(LEX_ASSETS));
+			const lexAsset = loaded[LEX_ASSETS.lex] as PIXI.Spritesheet | PIXI.Texture | undefined;
+			const cloneAsset = loaded[LEX_ASSETS.cloneBall] as
+				| PIXI.Spritesheet
+				| PIXI.Texture
+				| undefined;
+			const blueBlobAsset = loaded[LEX_ASSETS.halve] as PIXI.Spritesheet | PIXI.Texture | undefined;
+			const slayerAsset = loaded[LEX_ASSETS.slayer] as PIXI.Spritesheet | PIXI.Texture | undefined;
+			const gameAsset = loaded[LEX_ASSETS.gameAsset] as PIXI.Spritesheet | PIXI.Texture | undefined;
+			lexSheet = lexAsset && 'textures' in lexAsset ? lexAsset : undefined;
+			cloneSheet = cloneAsset && 'textures' in cloneAsset ? cloneAsset : undefined;
+			blueBlobSheet = blueBlobAsset && 'textures' in blueBlobAsset ? blueBlobAsset : undefined;
+			slayerSheet = slayerAsset && 'textures' in slayerAsset ? slayerAsset : undefined;
+			gameAssetSheet = gameAsset && 'textures' in gameAsset ? gameAsset : undefined;
 			textures = {
-				lex: loaded[LEX_ASSETS.lex],
-				cloneBall: loaded[LEX_ASSETS.cloneBall],
-				slayer: loaded[LEX_ASSETS.slayer],
-				halve: loaded[LEX_ASSETS.halve],
+				lex: lexSheet
+					? (lexSheet.textures['unarmed_run_front1.png'] ?? Object.values(lexSheet.textures)[0])
+					: (lexAsset as PIXI.Texture | undefined),
+				board: loaded[LEX_ASSETS.board],
+				gameAsset: gameAssetSheet
+					? (gameAssetSheet.textures['logo.png'] ?? Object.values(gameAssetSheet.textures)[0])
+					: (gameAsset as PIXI.Texture | undefined),
+				cloneBall: cloneSheet
+					? (cloneSheet.textures['unarmed_run_front1.png'] ?? Object.values(cloneSheet.textures)[0])
+					: (cloneAsset as PIXI.Texture | undefined),
+				slayer: slayerSheet
+					? (slayerSheet.textures['Slayer1.png'] ?? Object.values(slayerSheet.textures)[0])
+					: (slayerAsset as PIXI.Texture | undefined),
+				halve: blueBlobSheet
+					? (blueBlobSheet.textures['Frame1.png'] ?? Object.values(blueBlobSheet.textures)[0])
+					: (blueBlobAsset as PIXI.Texture | undefined),
 				escape: loaded[LEX_ASSETS.escape],
 				cloneOrb: loaded[LEX_ASSETS.cloneOrb],
 				coin: loaded[LEX_ASSETS.coin],
@@ -594,11 +796,24 @@
 				chest: loaded[LEX_ASSETS.chest],
 				heart: loaded[LEX_ASSETS.heart],
 			};
+			if (lexSheet) Object.values(lexSheet.textures).forEach(smoothTexture);
+			if (cloneSheet) Object.values(cloneSheet.textures).forEach(smoothTexture);
+			if (blueBlobSheet) Object.values(blueBlobSheet.textures).forEach(smoothTexture);
+			if (slayerSheet) Object.values(slayerSheet.textures).forEach(smoothTexture);
+			if (gameAssetSheet) Object.values(gameAssetSheet.textures).forEach(smoothTexture);
 			Object.values(textures).forEach(smoothTexture);
+			renderLogoAsset();
+			renderBoardArt();
 			renderHeartHudAssets();
 		} catch (error) {
 			console.warn('Lex assets failed to load; using fallback drawings.', error);
+			lexSheet = undefined;
+			cloneSheet = undefined;
+			blueBlobSheet = undefined;
+			slayerSheet = undefined;
+			gameAssetSheet = undefined;
 			textures = {};
+			renderBoardArt();
 			renderHeartHudAssets();
 		}
 
@@ -614,10 +829,12 @@
 	onDestroy(() => {
 		if (app) app.ticker.remove(tick);
 		mainBall?.destroy();
+		boardSprite?.destroy();
 		for (const clone of Object.values(cloneDisplays)) clone.display.destroy();
 		for (const container of Object.values(objectContainers)) container.destroy({ children: true });
 		cloneDisplays = {};
 		objectContainers = {};
+		objectRenderStates = {};
 	});
 
 	parentCtx.addToParent(root);

@@ -1,19 +1,19 @@
 export default {
 	lexMain: {
-		type: 'sprite',
-		src: '/assets/lex/runtime/lex-main.png',
+		type: 'sprites',
+		src: new URL('../../static/assets/lex/character/lexMain.json', import.meta.url).href,
 	},
 	lexClone: {
-		type: 'sprite',
-		src: '/assets/lex/runtime/lex-clone.png',
+		type: 'sprites',
+		src: new URL('../../static/assets/lex/character/lexClone.json', import.meta.url).href,
 	},
 	lexSlayer: {
-		type: 'sprite',
-		src: '/assets/lex/runtime/slayer.png',
+		type: 'sprites',
+		src: new URL('../../static/assets/lex/character/lexSlayer.json', import.meta.url).href,
 	},
 	lexBlueBlob: {
-		type: 'sprite',
-		src: '/assets/lex/runtime/blue-blob.png',
+		type: 'sprites',
+		src: new URL('../../static/assets/lex/character/lexBlueBlob.json', import.meta.url).href,
 	},
 	lexEscape: {
 		type: 'sprite',
@@ -38,6 +38,14 @@ export default {
 	lexHeart: {
 		type: 'sprite',
 		src: '/assets/lex/runtime/heart.png',
+	},
+	lexBoard: {
+		type: 'sprite',
+		src: new URL('../../static/assets/lex/board.jpg', import.meta.url).href,
+	},
+	lexGameAsset: {
+		type: 'sprites',
+		src: new URL('../../static/assets/lex/game-asset.json', import.meta.url).href,
 	},
 	loader: {
 		type: 'spine',

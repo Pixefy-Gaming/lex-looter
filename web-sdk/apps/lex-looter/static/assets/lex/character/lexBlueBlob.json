@@ -1,0 +1,58 @@
+{
+	"frames": {
+		"Frame1.png": {
+			"frame": { "x": 0, "y": 134, "w": 23, "h": 23 },
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": { "x": 0, "y": 0, "w": 23, "h": 23 },
+			"sourceSize": { "w": 23, "h": 23 }
+		},
+		"Frame2.png": {
+			"frame": { "x": 0, "y": 109, "w": 23, "h": 25 },
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": { "x": 0, "y": 0, "w": 23, "h": 25 },
+			"sourceSize": { "w": 23, "h": 25 }
+		},
+		"Frame3.png": {
+			"frame": { "x": 0, "y": 83, "w": 23, "h": 26 },
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": { "x": 0, "y": 0, "w": 23, "h": 26 },
+			"sourceSize": { "w": 23, "h": 26 }
+		},
+		"Frame4.png": {
+			"frame": { "x": 0, "y": 56, "w": 23, "h": 27 },
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": { "x": 0, "y": 0, "w": 23, "h": 27 },
+			"sourceSize": { "w": 23, "h": 27 }
+		},
+		"Frame5.png": {
+			"frame": { "x": 0, "y": 0, "w": 23, "h": 28 },
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": { "x": 0, "y": 0, "w": 23, "h": 28 },
+			"sourceSize": { "w": 23, "h": 28 }
+		},
+		"Frame6.png": {
+			"frame": { "x": 0, "y": 28, "w": 23, "h": 28 },
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": { "x": 0, "y": 0, "w": 23, "h": 28 },
+			"sourceSize": { "w": 23, "h": 28 }
+		}
+	},
+	"animations": {
+		"Frame": ["Frame1.png", "Frame2.png", "Frame3.png", "Frame4.png", "Frame5.png", "Frame6.png"]
+	},
+	"meta": {
+		"app": "https://www.codeandweb.com/texturepacker",
+		"version": "1.1",
+		"image": "lexBlueBlob.png",
+		"format": "RGBA8888",
+		"size": { "w": 23, "h": 157 },
+		"scale": "1",
+		"smartupdate": "$TexturePacker:SmartUpdate:00d3743fc120773b8af77d7166060bb7:9e0d0f54a10512e72a2cd5cfb45c3955:0f23bd585ac3a68f9cc658f8572c7625$"
+	}
+}
