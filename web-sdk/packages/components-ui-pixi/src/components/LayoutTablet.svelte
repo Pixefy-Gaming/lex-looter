@@ -65,6 +65,10 @@
 			{@render props.buttonTurbo({ anchor: 0.5 })}
 		</Container>
 
+		<Container y={DESKTOP_BASE_SIZE * 0.5} x={-10 + 180 * 7}>
+			{@render props.buttonFastForward({ anchor: 0.5 })}
+		</Container>
+
 		<Container y={DESKTOP_BASE_SIZE * 0.5} x={1560}>
 			{@render props.buttonDecrease({ anchor: 0.5 })}
 		</Container>

@@ -736,12 +736,20 @@
 		display.y += (dy / distance) * speed;
 	};
 
+	const snapDisplayToFinalTarget = (display: LexDisplay, targets: PixelPoint[]) => {
+		const target = targets.at(-1);
+		if (!target) return;
+		setDisplayCenter(display, target);
+		targets.length = 0;
+	};
+
 	const tick = (ticker: PIXI.Ticker) => {
 		const baseSpeed = stateBet.isTurbo ? TURBO_SPEED_PER_SECOND : NORMAL_SPEED_PER_SECOND;
 		const speed = baseSpeed * (ticker.deltaMS / 1000);
 		const animationSpeed = getCharacterAnimationSpeed();
 		if (mainBall) {
 			if (mainBall instanceof PIXI.AnimatedSprite) mainBall.animationSpeed = animationSpeed;
+			if (context.stateGame.lexSkipPlayback) snapDisplayToFinalTarget(mainBall, pathTargets);
 			moveDisplayTowardTargets(mainBall, pathTargets, speed, (dx, dy) => {
 				setLexAnimation(getLexAnimationForDelta(dx, dy));
 			});
@@ -749,6 +757,9 @@
 		for (const [cloneId, clone] of Object.entries(cloneDisplays)) {
 			if (clone.display instanceof PIXI.AnimatedSprite) {
 				clone.display.animationSpeed = animationSpeed;
+			}
+			if (context.stateGame.lexSkipPlayback) {
+				snapDisplayToFinalTarget(clone.display, clone.pathTargets);
 			}
 			moveDisplayTowardTargets(clone.display, clone.pathTargets, speed, (dx, dy) => {
 				setCloneAnimation(cloneId, getLexAnimationForDelta(dx, dy));
@@ -773,6 +784,13 @@
 		context.stateGame.lex.clones;
 		context.stateGame.lex.corners;
 		renderFromBookState();
+	});
+
+	context.eventEmitter.subscribeOnMount({
+		skipLexPlayback: () => {
+			if (context.stateXstateDerived.isIdle()) return;
+			context.stateGame.lexSkipPlayback = true;
+		},
 	});
 
 	onMount(async () => {

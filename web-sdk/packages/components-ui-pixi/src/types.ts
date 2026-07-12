@@ -9,6 +9,7 @@ export type EmitterEventUi =
 	| { type: 'stopButtonEnable' }
 	| { type: 'uiShow' }
 	| { type: 'uiHide' }
+	| { type: 'skipLexPlayback' }
 	| { type: 'drawerUnfold' }
 	| { type: 'drawerFold' }
 	| { type: 'drawerButtonShow' }
@@ -27,6 +28,7 @@ export type ButtonIcon =
 	| 'increase'
 	| 'menu'
 	| 'turbo'
+	| 'fastForward'
 	| 'autoSpin'
 	| 'payTable'
 	| 'info'
@@ -44,6 +46,7 @@ export type LayoutUiProps = {
 	buttonBuyBonus: Snippet<[Partial<ButtonProps>]>;
 	buttonBet: Snippet<[Partial<ButtonProps>]>;
 	buttonTurbo: Snippet<[Partial<ButtonProps>]>;
+	buttonFastForward: Snippet<[Partial<ButtonProps>]>;
 	buttonAutoSpin: Snippet<[Partial<ButtonProps>]>;
 	buttonIncrease: Snippet<[Partial<ButtonProps>]>;
 	buttonDecrease: Snippet<[Partial<ButtonProps>]>;

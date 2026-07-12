@@ -14,6 +14,7 @@ export const i18nDerived = {
 	increase: () => stateI18nDerived.translate('+'),
 	menu: () => stateI18nDerived.translate('MENU'),
 	turbo: () => stateI18nDerived.translate('TURBO'),
+	fastForward: () => stateI18nDerived.translate('>>'),
 	autoSpin: () => stateI18nDerived.translate('AUTO SPIN'),
 	payTable: () => stateI18nDerived.translate('PAYTABLE'),
 	info: () => stateI18nDerived.translate('INFO'),

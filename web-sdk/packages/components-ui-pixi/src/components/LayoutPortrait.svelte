@@ -113,6 +113,13 @@
 		</Container>
 
 		<Container
+			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 + 360}
+			y={context.stateLayoutDerived.mainLayoutStandard().height - 400}
+		>
+			{@render props.buttonFastForward({ anchor: 0.5 })}
+		</Container>
+
+		<Container
 			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5}
 			y={context.stateLayoutDerived.mainLayoutStandard().height - 270}
 		>

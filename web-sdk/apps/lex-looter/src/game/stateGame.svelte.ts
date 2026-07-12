@@ -185,6 +185,7 @@ export const stateGame = $state({
 	multiplierBoard: [] as (MultiplierSymbol | undefined)[][],
 	scatterCounter: 0,
 	lex: createInitialLexPlaybackState(),
+	lexSkipPlayback: false,
 });
 
 const boardLayout = () => ({

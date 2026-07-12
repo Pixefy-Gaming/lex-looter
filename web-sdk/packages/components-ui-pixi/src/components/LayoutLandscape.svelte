@@ -83,6 +83,10 @@
 		<Container x={LANDSCAPE_BASE_SIZE * 0.5} y={LANDSCAPE_BASE_SIZE * 0.5 + 140} scale={0.8}>
 			{@render props.buttonTurbo({ anchor: 0.5 })}
 		</Container>
+
+		<Container x={LANDSCAPE_BASE_SIZE * 0.5} y={LANDSCAPE_BASE_SIZE * 0.5 + 280} scale={0.8}>
+			{@render props.buttonFastForward({ anchor: 0.5 })}
+		</Container>
 	</Container>
 </MainContainer>
 

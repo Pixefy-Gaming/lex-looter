@@ -2,7 +2,6 @@ import _ from 'lodash';
 
 import { recordBookEvent, checkIsMultipleRevealEvents, type BookEventHandlerMap } from 'utils-book';
 import { stateBet } from 'state-shared';
-import { waitForTimeout } from 'utils-shared/wait';
 
 import { eventEmitter } from './eventEmitter';
 import { playBookEvent } from './utils';
@@ -43,8 +42,25 @@ const animateSymbols = async ({ positions }: { positions: Position[] }) => {
 	});
 };
 
-const waitLexPlaybackStep = async (duration = 220) => {
-	await waitForTimeout(stateBet.isTurbo ? Math.round(duration * 0.18) : duration);
+const waitLexPlaybackStepInterruptible = async (duration = 220) => {
+	if (stateGame.lexSkipPlayback) return;
+	const timeoutDuration = stateBet.isTurbo ? Math.round(duration * 0.18) : duration;
+	await new Promise<void>((resolve) => {
+		let timeout: ReturnType<typeof setTimeout>;
+		let interval: ReturnType<typeof setInterval>;
+		let resolved = false;
+		const finish = () => {
+			if (resolved) return;
+			resolved = true;
+			clearTimeout(timeout);
+			clearInterval(interval);
+			resolve();
+		};
+		timeout = setTimeout(finish, timeoutDuration);
+		interval = setInterval(() => {
+			if (stateGame.lexSkipPlayback) finish();
+		}, 16);
+	});
 };
 
 const applyCloneSnapshots = (clones: BookEventOfType<'bounceUpdate'>['clones'] = []) => {
@@ -74,6 +90,7 @@ const applyCloneUpdates = (cloneUpdates: BookEventOfType<'bounceUpdate'>['cloneU
 
 export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContext> = {
 	roundStart: async (bookEvent: BookEventOfType<'roundStart'>) => {
+		stateGame.lexSkipPlayback = false;
 		const nextRoundSerial = stateGame.lex.roundSerial + 1;
 		stateGame.lex = {
 			...createInitialLexPlaybackState(),
@@ -93,12 +110,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.lex.cloneCount = bookEvent.cloneCount;
 		stateBet.winBookEventAmount = 0;
 		eventEmitter.broadcast({ type: 'tumbleWinAmountReset' });
-		await waitLexPlaybackStep(250);
+		await waitLexPlaybackStepInterruptible(250);
 	},
 	cornerUpdate: async (bookEvent: BookEventOfType<'cornerUpdate'>) => {
 		stateGame.lex.mainBounces = bookEvent.mainBounces;
 		stateGame.lex.corners = { ...bookEvent.corners };
-		await waitLexPlaybackStep(120);
+		await waitLexPlaybackStepInterruptible(120);
 	},
 	bounceUpdate: async (bookEvent: BookEventOfType<'bounceUpdate'>) => {
 		stateGame.lex.lexPath = bookEvent.path?.length
@@ -113,7 +130,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.lex.cloneCount = bookEvent.cloneCount ?? Object.keys(stateGame.lex.clones).length;
 		stateGame.lex.modeMultiplier = bookEvent.modeMultiplier ?? stateGame.lex.modeMultiplier;
 		stateGame.lex.lastResolvedObjectId = undefined;
-		await waitLexPlaybackStep(260);
+		await waitLexPlaybackStepInterruptible(260);
 	},
 	objectSpawn: async (bookEvent: BookEventOfType<'objectSpawn'>) => {
 		stateGame.lex.activeObjects = {
@@ -129,7 +146,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				resolved: false,
 			},
 		};
-		await waitLexPlaybackStep(260);
+		await waitLexPlaybackStepInterruptible(260);
 	},
 	objectResolve: async (bookEvent: BookEventOfType<'objectResolve'>) => {
 		const collectorId = bookEvent.collectorId ?? 'main';
@@ -211,7 +228,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				0,
 			);
 		}
-		await waitLexPlaybackStep(420);
+		await waitLexPlaybackStepInterruptible(420);
 	},
 	cloneExpire: async (bookEvent: BookEventOfType<'cloneExpire'>) => {
 		stateGame.lex.tumbleValue = bookEvent.tumbleValue;
@@ -219,7 +236,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		delete nextClones[bookEvent.ballId];
 		stateGame.lex.clones = nextClones;
 		stateGame.lex.cloneCount = Object.keys(nextClones).length;
-		await waitLexPlaybackStep(320);
+		await waitLexPlaybackStepInterruptible(320);
 	},
 	roundEnd: async (bookEvent: BookEventOfType<'roundEnd'>) => {
 		stateGame.lex.lexNotation = bookEvent.lexAt;
@@ -235,7 +252,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.lex.cornerAt = bookEvent.cornerAt;
 		stateGame.lex.target = bookEvent.target;
 		stateBet.winBookEventAmount = bookEvent.totalWin;
-		await waitLexPlaybackStep(650);
+		await waitLexPlaybackStepInterruptible(650);
 	},
 	reveal: async (bookEvent: BookEventOfType<'reveal'>, { bookEvents }: BookEventContext) => {
 		eventEmitter.broadcast({ type: 'tumbleWinAmountReset' });
