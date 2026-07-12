@@ -7,6 +7,7 @@ import json
 BASE_URL = "http://localhost:3008"
 SESSION_ID = "test-123"
 MODES = ["base", "no_slayer", "start_clone", "lucky_lex"]
+BET_AMOUNTS = [100000, 1000000]
 
 def test_authenticate():
     """Test authenticate endpoint."""
@@ -18,33 +19,37 @@ def test_authenticate():
     data = response.json()
     print(f"✅ Balance: ${data['balance']['amount']/1000000:.2f}")
     print(f"   Session: {data['sessionID']}")
+    print(f"   Bet levels: {[level / 1000000 for level in data['config']['betLevels'][:6]]}...")
     return data
 
 def test_play():
     """Test play endpoint with the current Lex Looter modes."""
     results = []
-    for mode in MODES:
-        print(f"\n🎰 Testing /wallet/play... mode={mode}")
-        response = requests.post(f"{BASE_URL}/wallet/play", json={
-            "sessionID": SESSION_ID,
-            "amount": 1000000,
-            "mode": mode,
-        })
-        data = response.json()
-        round_data = data.get('round', {})
-        state = round_data.get('state', [])
-        round_end = next((event for event in reversed(state) if event.get('type') == 'roundEnd'), {})
-        print(f"✅ Mode: {round_data.get('mode')}")
-        print(f"   Base Bet: ${round_data.get('amount', 0)/1000000:.2f}")
-        print(f"   Debit: ${round_data.get('debitAmount', 0)/1000000:.2f}")
-        print(f"   Payout Multiplier Raw: {round_data.get('payoutMultiplier', 0)}")
-        print(f"   Win: ${round_data.get('payout', 0)/1000000:.2f}")
-        print(f"   Balance: ${data['balance']['amount']/1000000:.2f}")
-        print(f"   Events: {len(state)}")
-        print(f"   End Reason: {round_end.get('reason', 'unknown')}")
-        results.append(data)
+    for amount in BET_AMOUNTS:
+        for mode in MODES:
+            print(f"\n🎰 Testing /wallet/play... amount=${amount/1000000:.2f}, mode={mode}")
+            response = requests.post(f"{BASE_URL}/wallet/play", json={
+                "sessionID": SESSION_ID,
+                "amount": amount,
+                "mode": mode,
+            })
+            data = response.json()
+            if response.status_code != 200:
+                raise RuntimeError(data)
+            round_data = data.get('round', {})
+            state = round_data.get('state', [])
+            round_end = next((event for event in reversed(state) if event.get('type') == 'roundEnd'), {})
+            print(f"✅ Mode: {round_data.get('mode')}")
+            print(f"   Base Bet: ${round_data.get('amount', 0)/1000000:.2f}")
+            print(f"   Debit: ${round_data.get('debitAmount', 0)/1000000:.2f}")
+            print(f"   Payout Multiplier Raw: {round_data.get('payoutMultiplier', 0)}")
+            print(f"   Win: ${round_data.get('payout', 0)/1000000:.2f}")
+            print(f"   Balance: ${data['balance']['amount']/1000000:.2f}")
+            print(f"   Events: {len(state)}")
+            print(f"   End Reason: {round_end.get('reason', 'unknown')}")
+            results.append(data)
 
-        test_end_round()
+            test_end_round()
 
     return results
 

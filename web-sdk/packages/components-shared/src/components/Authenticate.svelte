@@ -2,7 +2,15 @@
 	import { onMount, type Snippet } from 'svelte';
 
 	import { requestAuthenticate, requestReplay } from 'rgs-requests';
-	import { stateUrlDerived, stateBet, stateConfig, stateModal, stateUi } from 'state-shared';
+	import {
+		DEFAULT_BET_AMOUNT_OPTIONS,
+		DEFAULT_BET_MENU_OPTIONS,
+		stateUrlDerived,
+		stateBet,
+		stateConfig,
+		stateModal,
+		stateUi,
+	} from 'state-shared';
 	import { API_AMOUNT_MULTIPLIER, MOST_USED_BET_INDEXES } from 'constants-shared/bet';
 
 	type Props = { children: Snippet };
@@ -60,12 +68,21 @@
 				// 	}
 				// }
 				stateConfig.jurisdiction = authenticateData?.config?.jurisdiction;
-				stateConfig.betAmountOptions = (authenticateData.config?.betLevels || []).map(
+				const betAmountOptions = (authenticateData.config?.betLevels || []).map(
 					(level) => level / API_AMOUNT_MULTIPLIER,
 				);
-				stateConfig.betMenuOptions = stateConfig.betAmountOptions.filter((_, index) =>
-					MOST_USED_BET_INDEXES.includes(index),
-				);
+				if (betAmountOptions.length > 1) {
+					stateConfig.betAmountOptions = betAmountOptions;
+					stateConfig.betMenuOptions = stateConfig.betAmountOptions.filter((_, index) =>
+						MOST_USED_BET_INDEXES.includes(index),
+					);
+					if (stateConfig.betMenuOptions.length === 0) {
+						stateConfig.betMenuOptions = stateConfig.betAmountOptions;
+					}
+				} else {
+					stateConfig.betAmountOptions = DEFAULT_BET_AMOUNT_OPTIONS;
+					stateConfig.betMenuOptions = DEFAULT_BET_MENU_OPTIONS;
+				}
 			}
 
 			// round

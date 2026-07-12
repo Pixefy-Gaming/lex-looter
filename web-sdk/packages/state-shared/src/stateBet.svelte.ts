@@ -23,10 +23,6 @@ export const stateBet = $state({
 
 const correctBetAmount = (value: number) => {
 	if (value <= 0) return 0;
-	const costMultiplier = betCostMultiplier();
-	if (costMultiplier === 0) return 0;
-	const max = stateBet.balanceAmount / costMultiplier;
-	if (value >= max) return max;
 	return value;
 };
 
@@ -54,10 +50,10 @@ const activeBetMode = () => stateMeta.betModeMeta?.[stateBet.activeBetModeKey.to
 	?? null;
 const isContinuousBet = () => stateBet.autoSpinsCounter > 1 || stateBet.isSpaceHold;
 const timeScale = () => (stateBet.isTurbo ? 2 : 1);
-const betCostMultiplier = () =>
-	stateBetDerived.activeBetMode().type === 'activate'
-		? stateBetDerived.activeBetMode().costMultiplier
-		: 1;
+const betCostMultiplier = () => {
+	const activeMode = stateBetDerived.activeBetMode();
+	return activeMode?.type === 'activate' ? activeMode.costMultiplier : 1;
+};
 const betCost = () => stateBet.betAmount * betCostMultiplier();
 const isBetCostAvailable = () => betCost() > 0 && betCost() <= stateBet.balanceAmount;
 const hasAutoBetCounter = () => stateBet.autoSpinsCounter !== 0;

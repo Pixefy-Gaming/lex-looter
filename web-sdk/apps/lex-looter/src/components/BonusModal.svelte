@@ -1,11 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
-	import { stateMeta, stateModal } from 'state-shared';
-
-	import { getContext } from '../game/context';
-
-	const context = getContext();
+	import { stateMeta } from 'state-shared';
 
 	const applyLexBonusModalMeta = () => {
 		stateMeta.betModeMeta = {
@@ -35,8 +31,8 @@
 			},
 			no_slayer: {
 				mode: 'no_slayer',
-				costMultiplier: 100,
-				type: 'buy',
+				costMultiplier: 3,
+				type: 'activate',
 				parent: '',
 				children: '',
 				assets: {
@@ -50,7 +46,7 @@
 					title: 'No Slayer',
 					dialog: 'Start the game without Slayer.',
 					description: 'Start the game without Slayer',
-					button: 'BUY',
+					button: 'ACTIVATE',
 					betAmountLabel: 'NO SLAYER',
 					tickerIdle: 'PLACE YOUR BET',
 					tickerSpin: 'NO SLAYER BONUS',
@@ -60,8 +56,8 @@
 			},
 			start_clone: {
 				mode: 'start_clone',
-				costMultiplier: 170,
-				type: 'buy',
+				costMultiplier: 50,
+				type: 'activate',
 				parent: '',
 				children: '',
 				assets: {
@@ -75,7 +71,7 @@
 					title: 'Start Clone',
 					dialog: 'Start the game without Slayer and with +1 clone.',
 					description: 'Start the game without Slayer & +1 clone',
-					button: 'BUY',
+					button: 'ACTIVATE',
 					betAmountLabel: 'START CLONE',
 					tickerIdle: 'PLACE YOUR BET',
 					tickerSpin: 'START CLONE BONUS',
@@ -85,8 +81,8 @@
 			},
 			lucky_lex: {
 				mode: 'lucky_lex',
-				costMultiplier: 250,
-				type: 'buy',
+				costMultiplier: 100,
+				type: 'activate',
 				parent: '',
 				children: '',
 				assets: {
@@ -101,7 +97,7 @@
 					dialog:
 						'Start the game without Slayer, with +1 clone, and with multiplier starting from x5.',
 					description: 'Start the game without Slayer & +1 clone & multiplier start from x5',
-					button: 'BUY',
+					button: 'ACTIVATE',
 					betAmountLabel: 'LUCKY LEX',
 					tickerIdle: 'PLACE YOUR BET',
 					tickerSpin: 'LUCKY LEX BONUS',
@@ -113,10 +109,4 @@
 	};
 
 	onMount(applyLexBonusModalMeta);
-
-	context.eventEmitter.subscribeOnMount({
-		buyBonusConfirm: () => {
-			stateModal.modal = { name: 'buyBonusConfirm' };
-		},
-	});
 </script>

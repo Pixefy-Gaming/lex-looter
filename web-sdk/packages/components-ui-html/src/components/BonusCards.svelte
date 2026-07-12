@@ -67,21 +67,27 @@
 				<div class="price">
 					{`${numberToCurrencyString(stateBet.betAmount * betModeData.costMultiplier)}`}
 				</div>
+				<div class="cost-formula">
+					{`${numberToCurrencyString(stateBet.betAmount)} × x${betModeData.costMultiplier}`}
+				</div>
 			{/snippet}
 
 			{#snippet button()}
+				{@const isActive = stateBet.activeBetModeKey === betModeData.mode}
 				<Button
 					onclick={() => {
 						stateBonus.selectedBetModeKey = betModeData.mode;
-						eventEmitter.broadcast({ type: 'buyBonusConfirm' });
+						stateBet.activeBetModeKey = betModeData.mode;
+						stateModal.modal = null;
 						eventEmitter.broadcast({ type: 'soundPressGeneral' });
 					}}
-					disabled={stateBet.betAmount <= 0 ||
+					disabled={isActive ||
+						stateBet.betAmount <= 0 ||
 						stateBet.balanceAmount < stateBet.betAmount * betModeData.costMultiplier}
 				>
 					<BaseIcon width="100%" height="2rem" border="2px solid white;" />
 					<BaseButtonContent>
-						<span style="font-size: 1rem;">{betModeData.text.button}</span>
+						<span style="font-size: 1rem;">{isActive ? 'ACTIVE' : betModeData.text.button}</span>
 					</BaseButtonContent>
 				</Button>
 			{/snippet}
@@ -122,6 +128,14 @@
 		font-size: 1rem;
 		line-height: 1rem;
 		text-align: center;
+		white-space: nowrap;
+	}
+
+	.cost-formula {
+		font-size: 0.7rem;
+		line-height: 0.8rem;
+		text-align: center;
+		opacity: 0.75;
 		white-space: nowrap;
 	}
 </style>

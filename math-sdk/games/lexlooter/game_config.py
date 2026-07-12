@@ -44,7 +44,7 @@ class GameConfig(Config):
             ),
             self._build_bet_mode(
                 name="no_slayer",
-                cost=100.0,
+                cost=3.0,
                 is_buybonus=True,
                 spawn_mode="no_slayer",
                 high_mult_corners=True,
@@ -57,7 +57,7 @@ class GameConfig(Config):
             ),
             self._build_bet_mode(
                 name="start_clone",
-                cost=170.0,
+                cost=50.0,
                 is_buybonus=True,
                 spawn_mode="start_clone",
                 high_mult_corners=True,
@@ -70,7 +70,7 @@ class GameConfig(Config):
             ),
             self._build_bet_mode(
                 name="lucky_lex",
-                cost=250.0,
+                cost=100.0,
                 is_buybonus=True,
                 spawn_mode="lucky_lex",
                 high_mult_corners=True,

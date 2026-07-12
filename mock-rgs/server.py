@@ -32,7 +32,26 @@ CORS(app)  # Enable CORS for web-sdk frontend
 sessions = {}
 INITIAL_BALANCE = 1000000000  # $1000 with 6 decimal precision
 API_AMOUNT_MULTIPLIER = 1_000_000
-SUPPORTED_BET_LEVELS = [API_AMOUNT_MULTIPLIER]
+SUPPORTED_BET_AMOUNTS = [
+    0.10,
+    0.20,
+    0.40,
+    0.60,
+    0.80,
+    1,
+    2,
+    5,
+    10,
+    25,
+    50,
+    75,
+    100,
+    200,
+    500,
+    800,
+    1000,
+]
+SUPPORTED_BET_LEVELS = [int(round(amount * API_AMOUNT_MULTIPLIER)) for amount in SUPPORTED_BET_AMOUNTS]
 
 MODE_ALIAS_OVERRIDES = {
     "default": "base",
@@ -289,7 +308,7 @@ def play():
         return jsonify(
             {
                 "error": "UNSUPPORTED_BET",
-                "message": "Mock RGS currently supports only the fixed $1 base bet for Lex Looter.",
+                "message": "Mock RGS supports Lex Looter base bets from $0.10 to $1000.00.",
             }
         ), 400
 
