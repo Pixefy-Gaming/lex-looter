@@ -44,7 +44,7 @@ const animateSymbols = async ({ positions }: { positions: Position[] }) => {
 };
 
 const waitLexPlaybackStep = async (duration = 220) => {
-	await waitForTimeout(stateBet.isTurbo ? Math.round(duration * 0.35) : duration);
+	await waitForTimeout(stateBet.isTurbo ? Math.round(duration * 0.18) : duration);
 };
 
 const applyCloneSnapshots = (clones: BookEventOfType<'bounceUpdate'>['clones'] = []) => {

@@ -512,7 +512,7 @@ class GameState(GameStateOverride):
             return
 
         if object_name == "slayer":
-            target_ball = self._choose_slayer_target(state)
+            target_ball = self._choose_slayer_target(state, collector)
             if target_ball is None:
                 self._object_resolve_event(
                     state,
@@ -522,7 +522,7 @@ class GameState(GameStateOverride):
                 )
                 return
 
-            if state["shield_count"] > 0:
+            if target_ball == "main" and state["shield_count"] > 0:
                 state["shield_count"] -= 1
                 self._object_resolve_event(
                     state,
@@ -642,8 +642,15 @@ class GameState(GameStateOverride):
             cornerAt=state["lex"]["notation"],
         )
 
-    def _choose_slayer_target(self, state: dict) -> str | None:
+    def _choose_slayer_target(self, state: dict, collector: dict | None = None) -> str | None:
         """Choose which live ball the slayer destroys."""
+        if collector is not None:
+            collector_id = collector.get("id")
+            if collector_id == "main" and state["main_alive"]:
+                return "main"
+            if any(clone["id"] == collector_id for clone in state["clones"]):
+                return collector_id
+
         live_balls = []
         if state["main_alive"]:
             live_balls.append("main")

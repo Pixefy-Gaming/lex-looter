@@ -40,9 +40,13 @@
 	const CORNER_TAB_OUTSET = 5;
 	const CORNER_CHEST_WIDTH = 32;
 	const CORNER_CHEST_HEIGHT = 24;
+	const CORNER_HITBOX_WIDTH = CELL_SIZE * 2;
+	const CORNER_HITBOX_HEIGHT = CELL_SIZE;
 	const MAX_BOUNCES = 40;
-	const NORMAL_SPEED_PER_SECOND = 1900;
-	const TURBO_SPEED_PER_SECOND = 3200;
+	const NORMAL_SPEED_PER_SECOND = 2200;
+	const TURBO_SPEED_PER_SECOND = 5200;
+	const NORMAL_CHARACTER_ANIMATION_SPEED = 0.24;
+	const TURBO_CHARACTER_ANIMATION_SPEED = 0.38;
 	const BOARD_ART_CROP = {
 		x: 335,
 		y: 335,
@@ -98,6 +102,7 @@
 		boxY: number;
 		gfx: PIXI.Graphics;
 		chest: PIXI.Graphics;
+		hitbox: PIXI.Graphics;
 		label: PIXI.Text;
 	};
 
@@ -109,6 +114,7 @@
 	].map((corner) => {
 		const gfx = new PIXI.Graphics();
 		const chest = new PIXI.Graphics();
+		const hitbox = new PIXI.Graphics();
 		const label = new PIXI.Text({
 			text: 'NONE',
 			style: { fill: 0x07110b, fontSize: 12, fontWeight: '900' },
@@ -116,8 +122,9 @@
 		label.anchor.set(0.5);
 		root.addChild(gfx);
 		root.addChild(chest);
+		root.addChild(hitbox);
 		root.addChild(label);
-		return { ...corner, gfx, chest, label };
+		return { ...corner, gfx, chest, hitbox, label };
 	});
 
 	const logoContainer = new PIXI.Container();
@@ -329,6 +336,8 @@
 		const isRight = corner.key === 'tr' || corner.key === 'br';
 		const chestX = isRight ? W - CORNER_CHEST_WIDTH : 0;
 		const chestY = isTop ? 0 : H - CORNER_CHEST_HEIGHT;
+		const hitboxX = isRight ? W - CORNER_HITBOX_WIDTH : 0;
+		const hitboxY = isTop ? 0 : H - CORNER_HITBOX_HEIGHT;
 		const tabX = isRight ? W + CORNER_TAB_OUTSET : -CORNER_TAB_WIDTH - CORNER_TAB_OUTSET;
 		const tabY = chestY + (CORNER_CHEST_HEIGHT - CORNER_TAB_HEIGHT) / 2;
 
@@ -349,6 +358,11 @@
 		corner.chest.fill({ color: 0x4b2a12, alpha: 0.9 });
 		corner.chest.rect(chestX + 13, chestY + 1, 6, CORNER_CHEST_HEIGHT - 2);
 		corner.chest.fill({ color: 0xffd06a, alpha: 0.75 });
+
+		corner.hitbox.clear();
+		corner.hitbox.rect(hitboxX, hitboxY, CORNER_HITBOX_WIDTH, CORNER_HITBOX_HEIGHT);
+		corner.hitbox.fill({ color: 0x00ff4a, alpha: 0.08 });
+		corner.hitbox.stroke({ color: 0x00ff4a, width: 2, alpha: 0.95 });
 	};
 
 	const fitSprite = (
@@ -379,6 +393,9 @@
 		ball.fill({ color });
 		return ball;
 	};
+
+	const getCharacterAnimationSpeed = () =>
+		stateBet.isTurbo ? TURBO_CHARACTER_ANIMATION_SPEED : NORMAL_CHARACTER_ANIMATION_SPEED;
 
 	const getRunTextures = (
 		sheet: PIXI.Spritesheet | undefined,
@@ -460,7 +477,7 @@
 			fitSprite(ball, BALL_SIZE, BALL_SIZE);
 		}
 		if (ball instanceof PIXI.AnimatedSprite) {
-			ball.animationSpeed = 0.22;
+			ball.animationSpeed = getCharacterAnimationSpeed();
 			ball.play();
 		}
 		ball.alpha = isClone ? 0.9 : 1;
@@ -722,12 +739,17 @@
 	const tick = (ticker: PIXI.Ticker) => {
 		const baseSpeed = stateBet.isTurbo ? TURBO_SPEED_PER_SECOND : NORMAL_SPEED_PER_SECOND;
 		const speed = baseSpeed * (ticker.deltaMS / 1000);
+		const animationSpeed = getCharacterAnimationSpeed();
 		if (mainBall) {
+			if (mainBall instanceof PIXI.AnimatedSprite) mainBall.animationSpeed = animationSpeed;
 			moveDisplayTowardTargets(mainBall, pathTargets, speed, (dx, dy) => {
 				setLexAnimation(getLexAnimationForDelta(dx, dy));
 			});
 		}
 		for (const [cloneId, clone] of Object.entries(cloneDisplays)) {
+			if (clone.display instanceof PIXI.AnimatedSprite) {
+				clone.display.animationSpeed = animationSpeed;
+			}
 			moveDisplayTowardTargets(clone.display, clone.pathTargets, speed, (dx, dy) => {
 				setCloneAnimation(cloneId, getLexAnimationForDelta(dx, dy));
 			});

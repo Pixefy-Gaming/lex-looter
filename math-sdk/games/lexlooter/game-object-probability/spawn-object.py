@@ -16,6 +16,7 @@ chest = [
 # the current bounce count, then does a weighted draw from that phase.
 # Weight 0 = never spawns.
 # "nothing" = the spawn roll resolves as no object, used to control hit rate/RTP.
+# "chest" remains weighted 0 because chests live only in the four board corners.
 #
 # Modes:
 #   base        — Standard game
@@ -27,7 +28,7 @@ chest = [
 spawn_tables = {
 
     "base": {
-        # Animation-test weights: all objects are available from the start.
+        # Animation-test weights: non-corner objects are available from the start.
         # Restore the balanced weights before final RTP submission.
         "phase_1": {  # bounce 0–9
             "from_bounce": 0,
@@ -38,7 +39,7 @@ spawn_tables = {
             "heart":     120,
             "blue_blob": 120,
             "escape":    120,
-            "chest":     120,
+            "chest":       0,
             "slayer":    120,
         },
         "phase_2": {  # bounce 10–24
@@ -50,7 +51,7 @@ spawn_tables = {
             "heart":     120,
             "blue_blob": 120,
             "escape":    120,
-            "chest":     120,
+            "chest":       0,
             "slayer":    120,
         },
         "phase_3": {  # bounce 25+
@@ -62,7 +63,7 @@ spawn_tables = {
             "heart":     120,
             "blue_blob": 120,
             "escape":    120,
-            "chest":     120,
+            "chest":       0,
             "slayer":    120,
         },
     },
@@ -89,7 +90,7 @@ spawn_tables = {
             "heart":       5,
             "blue_blob": 180,
             "escape":     20,
-            "chest":      23,
+            "chest":       0,
             "slayer":    0,    # disabled for entire mode
         },
         "phase_3": {  # bounce 25+
@@ -101,7 +102,7 @@ spawn_tables = {
             "heart":       4,
             "blue_blob": 200,
             "escape":     16,
-            "chest":      40,
+            "chest":       0,
             "slayer":    0,    # disabled for entire mode
         },
     },
@@ -130,7 +131,7 @@ spawn_tables = {
             "heart":       5,
             "blue_blob": 140,
             "escape":    0,
-            "chest":      10,
+            "chest":       0,
             "slayer":    0,
         },
         "phase_3": {  # bounce 25+
@@ -142,7 +143,7 @@ spawn_tables = {
             "heart":       4,
             "blue_blob": 160,
             "escape":    0,
-            "chest":      18,
+            "chest":       0,
             "slayer":    0,
         },
     },
@@ -150,7 +151,6 @@ spawn_tables = {
     "lucky_lex": {
         # Starts with 1 clone ball + tumble multiplier x5.
         # Slayer disabled. Escape disabled.
-        # Higher chest weight to match the elevated starting value.
         "phase_1": {  # bounce 0–9
             "from_bounce": 0,
             "nothing":   560,
@@ -160,7 +160,7 @@ spawn_tables = {
             "heart":       4,
             "blue_blob": 140,
             "escape":    0,    # disabled in bonus modes
-            "chest":       6,   # chest available earlier due to high tumble start
+            "chest":       0,
             "slayer":    0,
         },
         "phase_2": {  # bounce 10–24
@@ -172,7 +172,7 @@ spawn_tables = {
             "heart":       4,
             "blue_blob": 160,
             "escape":    0,
-            "chest":      10,
+            "chest":       0,
             "slayer":    0,
         },
         "phase_3": {  # bounce 25+
@@ -184,7 +184,7 @@ spawn_tables = {
             "heart":       3,
             "blue_blob": 180,
             "escape":    0,
-            "chest":      15,
+            "chest":       0,
             "slayer":    0,
         },
     },

@@ -181,18 +181,19 @@ class GameCalculations(Executables):
         }
 
     def corner_for_notation(self, notation: str) -> str | None:
-        """Return the corner key when a notation reaches a 3x3 corner zone."""
+        """Return the corner key when notation reaches a 2-column by 1-row corner chest zone."""
         cell = notation_to_cell(notation)
         col = cell["col"]
         row = cell["row"]
-        zone_size = 3
-        if col < zone_size and row >= self.BOARD_ROWS - zone_size:
+        zone_cols = 2
+        zone_rows = 1
+        if col < zone_cols and row >= self.BOARD_ROWS - zone_rows:
             return "tl"
-        if col >= self.BOARD_COLS - zone_size and row >= self.BOARD_ROWS - zone_size:
+        if col >= self.BOARD_COLS - zone_cols and row >= self.BOARD_ROWS - zone_rows:
             return "tr"
-        if col < zone_size and row < zone_size:
+        if col < zone_cols and row < zone_rows:
             return "bl"
-        if col >= self.BOARD_COLS - zone_size and row < zone_size:
+        if col >= self.BOARD_COLS - zone_cols and row < zone_rows:
             return "br"
         return None
 

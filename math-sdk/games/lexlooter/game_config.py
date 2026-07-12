@@ -11,10 +11,10 @@ class GameConfig(Config):
         super().__init__()
         self.game_id = "lexlooter"
         self.provider_number = 0
-        self.provider_name = "stake"
+        self.provider_name = "Pixefy Gaming"
         self.working_name = "lexlooter"
         self.game_name = "Lex Looter"
-        self.wincap = 50000
+        self.wincap = 10000
         self.win_type = "other"
         self.rtp = 0.965
         self.construct_paths()
