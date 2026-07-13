@@ -32,7 +32,13 @@ CORS(app)  # Enable CORS for web-sdk frontend
 sessions = {}
 INITIAL_BALANCE = 1000000000  # $1000 with 6 decimal precision
 API_AMOUNT_MULTIPLIER = 1_000_000
+MIN_BET = 10_000  # $0.01
+MAX_BET = 1_000_000_000  # $1000
+STEP_BET = 10_000  # $0.01
 SUPPORTED_BET_AMOUNTS = [
+    0.01,
+    0.02,
+    0.05,
     0.10,
     0.20,
     0.40,
@@ -53,6 +59,16 @@ SUPPORTED_BET_AMOUNTS = [
 ]
 SUPPORTED_BET_LEVELS = [int(round(amount * API_AMOUNT_MULTIPLIER)) for amount in SUPPORTED_BET_AMOUNTS]
 
+INVALID_REQUEST_RESPONSE = {
+    "error": "ERR_VAL",
+    "message": "Invalid request.",
+}
+
+INVALID_SESSION_RESPONSE = {
+    "error": "ERR_IS",
+    "message": "Invalid session. Call /wallet/authenticate before wallet requests.",
+}
+
 MODE_ALIAS_OVERRIDES = {
     "default": "base",
     "no slayer": "no_slayer",
@@ -70,6 +86,32 @@ MODE_ALIAS_OVERRIDES = {
 def normalize_mode_key(value):
     """Convert user-facing mode labels into a stable internal lookup key."""
     return re.sub(r"[^a-z0-9]+", "_", str(value or "").strip().lower()).strip("_")
+
+
+def get_authenticated_session(session_id):
+    """Return an authenticated session or the Stake Engine invalid-session error."""
+    if not session_id or session_id not in sessions:
+        return None, (jsonify(INVALID_SESSION_RESPONSE), 400)
+    return sessions[session_id], None
+
+
+def invalid_request(message):
+    return jsonify({**INVALID_REQUEST_RESPONSE, "message": message}), 400
+
+
+def parse_bet_amount(raw_amount):
+    try:
+        amount = int(raw_amount)
+    except (TypeError, ValueError):
+        return None, "Bet amount must be an integer with six decimal places of precision."
+
+    if amount < MIN_BET or amount > MAX_BET:
+        return None, f"Bet amount must be between {MIN_BET} and {MAX_BET}."
+
+    if amount % STEP_BET != 0:
+        return None, f"Bet amount must be divisible by stepBet {STEP_BET}."
+
+    return amount, None
 
 
 class Session:
@@ -246,9 +288,9 @@ def authenticate():
         },
         "config": {
             "gameID": GAME_ID,
-            "minBet": SUPPORTED_BET_LEVELS[0],
-            "maxBet": SUPPORTED_BET_LEVELS[-1],
-            "stepBet": SUPPORTED_BET_LEVELS[0],
+            "minBet": MIN_BET,
+            "maxBet": MAX_BET,
+            "stepBet": STEP_BET,
             "defaultBetLevel": SUPPORTED_BET_LEVELS[0],
             "betLevels": SUPPORTED_BET_LEVELS,
             "betModes": session.get_rgs_bet_modes_config(),
@@ -292,25 +334,19 @@ def play():
     """Place a bet and start a round - uses real math-sdk game engine."""
     data = request.json
     session_id = data.get('sessionID')
-    amount = int(data.get('amount', SUPPORTED_BET_LEVELS[0]))
+    amount, amount_error = parse_bet_amount(data.get('amount', SUPPORTED_BET_LEVELS[0]))
+    if amount_error:
+        return invalid_request(amount_error)
+
     mode = data.get('mode', 'BASE')
 
-    if session_id not in sessions:
-        return jsonify({"error": "Invalid session"}), 400
-
-    session = sessions[session_id]
+    session, invalid_session = get_authenticated_session(session_id)
+    if invalid_session:
+        return invalid_session
 
     resolved_mode = session.resolve_mode_name(mode)
     if resolved_mode is None:
-        return jsonify({"error": "Game engine error", "message": "No betmodes available"}), 500
-
-    if amount not in SUPPORTED_BET_LEVELS:
-        return jsonify(
-            {
-                "error": "UNSUPPORTED_BET",
-                "message": "Mock RGS supports Lex Looter base bets from $0.10 to $1000.00.",
-            }
-        ), 400
+        return invalid_request(f"Unsupported bet mode: {mode}")
 
     cost_multiplier = session.get_mode_cost_multiplier(resolved_mode)
     total_debit = int(round(amount * cost_multiplier, 0))
@@ -334,7 +370,7 @@ def play():
     if not book:
         # Restore balance if game failed
         session.balance += total_debit
-        return jsonify({"error": "Game engine error"}), 500
+        return jsonify({"error": "ERR_GEN", "message": "Game engine error"}), 500
     
     # Keep events as-is (web-sdk expects 'events' not 'state')
     session.current_book = book
@@ -388,13 +424,12 @@ def end_round():
     data = request.json
     session_id = data.get('sessionID')
     
-    if session_id not in sessions:
-        return jsonify({"error": "Invalid session"}), 400
-    
-    session = sessions[session_id]
+    session, invalid_session = get_authenticated_session(session_id)
+    if invalid_session:
+        return invalid_session
     
     if not session.round_active:
-        return jsonify({"error": "No active round"}), 400
+        return invalid_request("No active round.")
     
     # Add win amount to balance (calculated from actual game)
     session.balance += session.win_amount
@@ -423,10 +458,9 @@ def balance():
     data = request.json
     session_id = data.get('sessionID')
     
-    if session_id not in sessions:
-        return jsonify({"error": "Invalid session"}), 400
-    
-    session = sessions[session_id]
+    session, invalid_session = get_authenticated_session(session_id)
+    if invalid_session:
+        return invalid_session
     
     response = {
         "balance": {
@@ -445,14 +479,13 @@ def bet_event():
     session_id = data.get('sessionID')
     event_index = int(data.get('event', 0))
     
-    if session_id not in sessions:
-        return jsonify({"error": "Invalid session"}), 400
-    
-    session = sessions[session_id]
+    session, invalid_session = get_authenticated_session(session_id)
+    if invalid_session:
+        return invalid_session
     session.current_event_index = event_index + 1
     
     if not session.current_book:
-        return jsonify({"error": "No active book"}), 400
+        return invalid_request("No active book.")
     
     # Get events array from book
     all_events = session.current_book.get('events', [])
@@ -470,7 +503,7 @@ def bet_event():
             print(f"🔍 winInfo detail: {json.dumps(event, indent=2)}")
         return jsonify(response)
     
-    return jsonify({"error": "Invalid event index"}), 400
+    return invalid_request("Invalid event index.")
 
 
 @app.route('/api/teams/pixefy-gaming/approvals/<game_slug>', methods=['GET'])

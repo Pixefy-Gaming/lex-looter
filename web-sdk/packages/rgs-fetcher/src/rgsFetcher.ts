@@ -2,12 +2,17 @@ import type { paths } from './schema';
 import { fetcher } from 'utils-fetcher';
 
 function resolveRgsUrl(rgsUrl: string, path: string): string {
+	const normalizedRgsUrl = rgsUrl.trim().replace(/\/+$/, '');
+	if (normalizedRgsUrl.startsWith('http://') || normalizedRgsUrl.startsWith('https://')) {
+		return `${normalizedRgsUrl}${path}`;
+	}
+
 	const isLocal =
-		rgsUrl.startsWith('localhost') ||
-		rgsUrl.startsWith('127.0.0.1') ||
-		rgsUrl.startsWith('0.0.0.0');
+		normalizedRgsUrl.startsWith('localhost') ||
+		normalizedRgsUrl.startsWith('127.0.0.1') ||
+		normalizedRgsUrl.startsWith('0.0.0.0');
 	const protocol = isLocal ? 'http' : 'https';
-	return `${protocol}://${rgsUrl}${path}`;
+	return `${protocol}://${normalizedRgsUrl}${path}`;
 }
 
 export const rgsFetcher = {
