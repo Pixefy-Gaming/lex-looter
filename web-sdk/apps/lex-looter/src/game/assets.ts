@@ -1,153 +1,155 @@
+import { assetUrl as publicAssetUrl } from '../lib/assetUrl';
+
+const assetUrl = (path: string) => publicAssetUrl(`assets/${path}`);
+
 export default {
 	lexMain: {
 		type: 'sprites',
-		src: new URL('../../static/assets/lex/character/lexMain.json', import.meta.url).href,
+		src: assetUrl('lex/character/lexMain.json'),
 	},
 	lexClone: {
 		type: 'sprites',
-		src: new URL('../../static/assets/lex/character/lexClone.json', import.meta.url).href,
+		src: assetUrl('lex/character/lexClone.json'),
 	},
 	lexSlayer: {
 		type: 'sprites',
-		src: new URL('../../static/assets/lex/character/lexSlayer.json', import.meta.url).href,
+		src: assetUrl('lex/character/lexSlayer.json'),
 	},
 	lexBlueBlob: {
 		type: 'sprites',
-		src: new URL('../../static/assets/lex/character/lexBlueBlob.json', import.meta.url).href,
+		src: assetUrl('lex/character/lexBlueBlob.json'),
 	},
 	lexEscape: {
 		type: 'sprite',
-		src: '/assets/lex/runtime/escape.png',
+		src: assetUrl('lex/runtime/escape.png'),
 	},
 	lexCloneOrb: {
 		type: 'sprite',
-		src: '/assets/lex/runtime/clone-orb.png',
+		src: assetUrl('lex/runtime/clone-orb.png'),
 	},
 	lexCoin: {
 		type: 'sprite',
-		src: '/assets/lex/runtime/coin.png',
+		src: assetUrl('lex/runtime/coin.png'),
 	},
 	lexDiamond: {
 		type: 'sprite',
-		src: '/assets/lex/runtime/diamond.png',
+		src: assetUrl('lex/runtime/diamond.png'),
 	},
 	lexChest: {
 		type: 'sprite',
-		src: '/assets/lex/runtime/chest.png',
+		src: assetUrl('lex/runtime/chest.png'),
 	},
 	lexHeart: {
 		type: 'sprite',
-		src: '/assets/lex/runtime/heart.png',
+		src: assetUrl('lex/runtime/heart.png'),
 	},
 	lexBoard: {
 		type: 'sprite',
-		src: new URL('../../static/assets/lex/board.jpg', import.meta.url).href,
+		src: assetUrl('lex/board.jpg'),
 	},
 	lexGameAsset: {
 		type: 'sprites',
-		src: new URL('../../static/assets/lex/game-asset.json', import.meta.url).href,
+		src: assetUrl('lex/game-asset.json'),
 	},
 	loader: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/loader/loader.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/loader/loader.json', import.meta.url).href,
+			atlas: assetUrl('spines/loader/loader.atlas'),
+			skeleton: assetUrl('spines/loader/loader.json'),
 			scale: 2,
 		},
 		preload: true,
 	},
 	pressToContinueText: {
 		type: 'sprites',
-		src: new URL('../../assets/sprites/pressToContinueText/MM_pressanywhere.json', import.meta.url)
-			.href,
+		src: assetUrl('sprites/pressToContinueText/MM_pressanywhere.json'),
 		preload: true,
 	},
 	explosion: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/symbols3/symbols3.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbols3/explosion.json', import.meta.url).href,
+			atlas: assetUrl('spines/symbols3/symbols3.atlas'),
+			skeleton: assetUrl('spines/symbols3/explosion.json'),
 			scale: 2,
 		},
 	},
 	reelsFrame: {
 		type: 'sprites',
-		src: new URL('../../assets/sprites/reelsFrame/reels_frame.json', import.meta.url).href,
+		src: assetUrl('sprites/reelsFrame/reels_frame.json'),
 	},
 	payFrame: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/payFrame/payFrame.png', import.meta.url).href,
+		src: assetUrl('sprites/payFrame/payFrame.png'),
 	},
 	anticipation: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/anticipation/anticipation.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/anticipation/anticipation.json', import.meta.url).href,
+			atlas: assetUrl('spines/anticipation/anticipation.atlas'),
+			skeleton: assetUrl('spines/anticipation/anticipation.json'),
 			scale: 2,
 		},
 	},
 	goldFont: {
 		type: 'font',
-		src: new URL('../../assets/fonts/goldFont/mm_gold.xml', import.meta.url).href,
+		src: assetUrl('fonts/goldFont/mm_gold.xml'),
 	},
 	goldBlur: {
 		type: 'font',
-		src: new URL('../../assets/fonts/goldBlur/miningfont_gold_blur.xml', import.meta.url).href,
+		src: assetUrl('fonts/goldBlur/miningfont_gold_blur.xml'),
 	},
 	silverFont: {
 		type: 'font',
-		src: new URL('../../assets/fonts/silverFont/mm_silver.xml', import.meta.url).href,
+		src: assetUrl('fonts/silverFont/mm_silver.xml'),
 	},
 	purpleFont: {
 		type: 'font',
-		src: new URL('../../assets/fonts/purpleFont/mm_purple.xml', import.meta.url).href,
+		src: assetUrl('fonts/purpleFont/mm_purple.xml'),
 	},
 	bigwin: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/bigwin/big_wins.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/bigwin/mm_bigwin.json', import.meta.url).href,
+			atlas: assetUrl('spines/bigwin/big_wins.atlas'),
+			skeleton: assetUrl('spines/bigwin/mm_bigwin.json'),
 			scale: 2,
 		},
 	},
 	globalMultiplier: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/globalMultiplier/multiframe.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/globalMultiplier/multiframe.json', import.meta.url)
-				.href,
+			atlas: assetUrl('spines/globalMultiplier/multiframe.atlas'),
+			skeleton: assetUrl('spines/globalMultiplier/multiframe.json'),
 			scale: 2,
 		},
 	},
 	fsIntro: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/fsIntro/fs_screen.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/fsIntro/fs_screen.json', import.meta.url).href,
+			atlas: assetUrl('spines/fsIntro/fs_screen.atlas'),
+			skeleton: assetUrl('spines/fsIntro/fs_screen.json'),
 			scale: 2,
 		},
 	},
 	fsIntroNumber: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/fsIntro/fs_screen.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/fsIntro/fs_screen_number.json', import.meta.url).href,
+			atlas: assetUrl('spines/fsIntro/fs_screen.atlas'),
+			skeleton: assetUrl('spines/fsIntro/fs_screen_number.json'),
 			scale: 2,
 		},
 	},
 	fsOutroNumber: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/fsIntro/fs_screen.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/fsIntro/fs_total_number.json', import.meta.url).href,
+			atlas: assetUrl('spines/fsIntro/fs_screen.atlas'),
+			skeleton: assetUrl('spines/fsIntro/fs_total_number.json'),
 			scale: 2,
 		},
 	},
 	foregroundAnimation: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/foregroundAnimation/mm_bg.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/foregroundAnimation/mm_bg.json', import.meta.url).href,
+			atlas: assetUrl('spines/foregroundAnimation/mm_bg.atlas'),
+			skeleton: assetUrl('spines/foregroundAnimation/mm_bg.json'),
 			scale: 2,
 		},
 		preload: true,
@@ -155,14 +157,8 @@ export default {
 	foregroundFeatureAnimation: {
 		type: 'spine',
 		src: {
-			atlas: new URL(
-				'../../assets/spines/foregroundFeatureAnimation/mm_bg_feature.atlas',
-				import.meta.url,
-			).href,
-			skeleton: new URL(
-				'../../assets/spines/foregroundFeatureAnimation/mm_bg_feature.json',
-				import.meta.url,
-			).href,
+			atlas: assetUrl('spines/foregroundFeatureAnimation/mm_bg_feature.atlas'),
+			skeleton: assetUrl('spines/foregroundFeatureAnimation/mm_bg_feature.json'),
 			scale: 2,
 		},
 		preload: true,
@@ -170,69 +166,67 @@ export default {
 	tumble_multiplier: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/tumbleWin/tumble_win.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/tumbleWin/tumble_multiplier.json', import.meta.url)
-				.href,
+			atlas: assetUrl('spines/tumbleWin/tumble_win.atlas'),
+			skeleton: assetUrl('spines/tumbleWin/tumble_multiplier.json'),
 			scale: 2,
 		},
 	},
 	tumble_win: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/tumbleWin/tumble_win.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/tumbleWin/tumble_win.json', import.meta.url).href,
+			atlas: assetUrl('spines/tumbleWin/tumble_win.atlas'),
+			skeleton: assetUrl('spines/tumbleWin/tumble_win.json'),
 			scale: 2,
 		},
 	},
 	reelhouse: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/reelhouse/reelhouse_glow.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/reelhouse/reelhouse_glow.json', import.meta.url).href,
+			atlas: assetUrl('spines/reelhouse/reelhouse_glow.atlas'),
+			skeleton: assetUrl('spines/reelhouse/reelhouse_glow.json'),
 			scale: 2,
 		},
 	},
 	progressBar: {
 		type: 'sprites',
-		src: new URL('../../assets/sprites/progressBar/progressBar.json', import.meta.url).href,
+		src: assetUrl('sprites/progressBar/progressBar.json'),
 		preload: true,
 	},
 	freeSpins: {
 		type: 'sprites',
-		src: new URL('../../assets/sprites/freeSpins/freeSpins.json', import.meta.url).href,
+		src: assetUrl('sprites/freeSpins/freeSpins.json'),
 	},
 	winSmall: {
 		type: 'sprites',
-		src: new URL('../../assets/sprites/winSmall/MM_Localisation_winsmall.json', import.meta.url)
-			.href,
+		src: assetUrl('sprites/winSmall/MM_Localisation_winsmall.json'),
 	},
 	clusterWin: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/clusterWin/clusterpay.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/clusterWin/clusterpay.json', import.meta.url).href,
+			atlas: assetUrl('spines/clusterWin/clusterpay.atlas'),
+			skeleton: assetUrl('spines/clusterWin/clusterpay.json'),
 			scale: 2,
 		},
 	},
 	transition: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/transition/transition.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/transition/transition.json', import.meta.url).href,
+			atlas: assetUrl('spines/transition/transition.atlas'),
+			skeleton: assetUrl('spines/transition/transition.json'),
 			scale: 2,
 		},
 	},
 	symbolsStatic: {
 		type: 'sprites',
-		src: new URL('../../assets/sprites/symbolsStatic/symbolsStatic.json', import.meta.url).href,
+		src: assetUrl('sprites/symbolsStatic/symbolsStatic.json'),
 	},
 	coins: {
 		type: 'spriteSheet',
-		src: new URL('../../assets/sprites/coin/SD2_Coin.json', import.meta.url).href,
+		src: assetUrl('sprites/coin/SD2_Coin.json'),
 	},
 	sound: {
 		type: 'audio',
-		src: new URL('../../assets/audio/sounds.json', import.meta.url).href,
+		src: assetUrl('audio/sounds.json'),
 		preload: true,
 	},
 } as const;

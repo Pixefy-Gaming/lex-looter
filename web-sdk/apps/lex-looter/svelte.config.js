@@ -1,4 +1,7 @@
 // @ts-ignore
 import config from 'config-svelte';
 
-export default config();
+export default config({
+	pages: 'dist',
+	assets: 'dist',
+});

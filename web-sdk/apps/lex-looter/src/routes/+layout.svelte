@@ -4,6 +4,7 @@
 	import { Authenticate, LoaderStakeEngine, LoaderExample, LoadI18n } from 'components-shared';
 	import Game from '../components/Game.svelte';
 	import { setContext } from '../game/context';
+	import { assetUrl } from '../lib/assetUrl';
 
 	import messagesMap from '../i18n/messagesMap';
 
@@ -13,8 +14,8 @@
 
 	let showYourLoader = $state(false);
 
-	const loaderUrlStakeEngine = new URL('../../stake-engine-loader.gif', import.meta.url).href;
-	const loaderUrl = new URL('../../loader.gif', import.meta.url).href;
+	const loaderUrlStakeEngine = assetUrl('stake-engine-loader.gif');
+	const loaderUrl = assetUrl('loader.gif');
 
 	setContext();
 </script>

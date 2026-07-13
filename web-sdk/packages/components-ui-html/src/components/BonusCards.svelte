@@ -17,7 +17,7 @@
 	const props: Props = $props();
 	const { eventEmitter } = getContextEventEmitter<EmitterEventModal>();
 
-	const GAME_ASSET_URL = '/assets/lex/game-asset.png';
+	const GAME_ASSET_URL = './assets/lex/game-asset.png';
 	const GAME_ASSET_SIZE = { width: 1885, height: 1354 };
 	const BONUS_ICON_FRAMES: Record<string, { x: number; y: number; width: number; height: number }> =
 		{
