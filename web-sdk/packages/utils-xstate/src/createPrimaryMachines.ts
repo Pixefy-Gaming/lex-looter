@@ -11,7 +11,6 @@ const handleRequestBet = async ({ onError }: { onError: () => void }) => {
 		const data = await requestBet({
 			rgsUrl: stateUrlDerived.rgsUrl(),
 			sessionID: stateUrlDerived.sessionID(),
-			currency: stateBet.currency,
 			mode: stateBet.activeBetModeKey,
 			amount: stateBet.betAmount,
 		});
@@ -40,7 +39,7 @@ const handleRequestBet = async ({ onError }: { onError: () => void }) => {
 };
 
 const handleRequestEndRound = async () => {
-	if(stateUrlDerived.replay()) return;
+	if (stateUrlDerived.replay()) return;
 
 	try {
 		const data = await requestEndRound({

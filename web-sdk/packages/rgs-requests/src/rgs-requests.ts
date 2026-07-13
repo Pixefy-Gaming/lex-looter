@@ -32,6 +32,18 @@ export const requestEndRound = async (options: { sessionID: string; rgsUrl: stri
 	return data;
 };
 
+export const requestBalance = async (options: { sessionID: string; rgsUrl: string }) => {
+	const data = await rgsFetcher.post({
+		rgsUrl: options.rgsUrl,
+		url: '/wallet/balance',
+		variables: {
+			sessionID: options.sessionID,
+		},
+	});
+
+	return data;
+};
+
 export const requestEndEvent = async (options: {
 	sessionID: string;
 	eventIndex: number;
@@ -51,7 +63,6 @@ export const requestEndEvent = async (options: {
 
 export const requestBet = async (options: {
 	sessionID: string;
-	currency: string;
 	amount: number;
 	mode: string;
 	rgsUrl: string;
@@ -61,7 +72,6 @@ export const requestBet = async (options: {
 		url: '/wallet/play',
 		variables: {
 			mode: options.mode,
-			currency: options.currency,
 			sessionID: options.sessionID,
 			amount: Math.round(options.amount * API_AMOUNT_MULTIPLIER),
 		},

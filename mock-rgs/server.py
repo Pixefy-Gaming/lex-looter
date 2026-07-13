@@ -114,6 +114,13 @@ def parse_bet_amount(raw_amount):
     return amount, None
 
 
+def parse_event_index(raw_event):
+    try:
+        return int(raw_event), None
+    except (TypeError, ValueError):
+        return None, "Event must be an integer-compatible string."
+
+
 class Session:
     """Game session with real math-sdk integration."""
     
@@ -126,6 +133,7 @@ class Session:
         self.current_bet_amount = None
         self.current_book = None
         self.current_book_raw = None
+        self.last_completed_round = None
         self.round_active = False
         self.round_id = None
         self.win_amount = 0
@@ -260,6 +268,23 @@ class Session:
             traceback.print_exc()
             return None
 
+    def build_round_response(self, active):
+        """Build the round object returned by wallet endpoints."""
+        if not self.current_book:
+            return None
+
+        return {
+            "roundID": self.round_id,
+            "amount": self.current_base_bet_amount,
+            "debitAmount": self.current_bet_amount,
+            "payout": self.win_amount,
+            "payoutMultiplier": self.current_book.get('payoutMultiplier', 0),
+            "active": active,
+            "mode": self.current_mode or "BASE",
+            "event": str(self.current_event_index or 0),
+            "state": self.current_book.get('events', []),  # web-sdk expects 'state'
+        }
+
 
 @app.route('/wallet/authenticate', methods=['POST'])
 def authenticate():
@@ -311,19 +336,11 @@ def authenticate():
         }
     }
     
-    # Resume active round if exists
+    # Return an active round for resume, or the last completed round if one exists.
     if session.round_active and session.current_book:
-        response["round"] = {
-            "roundID": session.round_id,
-            "amount": session.current_base_bet_amount,
-            "debitAmount": session.current_bet_amount,
-            "payout": session.win_amount,
-            "payoutMultiplier": session.current_book.get('payoutMultiplier', 0),
-            "active": True,
-            "mode": session.current_mode or "BASE",
-            "event": str(session.current_event_index or 0),
-            "state": session.current_book.get('events', []),  # web-sdk expects 'state'
-        }
+        response["round"] = session.build_round_response(active=True)
+    elif session.last_completed_round:
+        response["round"] = session.last_completed_round
     
     print(f"✅ Authenticated: {session_id}, Balance: ${session.balance/1000000}")
     return jsonify(response)
@@ -433,6 +450,7 @@ def end_round():
     
     # Add win amount to balance (calculated from actual game)
     session.balance += session.win_amount
+    session.last_completed_round = session.build_round_response(active=False)
     
     session.round_active = False
     session.current_base_bet_amount = None
@@ -477,7 +495,9 @@ def bet_event():
     """Trigger a book event (for features/bonuses) - returns real event from game."""
     data = request.json
     session_id = data.get('sessionID')
-    event_index = int(data.get('event', 0))
+    event_index, event_error = parse_event_index(data.get('event', 0))
+    if event_error:
+        return invalid_request(event_error)
     
     session, invalid_session = get_authenticated_session(session_id)
     if invalid_session:
@@ -492,10 +512,7 @@ def bet_event():
     
     if event_index < len(all_events):
         event = all_events[event_index]
-        response = {
-            "event": event,
-            "eventIndex": event_index
-        }
+        response = {"event": str(session.current_event_index)}
         event_type = event.get('type')
         print(f"📋 Event {event_index}: {event_type}")
         if event_type == 'winInfo':
