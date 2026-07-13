@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 
 	import { EnablePixiExtension } from 'components-pixi';
 	import { EnableHotkey } from 'components-shared';
@@ -8,6 +8,7 @@
 
 	import { UI, UiGameName } from 'components-ui-pixi';
 	import { GameVersion, Modals } from 'components-ui-html';
+	import { stateBet, stateUrlDerived } from 'state-shared';
 
 	import { getContext } from '../game/context';
 	import EnableSound from './EnableSound.svelte';
@@ -29,11 +30,72 @@
 	import BouncingLex from './BouncingLex.svelte';
 	import BoardContainer from './BoardContainer.svelte';
 	import BonusModal from './BonusModal.svelte';
+	import ReplayIntro from './ReplayIntro.svelte';
+	import { stateXstateDerived } from '../game/stateXstate';
 
 	const context = getContext();
+	let showReplayIntro = $state(stateUrlDerived.replay());
+	let replayStarting = $state(false);
+	let replayStarted = $state(false);
+	let replayPlaybackSeen = $state(false);
+	let replayRoundSnapshot = $state(stateBet.betToResume);
+
+	const waitForReplayRound = async () => {
+		for (let attempt = 0; attempt < 40; attempt += 1) {
+			const replayRound = stateBet.betToResume ?? replayRoundSnapshot;
+			if (replayRound) return replayRound;
+			await new Promise((resolve) => setTimeout(resolve, 50));
+		}
+
+		return stateBet.betToResume ?? replayRoundSnapshot;
+	};
+
+	const startReplay = async () => {
+		if (replayStarting) return;
+
+		replayStarting = true;
+		const replayRound = await waitForReplayRound();
+
+		if (!replayRound) {
+			replayStarting = false;
+			return;
+		}
+
+		replayRoundSnapshot = replayRound;
+		stateBet.betToResume = {
+			...replayRound,
+			event: '0',
+			active: true,
+		};
+
+		if (replayRound.mode) {
+			stateBet.activeBetModeKey = replayRound.mode;
+		}
+
+		showReplayIntro = false;
+		replayPlaybackSeen = false;
+		replayStarted = true;
+		await tick();
+		context.eventEmitter.broadcast({ type: 'resumeBet' });
+		replayStarting = false;
+	};
 
 	onMount(() => {
 		context.stateLayout.showLoadingScreen = true;
+	});
+
+	$effect(() => {
+		if (!stateUrlDerived.replay() || !replayStarted) return;
+
+		if (stateXstateDerived.isResumingBet()) {
+			replayPlaybackSeen = true;
+			return;
+		}
+
+		if (replayPlaybackSeen && stateXstateDerived.isIdle()) {
+			showReplayIntro = true;
+			replayStarted = false;
+		}
 	});
 </script>
 
@@ -49,7 +111,9 @@
 	{#if context.stateLayout.showLoadingScreen}
 		<LoadingScreen onloaded={() => (context.stateLayout.showLoadingScreen = false)} />
 	{:else}
-		<ResumeBet />
+		{#if !stateUrlDerived.replay()}
+			<ResumeBet />
+		{/if}
 		<!--
 			The reason why <Sound /> is rendered after clicking the loading screen:
 			"Autoplay with sound is allowed if: The user has interacted with the domain (click, tap, etc.)."
@@ -97,6 +161,10 @@
 		<Transition />
 
 		<I18nTest />
+
+		{#if showReplayIntro}
+			<ReplayIntro onstart={startReplay} starting={replayStarting} again={replayPlaybackSeen} />
+		{/if}
 	{/if}
 </App>
 

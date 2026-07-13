@@ -19,6 +19,14 @@
 
 	let authenticated = $state(false);
 
+	const normalizeReplayAmount = (amount: number) => {
+		if (amount <= 0) return 0;
+		return amount > 1000 ? amount / API_AMOUNT_MULTIPLIER : amount;
+	};
+
+	const normalizeApiAmount = (amount: number | undefined) =>
+		typeof amount === 'number' && amount > 0 ? amount / API_AMOUNT_MULTIPLIER : 0;
+
 	const authenticate = async () => {
 		try {
 			const authenticateData = await requestAuthenticate({
@@ -124,26 +132,41 @@
 	};
 
 	const handleReplay = async () => {
-		stateBet.betAmount = (stateUrlDerived.amount() / API_AMOUNT_MULTIPLIER) || 0;
-		stateBet.wageredBetAmount = (stateUrlDerived.amount() / API_AMOUNT_MULTIPLIER) || 0;
-		stateBet.activeBetModeKey = stateUrlDerived.mode();
+		try {
+			const replayAmountFromUrl = normalizeReplayAmount(stateUrlDerived.amount());
+			stateBet.currency = stateUrlDerived.currency();
+			stateBet.activeBetModeKey = stateUrlDerived.mode();
 
-		const data = await requestReplay({
-			rgsUrl: stateUrlDerived.rgsUrl(),
-			game: stateUrlDerived.game(),
-			mode: stateUrlDerived.mode(),
-			version: stateUrlDerived.version(),
-			event: stateUrlDerived.event(),
-		});
-
-		if(data) {
-			// @ts-ignore
-			stateBet.betToResume = {
-				...data,
-				event: '0',
-				active: true,
+			const data = await requestReplay({
+				rgsUrl: stateUrlDerived.rgsUrl(),
+				game: stateUrlDerived.game(),
 				mode: stateUrlDerived.mode(),
-			};
+				version: stateUrlDerived.version(),
+				event: stateUrlDerived.event(),
+			});
+
+			if (data?.error) throw data;
+
+			if(data) {
+				const replayAmountFromData = normalizeApiAmount(data.amount);
+				const replayAmount = replayAmountFromUrl || replayAmountFromData || stateBet.betAmount;
+				const replayMode = stateUrlDerived.mode() || data.mode;
+
+				stateBet.betAmount = replayAmount;
+				stateBet.wageredBetAmount = replayAmount;
+				stateBet.activeBetModeKey = replayMode;
+
+				// @ts-ignore
+				stateBet.betToResume = {
+					...data,
+					event: '0',
+					active: true,
+					mode: replayMode,
+				};
+			}
+		} catch (error) {
+			console.error(error);
+			stateModal.modal = { name: 'error', error };
 		}
 	};
 
