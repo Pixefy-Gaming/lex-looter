@@ -26,7 +26,6 @@ class GameCalculations(Executables):
     MAX_ACTIVE_OBJECTS = 3
     OBJECT_HIT_RADIUS_CELLS = 1
 
-    MAIN_BOUNCE_INCREMENT = 0.12
     CLONE_BOUNCE_INCREMENT = 0.08
     CLONE_EXPIRY_BONUS = 0.50
     COIN_BONUS = 0.50
@@ -207,29 +206,29 @@ class GameCalculations(Executables):
         """Delay object resolution to keep spawn and collect events visually separate."""
         return random.randint(min_turns, max_turns)
 
-    def draw_corner_multiplier(self, high_mult_corners: bool) -> float | None:
+    def draw_corner_multiplier(self, corner_profile: list[dict]) -> float | None:
         """Return a weighted corner multiplier or None for an empty corner."""
         roll = random.random()
-        if high_mult_corners:
-            if roll < 0.70:
+        cumulative_weight = 0.0
+        for option in corner_profile:
+            cumulative_weight += float(option["weight"])
+            if roll > cumulative_weight:
+                continue
+
+            multiplier_range = option["range"]
+            if multiplier_range is None:
                 return None
-            if roll < 0.90:
-                return round(random.uniform(2.0, 4.0), 1)
-            return round(random.uniform(5.0, 20.0), 1)
+            return round(random.uniform(*multiplier_range), 1)
 
-        if roll < 0.75:
-            return None
-        if roll < 0.92:
-            return round(random.uniform(0.1, 1.0), 1)
-        return round(random.uniform(2.0, 12.0), 1)
+        return None
 
-    def roll_corners(self, main_bounces: int, high_mult_corners: bool) -> dict:
+    def roll_corners(self, main_bounces: int, corner_profile: list[dict]) -> dict:
         """Roll the full corner set, keeping the warm-up period empty."""
         if main_bounces < 5:
             return {corner: None for corner in self.CORNER_KEYS}
 
         return {
-            corner: self.draw_corner_multiplier(high_mult_corners)
+            corner: self.draw_corner_multiplier(corner_profile)
             for corner in self.CORNER_KEYS
         }
 

@@ -97,7 +97,8 @@ class GameState(GameStateOverride):
             "turn": 0,
             "bet_cost": self.get_bet_cost(),
             "mode_multiplier": float(conditions["start_multiplier"]),
-            "high_mult_corners": bool(conditions["high_mult_corners"]),
+            "main_bounce_increment": float(conditions["main_bounce_increment"]),
+            "corner_profile": conditions["corner_profile"],
             "spawn_chance_per_turn": float(conditions["spawn_chance_per_turn"]),
             "start_with_slayer": bool(conditions["start_with_slayer"]),
             "start_slayer_delay_min": int(conditions["start_slayer_delay_min"]),
@@ -108,7 +109,7 @@ class GameState(GameStateOverride):
             "shield_count": 0,
             "next_clone_id": len(clones) + 1,
             "tumble_value": 0.0,
-            "corners": self.roll_corners(0, bool(conditions["high_mult_corners"])),
+            "corners": self.roll_corners(0, conditions["corner_profile"]),
             "lex": lex,
             "last_step": None,
             "last_clone_steps": [],
@@ -191,9 +192,9 @@ class GameState(GameStateOverride):
 
         state["main_bounces"] += 1
         state["tumble_value"] = self.round_amount(
-            state["tumble_value"] + self.MAIN_BOUNCE_INCREMENT * state["bet_cost"]
+            state["tumble_value"] + state["main_bounce_increment"] * state["bet_cost"]
         )
-        state["corners"] = self.roll_corners(state["main_bounces"], state["high_mult_corners"])
+        state["corners"] = self.roll_corners(state["main_bounces"], state["corner_profile"])
         corner_update_event(
             self,
             main_bounces=state["main_bounces"],

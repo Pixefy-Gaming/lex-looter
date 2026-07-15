@@ -14,7 +14,7 @@ class GameConfig(Config):
         self.provider_name = "Pixefy Gaming"
         self.working_name = "lexlooter"
         self.game_name = "Lex Looter"
-        self.wincap = 10000
+        self.wincap = 8888
         self.win_type = "other"
         self.rtp = 0.965
         self.construct_paths()
@@ -34,7 +34,12 @@ class GameConfig(Config):
                 cost=1.0,
                 is_buybonus=False,
                 spawn_mode="base",
-                high_mult_corners=False,
+                main_bounce_increment=0.12,
+                corner_profile=[
+                    {"weight": 0.75, "range": None},
+                    {"weight": 0.17, "range": (0.1, 1.0)},
+                    {"weight": 0.08, "range": (2.0, 8.0)},
+                ],
                 start_with_slayer=False,
                 start_clone_count=0,
                 start_multiplier=1.0,
@@ -47,7 +52,12 @@ class GameConfig(Config):
                 cost=3.0,
                 is_buybonus=True,
                 spawn_mode="no_slayer",
-                high_mult_corners=True,
+                main_bounce_increment=0.10,
+                corner_profile=[
+                    {"weight": 0.70, "range": None},
+                    {"weight": 0.20, "range": (1.0, 3.0)},
+                    {"weight": 0.10, "range": (4.0, 10.0)},
+                ],
                 start_with_slayer=False,
                 start_clone_count=0,
                 start_multiplier=1.0,
@@ -60,7 +70,12 @@ class GameConfig(Config):
                 cost=50.0,
                 is_buybonus=True,
                 spawn_mode="start_clone",
-                high_mult_corners=True,
+                main_bounce_increment=0.08,
+                corner_profile=[
+                    {"weight": 0.70, "range": None},
+                    {"weight": 0.20, "range": (1.5, 3.5)},
+                    {"weight": 0.10, "range": (4.0, 12.0)},
+                ],
                 start_with_slayer=False,
                 start_clone_count=1,
                 start_multiplier=1.0,
@@ -73,7 +88,12 @@ class GameConfig(Config):
                 cost=100.0,
                 is_buybonus=True,
                 spawn_mode="lucky_lex",
-                high_mult_corners=True,
+                main_bounce_increment=0.06,
+                corner_profile=[
+                    {"weight": 0.75, "range": None},
+                    {"weight": 0.20, "range": (1.5, 2.5)},
+                    {"weight": 0.05, "range": (3.0, 6.0)},
+                ],
                 start_with_slayer=False,
                 start_clone_count=1,
                 start_multiplier=5.0,
@@ -89,7 +109,8 @@ class GameConfig(Config):
         cost: float,
         is_buybonus: bool,
         spawn_mode: str,
-        high_mult_corners: bool,
+        main_bounce_increment: float,
+        corner_profile: list[dict],
         start_with_slayer: bool,
         start_clone_count: int,
         start_multiplier: float,
@@ -114,7 +135,8 @@ class GameConfig(Config):
                         "force_wincap": False,
                         "force_freegame": False,
                         "spawn_mode": spawn_mode,
-                        "high_mult_corners": high_mult_corners,
+                        "main_bounce_increment": main_bounce_increment,
+                        "corner_profile": corner_profile,
                         "start_with_slayer": start_with_slayer,
                         "start_clone_count": start_clone_count,
                         "start_multiplier": start_multiplier,
