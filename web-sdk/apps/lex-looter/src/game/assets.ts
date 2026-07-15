@@ -47,18 +47,24 @@ export default {
 		type: 'sprite',
 		src: assetUrl('lex/board.jpg'),
 	},
+	baseBackground: {
+		type: 'spriteSheet',
+		src: assetUrl('lex/background/base-bg.json'),
+		preload: true,
+	},
+	activateBackground: {
+		type: 'spriteSheet',
+		src: assetUrl('lex/background/activate-bg.json'),
+		preload: true,
+	},
+	logoLex: {
+		type: 'spriteSheet',
+		src: assetUrl('lex/loading-logo/logo-lex.json'),
+		preload: true,
+	},
 	lexGameAsset: {
 		type: 'sprites',
 		src: assetUrl('lex/game-asset.json'),
-	},
-	loader: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('spines/loader/loader.atlas'),
-			skeleton: assetUrl('spines/loader/loader.json'),
-			scale: 2,
-		},
-		preload: true,
 	},
 	pressToContinueText: {
 		type: 'sprites',

@@ -1,34 +1,46 @@
 <script lang="ts">
-	import { Rectangle, SpineProvider, SpineTrack } from 'pixi-svelte';
+	import { Rectangle, SpriteSheet } from 'pixi-svelte';
 	import { FadeContainer } from 'components-pixi';
 	import { SECOND } from 'constants-shared/time';
+	import { stateBet } from 'state-shared';
 
 	import { getContext } from '../game/context';
 
 	const context = getContext();
-	const backgroundProps = $derived(
-		context.stateLayoutDerived.normalBackgroundLayout({ scale: 0.5 }),
+	const backgroundProps = $derived({
+		x: context.stateLayoutDerived.canvasSizes().width * 0.5,
+		y: context.stateLayoutDerived.canvasSizes().height * 0.5,
+		width: context.stateLayoutDerived.canvasSizes().width,
+		height: context.stateLayoutDerived.canvasSizes().height,
+	});
+	const activateBonusSelected = $derived(
+		!['BASE', 'base', undefined].includes(stateBet.activeBetModeKey),
 	);
-	const showBaseBackground = $derived(context.stateGame.gameType === 'basegame');
-	const showFeatureBackground = $derived(context.stateGame.gameType === 'freegame');
+	const showActivateBackground = $derived(
+		context.stateLayout.showLoadingScreen ||
+			context.stateGame.gameType === 'freegame' ||
+			activateBonusSelected,
+	);
+	const showBaseBackground = $derived(
+		!context.stateLayout.showLoadingScreen &&
+			context.stateGame.gameType === 'basegame' &&
+			!activateBonusSelected,
+	);
 </script>
 
 <Rectangle {...context.stateLayoutDerived.canvasSizes()} backgroundColor={0x000000} zIndex={-3} />
 
 <FadeContainer show={showBaseBackground} duration={SECOND} zIndex={-2}>
-	<SpineProvider key="foregroundAnimation" {...backgroundProps}>
-		<SpineTrack trackIndex={0} animationName={'idle'} loop />
-	</SpineProvider>
-	<SpineProvider key="foregroundAnimation" {...backgroundProps}>
-		<SpineTrack trackIndex={0} animationName={'dust'} loop />
-	</SpineProvider>
+	<SpriteSheet key="baseBackground" {...backgroundProps} anchor={0.5} animationSpeed={0.4} play loop />
 </FadeContainer>
 
-<FadeContainer show={showFeatureBackground} duration={SECOND} zIndex={-1}>
-	<SpineProvider key="foregroundFeatureAnimation" {...backgroundProps}>
-		<SpineTrack trackIndex={0} animationName={'idle'} loop />
-	</SpineProvider>
-	<SpineProvider key="foregroundFeatureAnimation" {...backgroundProps}>
-		<SpineTrack trackIndex={0} animationName={'dust'} loop />
-	</SpineProvider>
+<FadeContainer show={showActivateBackground} duration={SECOND} zIndex={-1}>
+	<SpriteSheet
+		key="activateBackground"
+		{...backgroundProps}
+		anchor={0.5}
+		animationSpeed={0.4}
+		play
+		loop
+	/>
 </FadeContainer>

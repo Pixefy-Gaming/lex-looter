@@ -4,9 +4,8 @@
 	import { EnablePixiExtension } from 'components-pixi';
 	import { EnableHotkey } from 'components-shared';
 	import { MainContainer } from 'components-layout';
-	import { App, Text, REM } from 'pixi-svelte';
+	import { App } from 'pixi-svelte';
 
-	import { UI, UiGameName } from 'components-ui-pixi';
 	import { GameVersion, Modals } from 'components-ui-html';
 	import { stateBet, stateUrlDerived } from 'state-shared';
 
@@ -25,8 +24,9 @@
 	import FreeSpinIntro from './FreeSpinIntro.svelte';
 	import FreeSpinCounter from './FreeSpinCounter.svelte';
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
+	import ControlBar from './ControlBar.svelte';
+	import ControlBarFreeSpin from './ControlBarFreeSpin.svelte';
 	import Transition from './Transition.svelte';
-	import I18nTest from './I18nTest.svelte';
 	import BouncingLex from './BouncingLex.svelte';
 	import BoardContainer from './BoardContainer.svelte';
 	import BonusModal from './BonusModal.svelte';
@@ -134,24 +134,8 @@
 			<ClusterWinAmounts />
 		</MainContainer>
 
-		<UI>
-			{#snippet gameName()}
-				<UiGameName name="LEX LOOTER" />
-			{/snippet}
-			{#snippet logo()}
-				<Text
-					anchor={{ x: 1, y: 0 }}
-					text="ADD YOUR LOGO"
-					style={{
-						fontFamily: 'proxima-nova',
-						fontSize: REM * 1.5,
-						fontWeight: '600',
-						lineHeight: REM * 2,
-						fill: 0xffffff,
-					}}
-				/>
-			{/snippet}
-		</UI>
+		<ControlBar />
+		<ControlBarFreeSpin />
 		<Win />
 		<FreeSpinIntro />
 		{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
@@ -159,8 +143,6 @@
 		{/if}
 		<FreeSpinOutro />
 		<Transition />
-
-		<I18nTest />
 
 		{#if showReplayIntro}
 			<ReplayIntro onstart={startReplay} starting={replayStarting} again={replayPlaybackSeen} />

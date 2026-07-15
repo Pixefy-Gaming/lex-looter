@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { SpineProvider, SpineTrack, Container, Sprite } from 'pixi-svelte';
+	import { Container, Sprite, SpriteSheet } from 'pixi-svelte';
 	import { FadeContainer, LoadingProgress } from 'components-pixi';
 	import { MainContainer } from 'components-layout';
 
@@ -17,18 +17,24 @@
 	let loadingType = $state<'start' | 'transition'>('start');
 </script>
 
-<!-- logo and loading progress -->
+<!-- loading progress -->
 <FadeContainer show={loadingType === 'start'}>
 	<MainContainer>
 		<Container
 			x={context.stateLayoutDerived.mainLayout().width * 0.5}
 			y={context.stateLayoutDerived.mainLayout().height * 0.5}
 		>
-			<SpineProvider key="loader" width={300}>
-				<SpineTrack trackIndex={0} animationName={'title_screen'} loop timeScale={3} />
-			</SpineProvider>
+			<SpriteSheet
+				key="logoLex"
+				y={-110}
+				width={500}
+				anchor={0.5}
+				animationSpeed={1}
+				play
+				loop={false}
+			/>
 			{#if !context.stateApp.loaded}
-				<LoadingProgress y={250} width={1967 * 0.2} height={346 * 0.2}>
+				<LoadingProgress y={170} width={1967 * 0.2} height={346 * 0.2}>
 					{#snippet background(sizes)}
 						<Sprite key="progressBarBackground.png" {...sizes} />
 					{/snippet}
