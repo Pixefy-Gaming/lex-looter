@@ -8,12 +8,7 @@ import { playBookEvent } from './utils';
 import { winLevelMap, type WinLevel, type WinLevelData } from './winLevelMap';
 import { createInitialLexPlaybackState, stateGame, stateGameDerived } from './stateGame.svelte';
 import type { SoundEffectName } from './sound';
-import type {
-	BookEvent,
-	BookEventOfType,
-	BookEventContext,
-	LexObjectName,
-} from './typesBookEvent';
+import type { BookEvent, BookEventOfType, BookEventContext, LexObjectName } from './typesBookEvent';
 import type { Position } from './types';
 
 const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinLevelData }) => {
@@ -302,22 +297,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			await animateSymbols({ positions: _.flatten(bookEvent.wins.map((win) => win.positions)) });
 		};
 
-		const promise2 = async () => {
-			await eventEmitter.broadcastAsync({
-				type: 'showClusterWinAmounts',
-				wins: bookEvent.wins.map((win) => {
-					return {
-						win: win.meta.winWithoutMult,
-						mult: win.meta.globalMult,
-						result: win.meta.winWithoutMult * win.meta.globalMult,
-						reel: win.meta.overlay.reel,
-						row: win.meta.overlay.row,
-					};
-				}),
-			});
-		};
-
-		await Promise.all([promise1(), promise2()]);
+		await promise1();
 	},
 	updateTumbleWin: async (bookEvent: BookEventOfType<'updateTumbleWin'>) => {
 		if (bookEvent.amount > 0) {
@@ -340,16 +320,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		await eventEmitter.broadcastAsync({ type: 'transition' });
-		eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
 		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin' });
-		await eventEmitter.broadcastAsync({
-			type: 'freeSpinIntroUpdate',
-			totalFreeSpins: bookEvent.totalFs,
-		});
 		stateGame.gameType = 'freegame';
-		eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
-		eventEmitter.broadcast({ type: 'boardFrameGlowShow' });
 		eventEmitter.broadcast({ type: 'globalMultiplierShow' });
 		await eventEmitter.broadcastAsync({
 			type: 'globalMultiplierUpdate',
@@ -373,16 +346,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		await eventEmitter.broadcastAsync({ type: 'transition' });
-		eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
 		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin' });
-		await eventEmitter.broadcastAsync({
-			type: 'freeSpinIntroUpdate',
-			totalFreeSpins: bookEvent.totalFs,
-		});
 		stateGame.gameType = 'freegame';
-		eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
-		eventEmitter.broadcast({ type: 'boardFrameGlowShow' });
 		eventEmitter.broadcast({ type: 'globalMultiplierShow' });
 		await eventEmitter.broadcastAsync({
 			type: 'globalMultiplierUpdate',
@@ -419,7 +385,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		stateGame.gameType = 'basegame';
-		eventEmitter.broadcast({ type: 'boardFrameGlowHide' });
 		eventEmitter.broadcast({ type: 'globalMultiplierHide' });
 		eventEmitter.broadcast({ type: 'freeSpinOutroShow' });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_youwon_panel' });

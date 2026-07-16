@@ -16,12 +16,9 @@
 	import Sound from './Sound.svelte';
 	import Background from './Background.svelte';
 	import LoadingScreen from './LoadingScreen.svelte';
-	import Anticipations from './Anticipations.svelte';
-	import ClusterWinAmounts from './ClusterWinAmounts.svelte';
 	import TumbleWinAmount from './TumbleWinAmount.svelte';
 	import GlobalMultiplier from './GlobalMultiplier.svelte';
 	import Win from './Win.svelte';
-	import FreeSpinIntro from './FreeSpinIntro.svelte';
 	import FreeSpinCounter from './FreeSpinCounter.svelte';
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
 	import ControlBar from './ControlBar.svelte';
@@ -122,7 +119,6 @@
 		<Sound />
 
 		<MainContainer>
-			<Anticipations />
 			<TumbleWinAmount />
 			<GlobalMultiplier />
 			<BoardContainer>
@@ -130,14 +126,9 @@
 			</BoardContainer>
 		</MainContainer>
 
-		<MainContainer>
-			<ClusterWinAmounts />
-		</MainContainer>
-
 		<ControlBar />
 		<ControlBarFreeSpin />
 		<Win />
-		<FreeSpinIntro />
 		{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
 			<FreeSpinCounter />
 		{/if}

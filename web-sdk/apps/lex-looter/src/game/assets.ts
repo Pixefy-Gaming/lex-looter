@@ -71,30 +71,6 @@ export default {
 		src: assetUrl('sprites/pressToContinueText/MM_pressanywhere.json'),
 		preload: true,
 	},
-	explosion: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('spines/symbols3/symbols3.atlas'),
-			skeleton: assetUrl('spines/symbols3/explosion.json'),
-			scale: 2,
-		},
-	},
-	reelsFrame: {
-		type: 'sprites',
-		src: assetUrl('sprites/reelsFrame/reels_frame.json'),
-	},
-	payFrame: {
-		type: 'sprite',
-		src: assetUrl('sprites/payFrame/payFrame.png'),
-	},
-	anticipation: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('spines/anticipation/anticipation.atlas'),
-			skeleton: assetUrl('spines/anticipation/anticipation.json'),
-			scale: 2,
-		},
-	},
 	goldFont: {
 		type: 'font',
 		src: assetUrl('fonts/goldFont/mm_gold.xml'),
@@ -127,48 +103,6 @@ export default {
 			scale: 2,
 		},
 	},
-	fsIntro: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('spines/fsIntro/fs_screen.atlas'),
-			skeleton: assetUrl('spines/fsIntro/fs_screen.json'),
-			scale: 2,
-		},
-	},
-	fsIntroNumber: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('spines/fsIntro/fs_screen.atlas'),
-			skeleton: assetUrl('spines/fsIntro/fs_screen_number.json'),
-			scale: 2,
-		},
-	},
-	fsOutroNumber: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('spines/fsIntro/fs_screen.atlas'),
-			skeleton: assetUrl('spines/fsIntro/fs_total_number.json'),
-			scale: 2,
-		},
-	},
-	foregroundAnimation: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('spines/foregroundAnimation/mm_bg.atlas'),
-			skeleton: assetUrl('spines/foregroundAnimation/mm_bg.json'),
-			scale: 2,
-		},
-		preload: true,
-	},
-	foregroundFeatureAnimation: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('spines/foregroundFeatureAnimation/mm_bg_feature.atlas'),
-			skeleton: assetUrl('spines/foregroundFeatureAnimation/mm_bg_feature.json'),
-			scale: 2,
-		},
-		preload: true,
-	},
 	tumble_multiplier: {
 		type: 'spine',
 		src: {
@@ -185,34 +119,14 @@ export default {
 			scale: 2,
 		},
 	},
-	reelhouse: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('spines/reelhouse/reelhouse_glow.atlas'),
-			skeleton: assetUrl('spines/reelhouse/reelhouse_glow.json'),
-			scale: 2,
-		},
-	},
 	progressBar: {
 		type: 'sprites',
 		src: assetUrl('sprites/progressBar/progressBar.json'),
 		preload: true,
 	},
-	freeSpins: {
-		type: 'sprites',
-		src: assetUrl('sprites/freeSpins/freeSpins.json'),
-	},
 	winSmall: {
 		type: 'sprites',
 		src: assetUrl('sprites/winSmall/MM_Localisation_winsmall.json'),
-	},
-	clusterWin: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('spines/clusterWin/clusterpay.atlas'),
-			skeleton: assetUrl('spines/clusterWin/clusterpay.json'),
-			scale: 2,
-		},
 	},
 	transition: {
 		type: 'spine',
@@ -221,14 +135,6 @@ export default {
 			skeleton: assetUrl('spines/transition/transition.json'),
 			scale: 2,
 		},
-	},
-	symbolsStatic: {
-		type: 'sprites',
-		src: assetUrl('sprites/symbolsStatic/symbolsStatic.json'),
-	},
-	coins: {
-		type: 'spriteSheet',
-		src: assetUrl('sprites/coin/SD2_Coin.json'),
 	},
 	sound: {
 		type: 'audio',

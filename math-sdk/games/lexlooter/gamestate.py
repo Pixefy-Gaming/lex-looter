@@ -672,7 +672,7 @@ class GameState(GameStateOverride):
     def _finish_round(self, state: dict, *, reason: str, payout: float, **meta) -> None:
         """Freeze the round and store its terminal outcome."""
         state["finished"] = True
-        state["payout"] = self.round_amount(max(payout, 0.0))
+        state["payout"] = round(max(payout, 0.0), 1)
         state["end_reason"] = reason
         state["end_meta"] = meta
         state["active_objects"] = []
