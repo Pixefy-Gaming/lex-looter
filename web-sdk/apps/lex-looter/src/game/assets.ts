@@ -128,14 +128,6 @@ export default {
 		type: 'sprites',
 		src: assetUrl('sprites/winSmall/MM_Localisation_winsmall.json'),
 	},
-	transition: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('spines/transition/transition.atlas'),
-			skeleton: assetUrl('spines/transition/transition.json'),
-			scale: 2,
-		},
-	},
 	sound: {
 		type: 'audio',
 		src: assetUrl('audio/lex/sounds.json'),

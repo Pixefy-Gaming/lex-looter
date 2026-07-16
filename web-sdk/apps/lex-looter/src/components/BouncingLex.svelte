@@ -13,7 +13,7 @@
 		notationToPixelCenter,
 		type PixelPoint,
 	} from '../game/notation';
-	import type { LexCornerKey, LexObjectName } from '../game/typesBookEvent';
+	import type { LexCornerKey, LexObjectName, LexRoundEndReason } from '../game/typesBookEvent';
 
 	type Props = {
 		betAmount?: number;
@@ -67,6 +67,14 @@
 		chest: assets.lexChest.src,
 		heart: assets.lexHeart.src,
 	} as const;
+	const ROUND_END_REASON_LABELS: Record<LexRoundEndReason, string> = {
+		cornerHit: 'Corner Hit',
+		escape: 'Escaped',
+		bounceLimit: 'Bounce Limit Hit',
+		slayer: 'Slayed',
+		allBallsLost: 'All Balls Lost',
+		safetyStop: 'Safety Stop',
+	};
 	type LexDisplay = PIXI.Sprite | PIXI.AnimatedSprite | PIXI.Graphics;
 
 	const root = new PIXI.Container();
@@ -158,7 +166,7 @@
 	});
 	valueText.anchor.set(0.5, 0);
 	valueText.x = W / 2;
-	valueText.y = -62;
+	valueText.y = -70;
 	hudLayer.addChild(valueText);
 
 	const stealthPill = new PIXI.Graphics();
@@ -184,7 +192,7 @@
 	});
 	metaText.anchor.set(0.5, 0);
 	metaText.x = W / 2;
-	metaText.y = 6;
+	metaText.y = 14;
 	hudLayer.addChild(metaText);
 
 	root.addChild(objectLayer);
@@ -697,9 +705,10 @@
 		valueText.text = formatMoney(lex.tumbleValue);
 		updateBounceText();
 		updateHud();
-		metaText.text = lex.roundEnded
-			? `${lex.roundEndReason ?? 'roundEnd'} | WIN ${formatMoney(lex.totalWin)}`
-			: '';
+		const roundEndLabel = lex.roundEndReason
+			? ROUND_END_REASON_LABELS[lex.roundEndReason]
+			: 'Round End';
+		metaText.text = lex.roundEnded ? `${roundEndLabel}` : '';
 
 		for (const corner of cornerStates) drawCorner(corner, lex.corners[corner.key]);
 		if (lex.roundEnded && lex.roundEndReason === 'cornerHit') {

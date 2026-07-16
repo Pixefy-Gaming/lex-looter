@@ -2,6 +2,7 @@
 
 from functools import lru_cache
 from pathlib import Path
+from decimal import Decimal, ROUND_HALF_UP
 import random
 import runpy
 
@@ -76,7 +77,7 @@ class GameCalculations(Executables):
 
     def to_cents(self, amount: float) -> int:
         """Convert a float amount to cents for book events."""
-        return int(round(amount * 100, 0))
+        return int((Decimal(str(amount)) * Decimal("100")).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
 
     def round_amount(self, amount: float) -> float:
         """Keep internal floating point drift under control."""

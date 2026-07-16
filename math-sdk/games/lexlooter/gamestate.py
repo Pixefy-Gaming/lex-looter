@@ -633,7 +633,8 @@ class GameState(GameStateOverride):
         if corner_multiplier is None or self._live_ball_count(state) <= 0:
             return
 
-        payout = state["tumble_value"] * state["mode_multiplier"] * corner_multiplier
+        displayed_tumble_value = self.to_cents(state["tumble_value"]) / 100.0
+        payout = displayed_tumble_value * corner_multiplier
         self._finish_round(
             state,
             reason="cornerHit",
@@ -672,7 +673,7 @@ class GameState(GameStateOverride):
     def _finish_round(self, state: dict, *, reason: str, payout: float, **meta) -> None:
         """Freeze the round and store its terminal outcome."""
         state["finished"] = True
-        state["payout"] = round(max(payout, 0.0), 1)
+        state["payout"] = self.to_cents(max(payout, 0.0)) / 100.0
         state["end_reason"] = reason
         state["end_meta"] = meta
         state["active_objects"] = []
