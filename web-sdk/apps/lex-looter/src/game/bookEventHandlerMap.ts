@@ -7,7 +7,13 @@ import { eventEmitter } from './eventEmitter';
 import { playBookEvent } from './utils';
 import { winLevelMap, type WinLevel, type WinLevelData } from './winLevelMap';
 import { createInitialLexPlaybackState, stateGame, stateGameDerived } from './stateGame.svelte';
-import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
+import type { SoundEffectName } from './sound';
+import type {
+	BookEvent,
+	BookEventOfType,
+	BookEventContext,
+	LexObjectName,
+} from './typesBookEvent';
 import type { Position } from './types';
 
 const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinLevelData }) => {
@@ -40,6 +46,17 @@ const animateSymbols = async ({ positions }: { positions: Position[] }) => {
 		type: 'boardWithAnimateSymbols',
 		symbolPositions: positions,
 	});
+};
+
+const LEX_OBJECT_SOUND_MAP: Record<LexObjectName, SoundEffectName> = {
+	coin: 'gold-coin',
+	diamond: 'diamond',
+	blue_blob: 'hit-blue-blob',
+	chest: 'hit-chest',
+	escape: 'escape',
+	slayer: 'slayer',
+	clone_orb: 'clone',
+	heart: 'hit-heart',
 };
 
 const waitLexPlaybackStepInterruptible = async (duration = 220) => {
@@ -110,14 +127,21 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.lex.cloneCount = bookEvent.cloneCount;
 		stateBet.winBookEventAmount = 0;
 		eventEmitter.broadcast({ type: 'tumbleWinAmountReset' });
+		eventEmitter.broadcast({ type: 'soundLoop', name: 'running' });
 		await waitLexPlaybackStepInterruptible(250);
 	},
 	cornerUpdate: async (bookEvent: BookEventOfType<'cornerUpdate'>) => {
+		if (bookEvent.mainBounces > stateGame.lex.mainBounces) {
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'bounce', forcePlay: true });
+		}
 		stateGame.lex.mainBounces = bookEvent.mainBounces;
 		stateGame.lex.corners = { ...bookEvent.corners };
 		await waitLexPlaybackStepInterruptible(120);
 	},
 	bounceUpdate: async (bookEvent: BookEventOfType<'bounceUpdate'>) => {
+		if (bookEvent.mainBounces > stateGame.lex.mainBounces) {
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'bounce', forcePlay: true });
+		}
 		stateGame.lex.lexPath = bookEvent.path?.length
 			? [...bookEvent.path]
 			: [bookEvent.from, bookEvent.to];
@@ -149,6 +173,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		await waitLexPlaybackStepInterruptible(260);
 	},
 	objectResolve: async (bookEvent: BookEventOfType<'objectResolve'>) => {
+		eventEmitter.broadcast({ type: 'soundOnce', name: LEX_OBJECT_SOUND_MAP[bookEvent.object] });
 		const collectorId = bookEvent.collectorId ?? 'main';
 		const collectorAt = bookEvent.collectorAt ?? bookEvent.lexAt;
 		if (collectorId === 'main') {
@@ -211,7 +236,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			stateGame.lex.shieldCount = bookEvent.shieldCount;
 		}
 		if (bookEvent.result === 'destroy') {
-			if (bookEvent.target === 'main') stateGame.lex.mainAlive = false;
+			if (bookEvent.target === 'main') {
+				stateGame.lex.mainAlive = false;
+				eventEmitter.broadcast({ type: 'soundStop', name: 'running' });
+			}
 			if (bookEvent.target !== 'main') {
 				const nextClones = { ...stateGame.lex.clones };
 				delete nextClones[bookEvent.target];
@@ -239,6 +267,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		await waitLexPlaybackStepInterruptible(320);
 	},
 	roundEnd: async (bookEvent: BookEventOfType<'roundEnd'>) => {
+		eventEmitter.broadcast({ type: 'soundStop', name: 'running' });
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'end-game', forcePlay: true });
 		stateGame.lex.lexNotation = bookEvent.lexAt;
 		stateGame.lex.lexPath = [bookEvent.lexAt];
 		stateGame.lex.roundEnded = true;

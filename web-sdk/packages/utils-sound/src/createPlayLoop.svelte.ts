@@ -1,9 +1,7 @@
-import type { Howl } from 'howler';
-
 import type { PlayOptions, GetSound, GetSoundMap } from './types';
 
 export function createPlayLoop<TSoundName extends string>(options: {
-	howl: Howl;
+	playHowl: (soundName: TSoundName) => number;
 	newSound: (value: TSoundName) => GetSound<TSoundName>;
 	getSoundMap: () => GetSoundMap<TSoundName>;
 	initSoundVolume: (soundName: TSoundName) => void;
@@ -11,7 +9,7 @@ export function createPlayLoop<TSoundName extends string>(options: {
 	type Sound = GetSound<TSoundName>;
 
 	const playLoop = (sound: Sound) => {
-		const soundId = options.howl.play(sound.soundName);
+		const soundId = options.playHowl(sound.soundName);
 		options.getSoundMap()[sound.soundName] = {
 			...sound,
 			soundId,

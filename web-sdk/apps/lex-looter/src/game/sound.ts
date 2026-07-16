@@ -10,7 +10,18 @@ export type MusicName =
 	| 'bgm_winlevel_superwin';
 
 export type SoundEffectName =
+	| 'bounce'
+	| 'clone'
+	| 'diamond'
+	| 'end-game'
+	| 'escape'
+	| 'gold-coin'
+	| 'hit-blue-blob'
+	| 'hit-chest'
+	| 'hit-heart'
 	| 'jng_intro_fs'
+	| 'running'
+	| 'slayer'
 	| 'sfx_anticipation'
 	| 'sfx_anticipation_start'
 	| 'sfx_bigwin_coinloop'

@@ -1,6 +1,6 @@
 export type SoundId = number;
 export type SoundState = 'new' | 'playing' | 'paused';
-export type SoundConfig = { volume: number };
+export type SoundConfig = { volume: number; rate?: number };
 export type SoundVolume = number;
 
 export type GetSound<TSoundName> = {
@@ -25,3 +25,5 @@ export type RateOptions<TSoundName extends string> = {
 	name: TSoundName;
 	rate: number;
 };
+
+export type SoundHowlMode = 'sprite' | 'file';

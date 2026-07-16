@@ -232,7 +232,7 @@ export default {
 	},
 	sound: {
 		type: 'audio',
-		src: assetUrl('audio/sounds.json'),
+		src: assetUrl('audio/lex/sounds.json'),
 		preload: true,
 	},
 } as const;

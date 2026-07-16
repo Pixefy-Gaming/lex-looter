@@ -7,7 +7,7 @@ import { createPlayer, type Player } from './createPlayer.svelte';
 import { createPlayMusic } from './createPlayMusic.svelte';
 import { createPlayLoop } from './createPlayLoop.svelte';
 import { createPlayOnce } from './createPlayOnce.svelte';
-import type { FadeOptions, RateOptions, StopOptions } from './types';
+import type { FadeOptions, RateOptions, StopOptions, SoundHowlMode } from './types';
 
 function createSound<TSoundName extends string>() {
 	type PlayMusic = ReturnType<typeof createPlayMusic<TSoundName>>['play'];
@@ -15,6 +15,7 @@ function createSound<TSoundName extends string>() {
 	type PlayOnce = ReturnType<typeof createPlayOnce<TSoundName>>['play'];
 
 	let loadedAudio: LoadedAudio<TSoundName>;
+	let howls: Howl[] = [];
 	let audioContextState = $state<AudioContext['state']>('running');
 	let visibilityState = $state<DocumentVisibilityState>('visible');
 	let players: {
@@ -27,16 +28,26 @@ function createSound<TSoundName extends string>() {
 		// loadedAudio
 		loadedAudio = loadedAudioValue;
 
-		const howl = new Howl({
+		const spriteHowl = new Howl({
 			src: loadedAudio.src,
 			sprite: loadedAudio.sprite,
 			volume: 1,
 		});
+		const fileHowlMap = Object.fromEntries(
+			Object.entries(loadedAudio.srcMap ?? {}).map(([soundName, src]) => [
+				soundName,
+				new Howl({ src: src as string | string[], volume: 1 }),
+			]),
+		) as Partial<Record<TSoundName, Howl>>;
+		howls = [spriteHowl, ...Object.values(fileHowlMap)];
+		const getHowlMode = (soundName: TSoundName): SoundHowlMode =>
+			fileHowlMap[soundName] ? 'file' : 'sprite';
+		const getHowl = (soundName: TSoundName) => fileHowlMap[soundName] ?? spriteHowl;
 		// players
 		players = {
-			music: createPlayer<TSoundName, PlayMusic>({ loadedAudio, loop: true, howl, createPlay: createPlayMusic<TSoundName> }), // prettier-ignore
-			loop: createPlayer<TSoundName, PlayLoop>({ loadedAudio, loop: true, howl, createPlay: createPlayLoop<TSoundName> }), // prettier-ignore
-			once: createPlayer<TSoundName, PlayOnce>({ loadedAudio, loop: false, howl, createPlay: createPlayOnce<TSoundName> }), //  prettier-ignore
+			music: createPlayer<TSoundName, PlayMusic>({ loadedAudio, loop: true, getHowl, getHowlMode, createPlay: createPlayMusic<TSoundName> }), // prettier-ignore
+			loop: createPlayer<TSoundName, PlayLoop>({ loadedAudio, loop: true, getHowl, getHowlMode, createPlay: createPlayLoop<TSoundName> }), // prettier-ignore
+			once: createPlayer<TSoundName, PlayOnce>({ loadedAudio, loop: false, getHowl, getHowlMode, createPlay: createPlayOnce<TSoundName> }), //  prettier-ignore
 		};
 
 		// audioContextState and visibilityState
@@ -51,9 +62,7 @@ function createSound<TSoundName extends string>() {
 			document.removeEventListener('visibilitychange', onVisibilityStateChange);
 
 			if (players) {
-				players.music.howl.unload();
-				players.loop.howl.unload();
-				players.once.howl.unload();
+				for (const howl of howls) howl.unload();
 			}
 		};
 

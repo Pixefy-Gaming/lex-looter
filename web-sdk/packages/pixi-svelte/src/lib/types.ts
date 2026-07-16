@@ -14,10 +14,11 @@ export type LoadedSprite = PIXI.Texture;
 export type LoadedSpriteSheet = PIXI.Texture[];
 export type LoadedAudio<TSoundName extends string> = {
 	src: string | string[];
-	sprite: {
+	srcMap?: Record<TSoundName, string | string[]>;
+	sprite?: {
 		[name: string]: [number, number] | [number, number, boolean];
 	};
-	config: Record<TSoundName, { volume: number }>;
+	config: Record<TSoundName, { volume: number; rate?: number }>;
 };
 export type LoadedAsset = LoadedSpine | LoadedSprite | LoadedSpriteSheet | LoadedAudio<string>;
 export type LoadedAssets = PIXI.Dict<LoadedAsset>;

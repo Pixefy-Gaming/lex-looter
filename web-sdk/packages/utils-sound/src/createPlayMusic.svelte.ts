@@ -3,7 +3,8 @@ import type { Howl } from 'howler';
 import type { PlayOptions, GetSound, GetSoundMap } from './types';
 
 export function createPlayMusic<TSoundName extends string>(options: {
-	howl: Howl;
+	getHowl: (soundName: TSoundName) => Howl;
+	playHowl: (soundName: TSoundName) => number;
 	newSound: (value: TSoundName) => GetSound<TSoundName>;
 	getSoundMap: () => GetSoundMap<TSoundName>;
 	initSoundVolume: (soundName: TSoundName) => void;
@@ -12,7 +13,7 @@ export function createPlayMusic<TSoundName extends string>(options: {
 
 	const pauseAllMusic = () => {
 		(Object.values(options.getSoundMap()) as Sound[]).forEach((existingSound) => {
-			options.howl.pause(existingSound.soundId);
+			options.getHowl(existingSound.soundName).pause(existingSound.soundId);
 			options.getSoundMap()[existingSound.soundName] = {
 				...existingSound,
 				soundState: 'paused',
@@ -22,7 +23,7 @@ export function createPlayMusic<TSoundName extends string>(options: {
 
 	const newMusic = (sound: Sound) => {
 		pauseAllMusic();
-		const soundId = options.howl.play(sound.soundName);
+		const soundId = options.playHowl(sound.soundName);
 		options.getSoundMap()[sound.soundName] = {
 			...sound,
 			soundId,
@@ -33,7 +34,7 @@ export function createPlayMusic<TSoundName extends string>(options: {
 
 	const resumeMusic = (sound: Sound) => {
 		pauseAllMusic();
-		options.howl.play(sound.soundId);
+		options.getHowl(sound.soundName).play(sound.soundId);
 		options.getSoundMap()[sound.soundName] = {
 			...sound,
 			soundState: 'playing',
