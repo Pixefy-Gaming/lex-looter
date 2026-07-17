@@ -22,7 +22,7 @@ def sync_lookup_tables(gamestate: GameState) -> None:
 
 if __name__ == "__main__":
 
-    num_threads = 4
+    num_threads = 10
     batching_size = 50000
     compression = True
     profiling = False

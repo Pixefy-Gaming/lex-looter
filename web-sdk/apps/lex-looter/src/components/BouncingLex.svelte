@@ -40,8 +40,8 @@
 	const CORNER_TAB_OUTSET = 5;
 	const CORNER_CHEST_WIDTH = 32;
 	const CORNER_CHEST_HEIGHT = 24;
-	const CORNER_HITBOX_WIDTH = CELL_SIZE * 2;
-	const CORNER_HITBOX_HEIGHT = CELL_SIZE;
+	const CORNER_HITBOX_WIDTH = CELL_SIZE * 1.5;
+	const CORNER_HITBOX_HEIGHT = CELL_SIZE * 1.1;
 	const MAX_BOUNCES = 40;
 	const NORMAL_SPEED_PER_SECOND = 2200;
 	const TURBO_SPEED_PER_SECOND = 5200;
@@ -109,7 +109,7 @@
 		boxX: number;
 		boxY: number;
 		gfx: PIXI.Graphics;
-		chest: PIXI.Graphics;
+		chest: PIXI.Sprite;
 		hitbox: PIXI.Graphics;
 		label: PIXI.Text;
 	};
@@ -121,8 +121,10 @@
 		{ key: 'br', boxX: W - CORNER_SIZE, boxY: H - CORNER_SIZE },
 	].map((corner) => {
 		const gfx = new PIXI.Graphics();
-		const chest = new PIXI.Graphics();
+		const chest = new PIXI.Sprite();
+		chest.anchor.set(0.5);
 		const hitbox = new PIXI.Graphics();
+		hitbox.visible = false;
 		const label = new PIXI.Text({
 			text: 'NONE',
 			style: { fill: 0x07110b, fontSize: 12, fontWeight: '900' },
@@ -358,19 +360,20 @@
 		corner.label.x = tabX + CORNER_TAB_WIDTH / 2;
 		corner.label.y = tabY + CORNER_TAB_HEIGHT / 2;
 
-		corner.chest.clear();
-		corner.chest.roundRect(chestX, chestY, CORNER_CHEST_WIDTH, CORNER_CHEST_HEIGHT, 2);
-		corner.chest.fill({ color: 0x8a4c1e, alpha: 0.96 });
-		corner.chest.stroke({ color: 0xffc36a, width: 2, alpha: 0.8 });
-		corner.chest.rect(chestX + 2, chestY + 8, CORNER_CHEST_WIDTH - 4, 5);
-		corner.chest.fill({ color: 0x4b2a12, alpha: 0.9 });
-		corner.chest.rect(chestX + 13, chestY + 1, 6, CORNER_CHEST_HEIGHT - 2);
-		corner.chest.fill({ color: 0xffd06a, alpha: 0.75 });
+		const chestTexture = gameAssetSheet?.textures['chest.png'] ?? textures.chest;
+		if (chestTexture) {
+			corner.chest.visible = true;
+			corner.chest.texture = chestTexture;
+			smoothTexture(corner.chest.texture);
+			fitSprite(corner.chest, CORNER_CHEST_WIDTH, CORNER_CHEST_HEIGHT);
+			corner.chest.x = chestX + CORNER_CHEST_WIDTH / 2;
+			corner.chest.y = chestY + CORNER_CHEST_HEIGHT / 2;
+		} else {
+			corner.chest.visible = false;
+		}
 
 		corner.hitbox.clear();
 		corner.hitbox.rect(hitboxX, hitboxY, CORNER_HITBOX_WIDTH, CORNER_HITBOX_HEIGHT);
-		corner.hitbox.fill({ color: 0x00ff4a, alpha: 0.08 });
-		corner.hitbox.stroke({ color: 0x00ff4a, width: 2, alpha: 0.95 });
 	};
 
 	const fitSprite = (
