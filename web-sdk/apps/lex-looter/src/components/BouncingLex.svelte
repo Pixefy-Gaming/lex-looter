@@ -317,7 +317,7 @@
 
 	const updateHud = () => {
 		stealthPill.clear();
-		stealthPill.roundRect(W / 2 - 78, -28, 156, 40, 20);
+		stealthPill.roundRect(W / 2 - 100, -28, 200, 40, 20);
 		stealthPill.fill({ color: 0x151515, alpha: 0.95 });
 		stealthPill.stroke({ color: 0x00ff4a, width: 2, alpha: 0.95 });
 		renderHeartHudAssets();

@@ -7,7 +7,7 @@
 	import { App } from 'pixi-svelte';
 
 	import { GameVersion, Modals } from 'components-ui-html';
-	import { stateBet, stateUrlDerived } from 'state-shared';
+	import { stateBet, stateModal, stateUrlDerived } from 'state-shared';
 
 	import { getContext } from '../game/context';
 	import EnableSound from './EnableSound.svelte';
@@ -36,6 +36,7 @@
 	let replayStarted = $state(false);
 	let replayPlaybackSeen = $state(false);
 	let replayRoundSnapshot = $state(stateBet.betToResume);
+	const hideControlBar = $derived(stateModal.modal?.name === 'buyBonus');
 
 	const waitForReplayRound = async () => {
 		for (let attempt = 0; attempt < 40; attempt += 1) {
@@ -126,8 +127,10 @@
 			</BoardContainer>
 		</MainContainer>
 
-		<ControlBar />
-		<ControlBarFreeSpin />
+		{#if !hideControlBar}
+			<ControlBar />
+			<ControlBarFreeSpin />
+		{/if}
 		<Win />
 		{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
 			<FreeSpinCounter />

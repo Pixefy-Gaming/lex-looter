@@ -14,6 +14,9 @@
 	const props: Props = $props();
 	const context = getContext();
 
+	const LOGO_WIDTH = 500;
+	const LOGO_HEIGHT = 395;
+
 	let loadingType = $state<'start' | 'transition'>('start');
 </script>
 
@@ -27,7 +30,8 @@
 			<SpriteSheet
 				key="logoLex"
 				y={-110}
-				width={500}
+				width={LOGO_WIDTH}
+				height={LOGO_HEIGHT}
 				anchor={0.5}
 				animationSpeed={1}
 				play
