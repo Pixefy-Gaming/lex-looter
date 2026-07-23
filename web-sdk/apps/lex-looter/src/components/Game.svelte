@@ -22,7 +22,6 @@
 	import FreeSpinCounter from './FreeSpinCounter.svelte';
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
 	import ControlBar from './ControlBar.svelte';
-	import ControlBarFreeSpin from './ControlBarFreeSpin.svelte';
 	import Transition from './Transition.svelte';
 	import BouncingLex from './BouncingLex.svelte';
 	import BoardContainer from './BoardContainer.svelte';
@@ -129,7 +128,6 @@
 
 		{#if !hideControlBar}
 			<ControlBar />
-			<ControlBarFreeSpin />
 		{/if}
 		<Win />
 		{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}

@@ -1,5 +1,7 @@
 import { SECOND } from 'constants-shared/time';
 
+export const BIG_WIN_PRESENTATION_MIN_BOOK_EVENT_AMOUNT = 25 * 100;
+
 export const winLevelMap = {
 	1: {
 		level: 1,

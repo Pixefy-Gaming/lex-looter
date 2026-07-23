@@ -485,3 +485,5 @@ export const SCATTER_LAND_SOUND_MAP = {
 	4: 'sfx_scatter_stop_4',
 	5: 'sfx_scatter_stop_5',
 } as const;
+
+export const TURBO_X2_ENABLED = false;
