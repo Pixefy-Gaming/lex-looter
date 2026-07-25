@@ -47,6 +47,10 @@ export default {
 		type: 'sprite',
 		src: assetUrl('lex/board.jpg'),
 	},
+	lexBoardFrame: {
+		type: 'sprite',
+		src: assetUrl('lex/bg-frame.png'),
+	},
 	baseBackground: {
 		type: 'spriteSheet',
 		src: assetUrl('lex/background/base-bg.json'),

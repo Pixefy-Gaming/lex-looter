@@ -36,12 +36,25 @@
 	const betOptionIndex = $derived(
 		stateConfig.betAmountOptions.findIndex((amount) => amount === stateBet.betAmount),
 	);
+	let confirmingMode = $state<BetModeData | null>(null);
 
 	const closeModal = () => {
+		confirmingMode = null;
 		stateModal.modal = null;
 	};
 
 	const activateBonus = (betModeData: BetModeData) => {
+		stateBonus.selectedBetModeKey = betModeData.mode;
+		confirmingMode = betModeData;
+		eventEmitter.broadcast({ type: 'soundPressGeneral' });
+	};
+
+	const cancelConfirm = () => {
+		confirmingMode = null;
+		eventEmitter.broadcast({ type: 'soundPressGeneral' });
+	};
+
+	const confirmBonus = (betModeData: BetModeData) => {
 		stateBonus.selectedBetModeKey = betModeData.mode;
 		stateBet.activeBetModeKey = betModeData.mode;
 		closeModal();
@@ -112,16 +125,27 @@
 							</span>
 						</div>
 
-						<button
-							class="action-btn"
-							class:active={isActive}
-							onclick={() => activateBonus(betModeData)}
-							disabled={isActive ||
-								stateBet.betAmount <= 0 ||
-								stateBet.balanceAmount < stateBet.betAmount * betModeData.costMultiplier}
-						>
-							{isActive ? 'ACTIVE' : betModeData.text.button}
-						</button>
+						{#if confirmingMode?.mode === betModeData.mode}
+							<div class="confirm-panel">
+								<div class="confirm-row">
+									<button class="confirm-back-btn" onclick={cancelConfirm}>Back</button>
+									<button class="confirm-ok-btn" onclick={() => confirmBonus(betModeData)}>
+										Confirm
+									</button>
+								</div>
+							</div>
+						{:else}
+							<button
+								class="action-btn"
+								class:active={isActive}
+								onclick={() => activateBonus(betModeData)}
+								disabled={isActive ||
+									stateBet.betAmount <= 0 ||
+									stateBet.balanceAmount < stateBet.betAmount * betModeData.costMultiplier}
+							>
+								{isActive ? 'ACTIVE' : betModeData.text.button}
+							</button>
+						{/if}
 					</div>
 				{/each}
 			</div>
@@ -379,6 +403,78 @@
 		cursor: not-allowed;
 		opacity: 0.8;
 		transform: translateY(2px);
+	}
+
+	.confirm-panel {
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 12px;
+		animation: slide-up 0.2s ease-out;
+	}
+
+	@keyframes slide-up {
+		from {
+			opacity: 0;
+			transform: translateY(12px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	.confirm-row {
+		display: flex;
+		width: 100%;
+		gap: 10px;
+	}
+
+	.confirm-back-btn,
+	.confirm-ok-btn {
+		flex: 1;
+		padding: clamp(8px, 1.4vw, 10px);
+		border-radius: 99px;
+		font-family: 'Russo One', 'proxima-nova', sans-serif;
+		font-size: clamp(12px, 1.2vw, 16px);
+		font-weight: 900;
+		cursor: pointer;
+		transition:
+			transform 0.15s,
+			box-shadow 0.15s,
+			filter 0.15s;
+		text-transform: uppercase;
+		outline: none;
+	}
+
+	.confirm-back-btn {
+		background: transparent;
+		border: 2px solid rgba(255, 255, 255, 0.35);
+		color: #ffffff;
+		box-shadow: 0 4px 0 rgba(255, 255, 255, 0.16);
+	}
+
+	.confirm-ok-btn {
+		background: #00ff50;
+		border: 2px solid #008f2d;
+		color: #000000;
+		box-shadow: 0 6px 0 #008f2d;
+	}
+
+	.confirm-back-btn:hover,
+	.confirm-ok-btn:hover {
+		filter: brightness(1.1);
+	}
+
+	.confirm-back-btn:active {
+		transform: translateY(2px);
+		box-shadow: 0 2px 0 rgba(255, 255, 255, 0.16);
+	}
+
+	.confirm-ok-btn:active {
+		transform: translateY(4px);
+		box-shadow: 0 2px 0 #008f2d;
 	}
 
 	.bet-adjust-bar {

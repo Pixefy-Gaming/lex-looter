@@ -7,6 +7,13 @@
 	import { getContext } from '../game/context';
 	import assets from '../game/assets';
 	import { BOARD_SIZES } from '../game/constants';
+	import { createCollisionReactionController } from '../animation/collisionReaction';
+	import { createCornerAnticipationController } from '../animation/cornerAnticipation';
+	import { createHeartHudAnimationController, type HeartHudSlot } from '../animation/heart';
+	import { createObjectSpawnAnimationController } from '../animation/objectSpawn';
+	import { createObjectResolveAnimationController } from '../animation/objectResolve';
+	import { createPickupBurstController } from '../animation/pickupBurst';
+	import { createLexTrailController } from '../animation/trail';
 	import {
 		CANVAS_HEIGHT,
 		CANVAS_WIDTH,
@@ -53,9 +60,12 @@
 		width: 2688,
 		height: 1680,
 	};
+	const BOARD_FRAME_OUTSET_X = 92;
+	const BOARD_FRAME_OUTSET_Y = 56;
 	const LEX_ASSETS = {
 		lex: assets.lexMain.src,
 		board: assets.lexBoard.src,
+		boardFrame: assets.lexBoardFrame.src,
 		gameAsset: assets.lexGameAsset.src,
 		cloneBall: assets.lexClone.src,
 		slayer: assets.lexSlayer.src,
@@ -80,7 +90,9 @@
 	const root = new PIXI.Container();
 	const hudLayer = new PIXI.Container();
 	const objectLayer = new PIXI.Container();
+	const effectLayer = new PIXI.Container();
 	const ballLayer = new PIXI.Container();
+	const trailLayer = new PIXI.Container();
 	const CANVAS_Y_OFFSET = -35;
 	const _SCALE = Math.min(BOARD_SIZES.width / W, BOARD_SIZES.height / H);
 	root.scale.set(_SCALE);
@@ -89,19 +101,16 @@
 
 	const bg = new PIXI.Container();
 	const bgFallback = new PIXI.Graphics();
-	const bgBorder = new PIXI.Graphics();
 	let boardSprite: PIXI.Sprite | undefined;
+	let boardFrameSprite: PIXI.Sprite | undefined;
+	const boardFrameSoftBlur = new PIXI.BlurFilter({ strength: 1.15, quality: 3 });
 	const drawBoardFallback = () => {
 		bgFallback.clear();
 		bgFallback.rect(0, 0, W, H);
 		bgFallback.fill({ color: 0x101417 });
-		bgBorder.clear();
-		bgBorder.rect(0, 0, W, H);
-		bgBorder.stroke({ color: 0xffffff, alpha: 0.9, width: 2 });
 	};
 	drawBoardFallback();
 	bg.addChild(bgFallback);
-	bg.addChild(bgBorder);
 	root.addChild(bg);
 
 	type CornerState = {
@@ -197,16 +206,23 @@
 	metaText.y = 14;
 	hudLayer.addChild(metaText);
 
+	ballLayer.addChild(trailLayer);
+
 	root.addChild(objectLayer);
+	root.addChild(effectLayer);
 	root.addChild(ballLayer);
 	root.addChild(hudLayer);
 
-	const heartHud = [0, 1, 2].map((index) => {
+	const heartHud: HeartHudSlot[] = [0, 1, 2].map((index) => {
 		const heartSlot = new PIXI.Container();
+		const baseLayer = new PIXI.Container();
+		const effectLayer = new PIXI.Container();
 		heartSlot.x = W / 2 + 145 + index * 40;
 		heartSlot.y = -38;
+		heartSlot.addChild(baseLayer);
+		heartSlot.addChild(effectLayer);
 		hudLayer.addChild(heartSlot);
-		return heartSlot;
+		return { container: heartSlot, baseLayer, effectLayer };
 	});
 
 	let app: PIXI.Application | undefined;
@@ -241,6 +257,10 @@
 		if (source) source.scaleMode = 'linear';
 	};
 
+	const clearContainer = (container: PIXI.Container) => {
+		for (const child of container.removeChildren()) child.destroy();
+	};
+
 	const renderBoardArt = () => {
 		boardSprite?.destroy();
 		boardSprite = undefined;
@@ -260,30 +280,53 @@
 		boardSprite = new PIXI.Sprite(croppedTexture);
 		boardSprite.width = W;
 		boardSprite.height = H;
-		bg.addChildAt(boardSprite, 1);
+		bg.addChild(boardSprite);
+	};
+
+	const renderBoardFrame = () => {
+		boardFrameSprite?.destroy();
+		boardFrameSprite = undefined;
+		const texture = textures.boardFrame;
+		if (!texture) return;
+
+		boardFrameSprite = new PIXI.Sprite(texture);
+		boardFrameSprite.anchor.set(0.5);
+		boardFrameSprite.x = W / 2;
+		boardFrameSprite.y = H / 2;
+		boardFrameSprite.width = W + BOARD_FRAME_OUTSET_X * 2;
+		boardFrameSprite.height = H + BOARD_FRAME_OUTSET_Y * 2;
+		boardFrameSprite.filters = [boardFrameSoftBlur];
+		smoothTexture(boardFrameSprite.texture);
+		bg.addChildAt(boardFrameSprite, 0);
+	};
+
+	const createHeartDisplay = (filled: boolean) => {
+		const texture = filled
+			? (gameAssetSheet?.textures['heart.png'] ?? textures.heart)
+			: gameAssetSheet?.textures['noHeart.png'];
+		if (texture) {
+			const sprite = new PIXI.Sprite(texture);
+			sprite.anchor.set(0.5);
+			smoothTexture(sprite.texture);
+			fitSprite(sprite, 34, 34);
+			return sprite;
+		}
+
+		const fallback = new PIXI.Graphics();
+		fallback.circle(0, 0, 13);
+		fallback.fill({ color: filled ? 0xff2738 : 0x2b2b2b, alpha: filled ? 0.95 : 0.45 });
+		if (!filled) fallback.stroke({ color: 0xffffff, alpha: 0.18, width: 2 });
+		return fallback;
 	};
 
 	const renderHeartHudAssets = () => {
 		const shieldCount = Math.min(context.stateGame.lex.shieldCount, heartHud.length);
-		const lifeTexture = gameAssetSheet?.textures['heart.png'];
-		const noLifeTexture = gameAssetSheet?.textures['noHeart.png'];
 		for (const [index, heartSlot] of heartHud.entries()) {
-			for (const child of heartSlot.removeChildren()) child.destroy();
-			const texture = index < shieldCount ? lifeTexture : noLifeTexture;
-			if (texture) {
-				const sprite = new PIXI.Sprite(texture);
-				sprite.anchor.set(0.5);
-				smoothTexture(sprite.texture);
-				const scale = Math.min(34 / sprite.texture.width, 34 / sprite.texture.height);
-				sprite.scale.set(scale);
-				heartSlot.addChild(sprite);
-				continue;
-			}
-
-			const fallback = new PIXI.Graphics();
-			fallback.circle(0, 0, 13);
-			fallback.fill({ color: 0xff2738, alpha: 0.95 });
-			heartSlot.addChild(fallback);
+			clearContainer(heartSlot.baseLayer);
+			const baseDisplay = createHeartDisplay(index < shieldCount);
+			const hidingForGain = heartHudAnimation.isGainHidingSlot(index);
+			heartSlot.baseLayer.alpha = hidingForGain ? 0 : 1;
+			heartSlot.baseLayer.addChild(baseDisplay);
 		}
 	};
 
@@ -593,10 +636,116 @@
 		container.y = point.y;
 	};
 
+	const getObjectPoint = (notation: string, x?: number, y?: number): PixelPoint =>
+		notation ? notationToPixelCenter(notation) : { x: (x ?? 0.5) * W, y: (y ?? 0.5) * H };
+
+	const getShieldAnimationSourcePoint = (): PixelPoint => {
+		const activeObject = context.stateGame.lex.lastResolvedObjectId
+			? context.stateGame.lex.activeObjects[context.stateGame.lex.lastResolvedObjectId]
+			: undefined;
+		if (activeObject?.object === 'heart') {
+			return getObjectPoint(activeObject.notation, activeObject.x, activeObject.y);
+		}
+		if (mainBall) return getDisplayCenter(mainBall);
+		return { x: W / 2, y: H / 2 };
+	};
+
+	const heartHudAnimation = createHeartHudAnimationController({
+		heartHud,
+		hudLayer,
+		createHeartDisplay,
+		getSourcePoint: getShieldAnimationSourcePoint,
+		getShieldCount: () => context.stateGame.lex.shieldCount,
+		getRoundSerial: () => context.stateGame.lex.roundSerial,
+		isTurbo: () => stateBet.isTurbo,
+		isSkipPlayback: () => context.stateGame.lexSkipPlayback,
+	});
+
+	const lexTrailAnimation = createLexTrailController({
+		layer: trailLayer,
+		isTurbo: () => stateBet.isTurbo,
+		isSkipPlayback: () => context.stateGame.lexSkipPlayback,
+	});
+
+	const pickupBurstAnimation = createPickupBurstController({
+		layer: effectLayer,
+		isTurbo: () => stateBet.isTurbo,
+		isSkipPlayback: () => context.stateGame.lexSkipPlayback,
+	});
+
+	const objectSpawnAnimation = createObjectSpawnAnimationController({
+		isTurbo: () => stateBet.isTurbo,
+		isSkipPlayback: () => context.stateGame.lexSkipPlayback,
+	});
+
+	const objectResolveAnimation = createObjectResolveAnimationController({
+		layer: effectLayer,
+		isTurbo: () => stateBet.isTurbo,
+		isSkipPlayback: () => context.stateGame.lexSkipPlayback,
+	});
+
+	const collisionReactionAnimation = createCollisionReactionController({
+		layer: effectLayer,
+		boardWidth: W,
+		boardHeight: H,
+		getDisplay: () => mainBall,
+		getPoint: () => notationToPixelCenter(context.stateGame.lex.lexNotation),
+		getBounceCount: () => context.stateGame.lex.mainBounces,
+		getRoundSerial: () => context.stateGame.lex.roundSerial,
+		isTurbo: () => stateBet.isTurbo,
+		isSkipPlayback: () => context.stateGame.lexSkipPlayback,
+	});
+
+	const cornerAnticipationAnimation = createCornerAnticipationController({
+		layer: effectLayer,
+		targets: cornerStates.map((corner) => ({
+			key: corner.key,
+			chest: corner.chest,
+			label: corner.label,
+			gfx: corner.gfx,
+			point: {
+				x: corner.key === 'tr' || corner.key === 'br' ? W : 0,
+				y: corner.key === 'bl' || corner.key === 'br' ? H : 0,
+			},
+		})),
+		getLexPoint: () =>
+			mainBall
+				? getDisplayCenter(mainBall)
+				: notationToPixelCenter(context.stateGame.lex.lexNotation),
+		getMultiplier: (key) => context.stateGame.lex.corners[key],
+		isRoundActive: () => context.stateGame.lex.mainAlive && !context.stateGame.lex.roundEnded,
+		isTurbo: () => stateBet.isTurbo,
+		isSkipPlayback: () => context.stateGame.lexSkipPlayback,
+	});
+
+	const queuePickupBurstAnimation = () => {
+		const objectId = context.stateGame.lex.lastResolvedObjectId;
+		if (!objectId) return;
+
+		const activeObject = context.stateGame.lex.activeObjects[objectId];
+		if (!activeObject?.resolved) return;
+		if (activeObject.object === 'slayer' || activeObject.object === 'escape') return;
+
+		pickupBurstAnimation.queue({
+			objectId,
+			roundSerial: context.stateGame.lex.roundSerial,
+			object: activeObject.object,
+			point: getObjectPoint(activeObject.notation, activeObject.x, activeObject.y),
+		});
+	};
+
+	const shouldHideMainLexForEscape = () => {
+		const objectId = context.stateGame.lex.lastResolvedObjectId;
+		const activeObject = objectId ? context.stateGame.lex.activeObjects[objectId] : undefined;
+		return activeObject?.resolved === true && activeObject.object === 'escape';
+	};
+
 	const renderObjects = () => {
 		const activeObjects = context.stateGame.lex.activeObjects;
 		for (const objectId of Object.keys(objectContainers)) {
 			if (!activeObjects[objectId]) {
+				objectSpawnAnimation.cancelContainer(objectContainers[objectId]);
+				objectResolveAnimation.cancelContainer(objectContainers[objectId]);
 				objectContainers[objectId].destroy({ children: true });
 				delete objectContainers[objectId];
 				delete objectRenderStates[objectId];
@@ -607,16 +756,46 @@
 			let container = objectContainers[activeObject.objectId];
 			const renderState = `${activeObject.object}:${activeObject.resolved}:${activeObject.result ?? ''}`;
 			if (!container || objectRenderStates[activeObject.objectId] !== renderState) {
+				if (container) {
+					objectSpawnAnimation.cancelContainer(container);
+					objectResolveAnimation.cancelContainer(container);
+				}
 				container?.destroy({ children: true });
 				container = createObjectContainer(activeObject.object, activeObject.resolved);
 				objectContainers[activeObject.objectId] = container;
 				objectRenderStates[activeObject.objectId] = renderState;
 				objectLayer.addChild(container);
 			}
-			container.alpha = activeObject.resolved && activeObject.object !== 'slayer' ? 0.15 : 1;
-			container.scale.set(activeObject.resolved && activeObject.object !== 'slayer' ? 1.35 : 1);
 			setObjectPosition(container, activeObject.notation, activeObject.x, activeObject.y);
+			const isTerminalResolvedObject =
+				activeObject.resolved &&
+				(activeObject.object === 'slayer' || activeObject.object === 'escape');
+			if (isTerminalResolvedObject) {
+				container.alpha = 1;
+				continue;
+			}
+
+			if (
+				activeObject.resolved &&
+				activeObject.object !== 'slayer' &&
+				activeObject.object !== 'escape'
+			) {
+				objectResolveAnimation.syncResolvedObject({
+					objectId: activeObject.objectId,
+					roundSerial: context.stateGame.lex.roundSerial,
+					object: activeObject.object,
+					container,
+					point: getObjectPoint(activeObject.notation, activeObject.x, activeObject.y),
+				});
+			} else {
+				container.alpha = 1;
+				container.scale.set(1);
+				objectSpawnAnimation.syncObject(activeObject.objectId, container, activeObject.resolved);
+			}
 		}
+		const activeObjectIds = Object.keys(activeObjects);
+		objectSpawnAnimation.forgetMissing(activeObjectIds);
+		objectResolveAnimation.forgetMissing(activeObjectIds);
 	};
 
 	const renderBalls = () => {
@@ -625,6 +804,12 @@
 			currentPathKey = '';
 			pathTargets = [];
 			currentLexAnimation = 'unarmed_run_front';
+			collisionReactionAnimation.clear();
+			lexTrailAnimation.clear();
+			pickupBurstAnimation.clear();
+			objectSpawnAnimation.clear();
+			objectResolveAnimation.clear();
+			cornerAnticipationAnimation.clear();
 			mainBall?.destroy();
 			mainBall = undefined;
 			for (const clone of Object.values(cloneDisplays)) clone.display.destroy();
@@ -635,12 +820,14 @@
 			objectRenderStates = {};
 		}
 
-		if (context.stateGame.lex.mainAlive) {
+		if (context.stateGame.lex.mainAlive && !shouldHideMainLexForEscape()) {
 			if (!mainBall) mainBall = createBall(false);
 			if (pathTargets.length === 0) {
 				setDisplayCenter(mainBall, notationToPixelCenter(context.stateGame.lex.lexNotation));
 			}
 		} else if (mainBall) {
+			collisionReactionAnimation.clear();
+			lexTrailAnimation.clear();
 			mainBall.destroy();
 			mainBall = undefined;
 		}
@@ -707,6 +894,7 @@
 		const lex = context.stateGame.lex;
 		valueText.text = formatMoney(lex.tumbleValue);
 		updateBounceText();
+		heartHudAnimation.syncShieldCount();
 		updateHud();
 		const roundEndLabel = lex.roundEndReason
 			? ROUND_END_REASON_LABELS[lex.roundEndReason]
@@ -719,7 +907,9 @@
 			if (winningCorner) winningCorner.gfx.stroke({ color: 0xffffff, width: 5, alpha: 0.95 });
 		}
 		renderObjects();
+		queuePickupBurstAnimation();
 		renderBalls();
+		collisionReactionAnimation.syncBounceCount();
 		queueLexPath();
 		queueClonePaths();
 	};
@@ -759,13 +949,21 @@
 		const baseSpeed = stateBet.isTurbo ? TURBO_SPEED_PER_SECOND : NORMAL_SPEED_PER_SECOND;
 		const speed = baseSpeed * (ticker.deltaMS / 1000);
 		const animationSpeed = getCharacterAnimationSpeed();
+		heartHudAnimation.update(ticker.deltaMS);
+		lexTrailAnimation.update(ticker.deltaMS);
+		pickupBurstAnimation.update(ticker.deltaMS);
+		objectSpawnAnimation.update(ticker.deltaMS);
+		objectResolveAnimation.update(ticker.deltaMS);
 		if (mainBall) {
 			if (mainBall instanceof PIXI.AnimatedSprite) mainBall.animationSpeed = animationSpeed;
 			if (context.stateGame.lexSkipPlayback) snapDisplayToFinalTarget(mainBall, pathTargets);
 			moveDisplayTowardTargets(mainBall, pathTargets, speed, (dx, dy) => {
 				setLexAnimation(getLexAnimationForDelta(dx, dy));
 			});
+			lexTrailAnimation.add(getDisplayCenter(mainBall), false, 'main');
 		}
+		collisionReactionAnimation.update(ticker.deltaMS);
+		cornerAnticipationAnimation.update(ticker.deltaMS);
 		for (const [cloneId, clone] of Object.entries(cloneDisplays)) {
 			if (clone.display instanceof PIXI.AnimatedSprite) {
 				clone.display.animationSpeed = animationSpeed;
@@ -776,6 +974,7 @@
 			moveDisplayTowardTargets(clone.display, clone.pathTargets, speed, (dx, dy) => {
 				setCloneAnimation(cloneId, getLexAnimationForDelta(dx, dy));
 			});
+			lexTrailAnimation.add(getDisplayCenter(clone.display), true, cloneId);
 		}
 	};
 
@@ -829,6 +1028,7 @@
 					? (lexSheet.textures['unarmed_run_front1.png'] ?? Object.values(lexSheet.textures)[0])
 					: (lexAsset as PIXI.Texture | undefined),
 				board: loaded[LEX_ASSETS.board],
+				boardFrame: loaded[LEX_ASSETS.boardFrame],
 				gameAsset: gameAssetSheet
 					? (gameAssetSheet.textures['logo.png'] ?? Object.values(gameAssetSheet.textures)[0])
 					: (gameAsset as PIXI.Texture | undefined),
@@ -855,6 +1055,7 @@
 			if (gameAssetSheet) Object.values(gameAssetSheet.textures).forEach(smoothTexture);
 			Object.values(textures).forEach(smoothTexture);
 			renderLogoAsset();
+			renderBoardFrame();
 			renderBoardArt();
 			renderHeartHudAssets();
 		} catch (error) {
@@ -865,6 +1066,7 @@
 			slayerSheet = undefined;
 			gameAssetSheet = undefined;
 			textures = {};
+			renderBoardFrame();
 			renderBoardArt();
 			renderHeartHudAssets();
 		}
@@ -880,8 +1082,16 @@
 
 	onDestroy(() => {
 		if (app) app.ticker.remove(tick);
+		heartHudAnimation.clear();
+		lexTrailAnimation.clear();
+		pickupBurstAnimation.clear();
+		collisionReactionAnimation.clear();
+		objectSpawnAnimation.clear();
+		objectResolveAnimation.clear();
+		cornerAnticipationAnimation.clear();
 		mainBall?.destroy();
 		boardSprite?.destroy();
+		boardFrameSprite?.destroy();
 		for (const clone of Object.values(cloneDisplays)) clone.display.destroy();
 		for (const container of Object.values(objectContainers)) container.destroy({ children: true });
 		cloneDisplays = {};
