@@ -65,6 +65,7 @@ export default {
 	lexGameAsset: {
 		type: 'sprites',
 		src: assetUrl('lex/game-asset.json'),
+		preload: true,
 	},
 	pressToContinueText: {
 		type: 'sprites',
