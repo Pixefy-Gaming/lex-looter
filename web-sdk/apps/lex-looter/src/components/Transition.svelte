@@ -80,9 +80,20 @@
 		stateUi.transitionProgress = $progress;
 	});
 
-	// High-saturation glitch colors: RGB, Cyan, Magenta, Yellow, Pink
-	// High-saturation glitch colors: classic RGB split
-	const GLITCH_COLORS = [0x00ffff, 0xff0000, 0xffffff, 0x000000, 0xffff00];
+	const THEME_COLORS = {
+		boardShadow: 0x07141d,
+		lexGreen: 0x00ff50,
+		cloverGreen: 0x00e701,
+		coinGold: 0xffd24a,
+		softHighlight: 0xf4ffe8,
+	};
+	const GLITCH_COLORS = [
+		THEME_COLORS.lexGreen,
+		THEME_COLORS.coinGold,
+		THEME_COLORS.softHighlight,
+		THEME_COLORS.boardShadow,
+		THEME_COLORS.cloverGreen,
+	];
 
 	// Scanline Layer: Subtle horizontal texture
 	const scanlines = $derived.by(() => {
@@ -97,8 +108,8 @@
 				y: i * spacing,
 				width: canvasSizes.width,
 				height: 1,
-				backgroundColor: 0x000000,
-				backgroundAlpha: 0.15 * p,
+				backgroundColor: THEME_COLORS.boardShadow,
+				backgroundAlpha: 0.18 * p,
 			});
 		}
 		return layers;
@@ -141,7 +152,11 @@
 			const w = (s > 0.5 ? 40 + s * 150 : canvasSizes.width * 0.6) * p * 1.5;
 			const h = s > 0.5 ? canvasSizes.height * 0.2 : 5 + s * 80;
 			const color =
-				i % 3 === 0 ? 0x000000 : i % 3 === 1 ? 0xffffff : i % 3 === 2 ? 0xff0000 : 0x00ffff;
+				i % 3 === 0
+					? THEME_COLORS.boardShadow
+					: i % 3 === 1
+						? THEME_COLORS.lexGreen
+						: THEME_COLORS.coinGold;
 
 			layers.push({
 				x: ((s * 19) % 1) * canvasSizes.width - w * 0.5,
@@ -173,11 +188,11 @@
 				y: ((s * 31) % 1) * canvasSizes.height - h * 0.5,
 				width: w,
 				height: h,
-				backgroundColor: 0xffffff,
-				backgroundAlpha: 0.12 * p,
-				borderColor: 0xffffff,
+				backgroundColor: THEME_COLORS.softHighlight,
+				backgroundAlpha: 0.1 * p,
+				borderColor: THEME_COLORS.lexGreen,
 				borderWidth: 1.5,
-				borderAlpha: 0.35 * p,
+				borderAlpha: 0.3 * p,
 				borderRadius: 2,
 			});
 
@@ -187,8 +202,8 @@
 					y: ((s * 29) % 1) * canvasSizes.height,
 					width: w * 0.9,
 					height: 2,
-					backgroundColor: 0xffffff,
-					backgroundAlpha: 0.6 * p,
+					backgroundColor: THEME_COLORS.coinGold,
+					backgroundAlpha: 0.42 * p,
 				});
 			}
 		}
@@ -224,8 +239,8 @@
 			y={((jitterSeed * 17) % 1) * canvasSizes.height}
 			width={canvasSizes.width}
 			height={1 + jitterSeed * 15}
-			backgroundColor={0xffffff}
-			backgroundAlpha={0.5 * $progress}
+			backgroundColor={THEME_COLORS.softHighlight}
+			backgroundAlpha={0.34 * $progress}
 		/>
 	</Container>
 {/if}
