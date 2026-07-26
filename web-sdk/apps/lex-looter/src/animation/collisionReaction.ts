@@ -98,7 +98,7 @@ export const createCollisionReactionController = ({
 			cover.moveTo(point.x, clamp(point.y - half, 0, boardHeight));
 			cover.lineTo(point.x, clamp(point.y + half, 0, boardHeight));
 		}
-		cover.stroke({ color: 0x101417, alpha, width: 6 });
+		cover.stroke({ color: 0x101417, alpha, width: 4 });
 	};
 
 	const drawWave = (wave: PIXI.Graphics, point: PixelPoint, edge: BorderEdge, progress: number) => {
@@ -135,8 +135,8 @@ export const createCollisionReactionController = ({
 			else wave.lineTo(x, y);
 		}
 
-		wave.stroke({ color: 0x00ff4a, alpha: 0.44 * fade, width: 7 });
-		wave.stroke({ color: 0xffffff, alpha: 0.94 * fade, width: 3 });
+		wave.stroke({ color: 0x00ff4a, alpha: 0.36 * fade, width: 4 });
+		wave.stroke({ color: 0xffffff, alpha: 0.82 * fade, width: 1.8 });
 	};
 
 	const queueBorderWave = (rawPoint: PixelPoint) => {

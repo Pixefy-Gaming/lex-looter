@@ -71,7 +71,6 @@ export const createCornerAnticipationController = ({
 		if (strength <= 0) return;
 
 		const length = 86;
-		const width = 5 + strength * 6;
 		const alpha = 0.18 + strength * 0.58;
 		const x = target.point.x;
 		const y = target.point.y;
@@ -82,13 +81,13 @@ export const createCornerAnticipationController = ({
 		glow.lineTo(x + horizontalDirection * length, y);
 		glow.moveTo(x, y);
 		glow.lineTo(x, y + verticalDirection * length);
-		glow.stroke({ color: 0x00ff4a, alpha, width });
+		glow.stroke({ color: 0x00ff4a, alpha, width: 4 });
 
 		glow.moveTo(x, y);
 		glow.lineTo(x + horizontalDirection * length * 0.72, y);
 		glow.moveTo(x, y);
 		glow.lineTo(x, y + verticalDirection * length * 0.72);
-		glow.stroke({ color: 0xffffff, alpha: alpha * 0.85, width: Math.max(2, width * 0.35) });
+		glow.stroke({ color: 0xffffff, alpha: alpha * 0.85, width: 1.8 });
 
 		if (target.key === 'tr' || target.key === 'br') glow.x = -0.5;
 		if (target.key === 'bl' || target.key === 'br') glow.y = -0.5;

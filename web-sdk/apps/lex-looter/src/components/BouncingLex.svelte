@@ -218,7 +218,7 @@
 		const baseLayer = new PIXI.Container();
 		const effectLayer = new PIXI.Container();
 		heartSlot.x = W / 2 + 145 + index * 40;
-		heartSlot.y = -38;
+		heartSlot.y = -24;
 		heartSlot.addChild(baseLayer);
 		heartSlot.addChild(effectLayer);
 		hudLayer.addChild(heartSlot);

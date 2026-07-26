@@ -59,7 +59,9 @@
 	const isExtraChance = $derived(activeBetModeKey === 'EXTRA_CHANCE');
 	const isGlitchMachine = $derived(activeBetModeKey === 'GLITCH_MACHINE');
 	const isMultiHunt = $derived(false);
-	const isFeatureModeActive = $derived(activeBetMode?.type === 'activate' && activeBetModeKey !== 'BASE');
+	const isFeatureModeActive = $derived(
+		activeBetMode?.type === 'activate' && activeBetModeKey !== 'BASE',
+	);
 	const isGenericFeatureActive = $derived(
 		isFeatureModeActive && !isExtraChance && !isGlitchMachine && !isMultiHunt,
 	);
@@ -84,11 +86,11 @@
 	);
 	const isTurbo = $derived(stateBet.isTurbo);
 	const isTurboDisabled = $derived(!!stateConfig.jurisdiction?.disabledTurbo);
-	const isFastForwardDisabled = $derived(isIdle || stateBet.isSpaceHold);
+	const isFastForwardDisabled = $derived(isTurboDisabled || stateBet.isSpaceHold);
+	const isSkipDisabled = $derived(isIdle || stateBet.isSpaceHold);
 	const isFeatureBuyDisabled = $derived(!!stateConfig.jurisdiction?.disabledBuyFeature);
 	let isOverlayActive = $state(false);
 	let isHudHidden = $state(false);
-	let canSkip = $state(false);
 	let stopDisabled = $state(false);
 
 	function getLiveSessionParams() {
@@ -232,12 +234,10 @@
 			isHudHidden = false;
 		},
 		stopButtonEnable: () => {
-			canSkip = true;
 			stopDisabled = false;
 			stateBetDerived.updateIsTurbo(false, { persistent: false });
 		},
 		stopButtonClick: () => {
-			canSkip = false;
 			stopDisabled = true;
 			stateBetDerived.updateIsTurbo(true, { persistent: false });
 		},
@@ -273,8 +273,6 @@
 	$effect(() => {
 		if (isTurboDisabled && stateBet.isTurbo) {
 			stateBetDerived.updateIsTurbo(false, { persistent: true });
-		} else if (!isFreeSpin && !isTurboDisabled && !stateBet.isTurbo) {
-			stateBetDerived.updateIsTurbo(true, { persistent: true });
 		}
 	});
 
@@ -401,9 +399,15 @@
 		autoCountToConfirm = 0;
 	}
 
-	function fastForward() {
+	function toggleFastForward() {
 		eventEmitter.broadcast({ type: 'soundPressGeneral' });
 		if (isFastForwardDisabled) return;
+		stateBetDerived.updateIsTurbo(!stateBet.isTurbo, { persistent: true });
+	}
+
+	function skipPlayback() {
+		eventEmitter.broadcast({ type: 'soundPressGeneral' });
+		if (isSkipDisabled) return;
 		eventEmitter.broadcast({ type: 'skipLexPlayback' });
 	}
 
@@ -614,6 +618,25 @@
 		</div>
 	{/if}
 
+	{#if !isIdle}
+		<button
+			class="skip-playback-btn"
+			onclick={skipPlayback}
+			disabled={isSkipDisabled}
+			aria-label={stateI18n.i18n._('SKIP')}
+		>
+			<ControlToggleIcon
+				kind="skip"
+				size={isPopoutS
+					? 'compact'
+					: controlBarLayoutType === 'portrait'
+						? 'portrait'
+						: 'landscape'}
+				label={stateI18n.i18n._('SKIP')}
+			/>
+		</button>
+	{/if}
+
 	{#if controlBarLayoutType === 'portrait'}
 		<!-- ----------------------------------------------------- -->
 		<!--                   PORTRAIT LAYOUT                     -->
@@ -672,14 +695,14 @@
 					<!-- 2. Turbo Toggle -->
 					<button
 						class="toggle-btn-portrait turbo-btn-mobile"
-						class:active={isSpinning && !isFastForwardDisabled}
-						onclick={fastForward}
+						class:active={isTurbo}
+						onclick={toggleFastForward}
 						aria-label={i18nDerived.fastForward()}
 						disabled={isFastForwardDisabled}
 					>
 						<ControlToggleIcon
 							kind="turbo"
-							active={isSpinning && !isFastForwardDisabled}
+							active={isTurbo}
 							size="portrait"
 							label={i18nDerived.fastForward()}
 						/>
@@ -1008,14 +1031,14 @@
 				<div class="toggles-landscape">
 					<button
 						class="toggle-btn-landscape turbo-btn-landscape"
-						class:active={isSpinning && !isFastForwardDisabled}
-						onclick={fastForward}
+						class:active={isTurbo}
+						onclick={toggleFastForward}
 						aria-label={i18nDerived.fastForward()}
 						disabled={isFastForwardDisabled}
 					>
 						<ControlToggleIcon
 							kind="turbo"
-							active={isSpinning && !isFastForwardDisabled}
+							active={isTurbo}
 							size="landscape"
 							label={i18nDerived.fastForward()}
 						/>
@@ -1167,6 +1190,7 @@
 		bottom: 0;
 		width: 100%;
 		padding: 0;
+		--skip-scale: 1.5;
 		/* we override flex constraints here since we aren't using the default flex layout */
 		display: block;
 	}
@@ -1181,6 +1205,37 @@
 		opacity: 0;
 		visibility: hidden;
 		pointer-events: none;
+	}
+
+	.skip-playback-btn {
+		position: absolute;
+		left: 50%;
+		bottom: calc(100% - 4px);
+		transform: translateX(-50%) scale(var(--skip-scale, 1));
+		transform-origin: center;
+		width: 47px;
+		height: 47px;
+		border: none;
+		background: transparent;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0;
+		z-index: 10003;
+		cursor: pointer;
+		transition:
+			transform 110ms ease,
+			filter 110ms ease,
+			opacity 110ms ease;
+	}
+
+	.skip-playback-btn:active:not(:disabled) {
+		transform: translateX(-50%) translateY(2px) scale(var(--skip-scale, 1));
+	}
+
+	.skip-playback-btn:disabled {
+		cursor: default;
+		opacity: 0.5;
 	}
 
 	/* -------------------------------------------------------------------------- */
@@ -2172,6 +2227,13 @@
 		overflow: visible !important;
 	}
 
+	.popout-s .skip-playback-btn {
+		width: 32px;
+		height: 32px;
+		bottom: calc(100% - 6px);
+		--skip-scale: 1;
+	}
+
 	.popout-s .feature-buy-landscape-container {
 		position: absolute !important;
 		left: 24px !important;
@@ -2613,6 +2675,10 @@
 			gap: 10px;
 		}
 
+		.skip-playback-btn {
+			bottom: calc(100% - 4px);
+		}
+
 		.portrait-control-bar .top-row {
 			padding: 0 15px 0px 15px;
 			align-items: center;
@@ -2704,6 +2770,10 @@
 		.portrait-control-bar {
 			padding: 0;
 			gap: 8px;
+		}
+
+		.skip-playback-btn {
+			bottom: calc(100% - 5px);
 		}
 
 		.turbo-btn-mobile {

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { ButtonProps } from 'components-pixi';
-	import { stateBet } from 'state-shared';
+	import { stateBet, stateBetDerived } from 'state-shared';
 
 	import UiButton from './UiButton.svelte';
 	import { UI_BASE_SIZE } from '../constants';
@@ -9,12 +9,13 @@
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
 	const context = getContext();
 	const sizes = { width: UI_BASE_SIZE, height: UI_BASE_SIZE };
-	const disabled = $derived(context.stateXstateDerived.isIdle() || stateBet.isSpaceHold);
+	const active = $derived(stateBet.isTurbo);
+	const disabled = $derived(stateBet.isSpaceHold);
 
 	const onpress = () => {
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
-		context.eventEmitter.broadcast({ type: 'skipLexPlayback' });
+		stateBetDerived.updateIsTurbo(!stateBet.isTurbo, { persistent: true });
 	};
 </script>
 
-<UiButton {...props} {sizes} {onpress} {disabled} icon="fastForward" />
+<UiButton {...props} {sizes} {active} {onpress} {disabled} icon="fastForward" />

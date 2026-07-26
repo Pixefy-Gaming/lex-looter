@@ -1,6 +1,6 @@
 <script lang="ts">
 	type Props = {
-		kind: 'autoplay' | 'turbo' | 'turbo2';
+		kind: 'autoplay' | 'turbo' | 'turbo2' | 'skip';
 		active?: boolean;
 		size?: 'compact' | 'portrait' | 'landscape';
 		label: string;
@@ -23,10 +23,16 @@
 	class:double={props.kind === 'turbo2'}
 	class:autoplay={props.kind === 'autoplay'}
 	class:turbo={props.kind === 'turbo'}
+	class:skip={props.kind === 'skip'}
 	aria-hidden="true"
 >
 	<span class="circle">
-		{#if props.kind === 'turbo2'}
+		{#if props.kind === 'skip'}
+			<span class="skip-glyph">
+				<span></span>
+				<span></span>
+			</span>
+		{:else if props.kind === 'turbo2'}
 			<!-- Two active-speed bolts with a circle-colored separation stroke. -->
 			{#each ['bolt-back', 'bolt-front'] as boltClass}
 				<svg class="bolt {boltClass}" viewBox="0 0 109.99 110" aria-hidden="true" focusable="false">
@@ -73,6 +79,10 @@
 		background: var(--pipee-accent, #00ff50);
 	}
 
+	.skip .circle {
+		border: 1px solid #181818;
+	}
+
 	.control-toggle-icon.portrait {
 		width: 38px;
 		height: 38px;
@@ -112,6 +122,33 @@
 	.turbo .glyph {
 		width: 60%;
 		height: 60%;
+	}
+
+	.skip-glyph {
+		display: flex;
+		align-items: center;
+		gap: 1px;
+		transform: translateX(1px);
+	}
+
+	.skip-glyph span {
+		width: 0;
+		height: 0;
+		border-top: 5px solid transparent;
+		border-bottom: 5px solid transparent;
+		border-left: 7px solid #000;
+	}
+
+	.skip.landscape .skip-glyph span {
+		border-top-width: 7px;
+		border-bottom-width: 7px;
+		border-left-width: 9px;
+	}
+
+	.skip.portrait .skip-glyph span {
+		border-top-width: 6px;
+		border-bottom-width: 6px;
+		border-left-width: 8px;
 	}
 
 	.double .bolt {
