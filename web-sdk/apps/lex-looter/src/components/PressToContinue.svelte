@@ -13,10 +13,29 @@
 	const props: Props = $props();
 	const context = getContext();
 	const mainLayout = $derived(context.stateLayoutDerived.mainLayout());
+	let pulseTime = $state(0);
+	const pulse = $derived((Math.sin(pulseTime * 0.0032) + 1) * 0.5);
+	const pulseScale = $derived(1 + pulse * 0.025);
+	const pulseAlpha = $derived(0.78 + pulse * 0.22);
+
+	$effect(() => {
+		let rafId = 0;
+		const tick = (time: number) => {
+			pulseTime = time;
+			rafId = requestAnimationFrame(tick);
+		};
+		rafId = requestAnimationFrame(tick);
+		return () => cancelAnimationFrame(rafId);
+	});
 </script>
 
 <MainContainer alignVertical="bottom">
-	<Container x={mainLayout.width * 0.5} y={mainLayout.height - 34}>
+	<Container
+		x={mainLayout.width * 0.5}
+		y={mainLayout.height - 56}
+		scale={pulseScale}
+		alpha={pulseAlpha}
+	>
 		<ResponsiveText
 			anchor={{ x: 0.5, y: 1 }}
 			text="PRESS ANYWHERE TO CONTINUE"

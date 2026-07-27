@@ -29,7 +29,9 @@
 		};
 
 	const bonusModes = $derived(
-		stateMetaDerived.betModeMetaList().filter((item) => item.type === 'activate' || item.type === 'buy'),
+		stateMetaDerived
+			.betModeMetaList()
+			.filter((item) => item.type === 'activate' || item.type === 'buy'),
 	);
 	const layoutType = $derived(stateLayoutDerived.layoutType());
 	const stackedLayout = $derived(layoutType === 'portrait' || layoutType === 'tablet');
@@ -297,16 +299,17 @@
 
 	.visual-frame {
 		width: 100%;
-		min-height: clamp(105px, 11vw, 150px);
+		height: clamp(105px, 11vw, 150px);
 		display: flex;
 		align-items: center;
 		justify-content: center;
 	}
 
 	.top-visual {
-		width: min(100%, 200px);
+		width: auto;
+		max-width: min(100%, 220px);
+		height: 100%;
 		aspect-ratio: var(--asset-ratio);
-		height: auto;
 		display: block;
 	}
 

@@ -431,9 +431,9 @@
 <style>
 	.modal-overlay {
 		--pipee-accent: #00ff50;
-		--pipee-accent-bright: #31ff74;
-		--pipee-accent-soft: #74ff9f;
-		--pipee-accent-soft-rgb: 116, 255, 159;
+		--pipee-accent-bright: #00ff50;
+		--pipee-accent-soft: #00ff50;
+		--pipee-accent-soft-rgb: 0, 255, 80;
 		--lex-green-rgb: 0, 255, 80;
 		position: fixed;
 		inset: 0;
