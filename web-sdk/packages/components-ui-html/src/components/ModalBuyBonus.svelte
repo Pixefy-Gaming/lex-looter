@@ -195,7 +195,7 @@
 		padding: clamp(12px, 3vh, 32px);
 		box-sizing: border-box;
 		color: white;
-		font-family: 'proxima-nova', sans-serif;
+		font-family: var(--lex-looter-ui-font, sans-serif);
 		cursor: pointer;
 	}
 
@@ -321,7 +321,7 @@
 	h2 {
 		margin: 0;
 		color: #ffffff;
-		font-family: 'Russo One', 'proxima-nova', sans-serif;
+		font-family: var(--lex-looter-ui-font, sans-serif);
 		font-size: clamp(24px, 2.2vw, 34px);
 		font-weight: 900;
 		line-height: 1;
@@ -347,7 +347,7 @@
 	}
 
 	.price-text {
-		font-family: 'Russo One', 'proxima-nova', sans-serif;
+		font-family: var(--lex-looter-ui-font, sans-serif);
 		font-size: clamp(30px, 3vw, 44px);
 		font-weight: 900;
 		color: #ffffff;
@@ -369,7 +369,7 @@
 		color: #000000;
 		border: 2px solid #008f2d;
 		border-radius: 99px;
-		font-family: 'Russo One', 'proxima-nova', sans-serif;
+		font-family: var(--lex-looter-ui-font, sans-serif);
 		font-size: clamp(15px, 1.5vw, 20px);
 		font-weight: 900;
 		cursor: pointer;
@@ -436,7 +436,7 @@
 		flex: 1;
 		padding: clamp(8px, 1.4vw, 10px);
 		border-radius: 99px;
-		font-family: 'Russo One', 'proxima-nova', sans-serif;
+		font-family: var(--lex-looter-ui-font, sans-serif);
 		font-size: clamp(12px, 1.2vw, 16px);
 		font-weight: 900;
 		cursor: pointer;
@@ -540,7 +540,7 @@
 	}
 
 	.bet-value {
-		font-family: 'Russo One', 'proxima-nova', sans-serif;
+		font-family: var(--lex-looter-ui-font, sans-serif);
 		font-size: 23px;
 		color: #ffffff;
 		font-weight: 900;

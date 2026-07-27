@@ -11,7 +11,7 @@
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
-	import { anchorToPivot, BitmapText, Container, Sprite, type Sizes } from 'pixi-svelte';
+	import { anchorToPivot, Container, Sprite, Text, type Sizes } from 'pixi-svelte';
 
 	const context = getContext();
 	const PANEL_KEY_DESKTOP = 'Frame_FSCounter.png';
@@ -69,22 +69,24 @@
 				anchor: { x: 0.5, y: 0.5 },
 			})}
 		>
-			<BitmapText
+			<Text
 				text={'FREE SPIN'}
 				style={{
-					fontFamily: 'gold',
+					fontFamily: 'Jersey 25',
 					fontSize,
+					fill: 0xffffff,
 					wordWrap: false,
 				}}
 				onresize={(sizes) => (titleSizes = sizes)}
 			/>
-			<BitmapText
+			<Text
 				text={`${current} OF ${total}`}
 				{...counterPosition}
 				anchor={{ x: 0.5, y: 0 }}
 				style={{
-					fontFamily: 'gold',
+					fontFamily: 'Jersey 25',
 					fontSize,
+					fill: 0xffffff,
 				}}
 				onresize={(sizes) => (counterSizes = sizes)}
 			/>

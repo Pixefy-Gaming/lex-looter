@@ -429,14 +429,6 @@
 </div>
 
 <style>
-	@font-face {
-		font-family: 'cherryBomb';
-		src: url('assets/fonts/cherryBomb/CherryBombOne-Regular.ttf') format('truetype');
-		font-weight: 400;
-		font-style: normal;
-		font-display: swap;
-	}
-
 	.modal-overlay {
 		--pipee-accent: #00ff50;
 		--pipee-accent-bright: #31ff74;
@@ -452,7 +444,7 @@
 		backdrop-filter: blur(8px);
 		-webkit-backdrop-filter: blur(8px);
 		z-index: 30000;
-		font-family: 'Poppins', sans-serif;
+		font-family: var(--lex-looter-ui-font);
 	}
 
 	.modal-overlay * {
@@ -537,7 +529,7 @@
 		margin: 0 0 12px;
 		overflow-wrap: break-word;
 		color: var(--pipee-accent-soft);
-		font-family: 'cherryBomb', sans-serif;
+		font-family: var(--lex-looter-ui-font);
 		font-size: clamp(18px, 6vw, 32px);
 		letter-spacing: 0;
 		text-align: center;
@@ -632,7 +624,7 @@
 		padding-bottom: 10px;
 		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 		color: var(--pipee-accent-soft);
-		font-family: 'Bungee', cursive;
+		font-family: var(--lex-looter-ui-font);
 		font-size: 0.75rem;
 		letter-spacing: 0;
 		text-transform: uppercase;

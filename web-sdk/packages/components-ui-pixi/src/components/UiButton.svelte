@@ -54,7 +54,7 @@
 				align: 'center',
 				wordWrap: true,
 				wordWrapWidth: 200,
-				fontFamily: 'proxima-nova',
+				fontFamily: 'Jersey 25',
 				fontWeight: '600',
 				fontSize: UI_BASE_FONT_SIZE * 0.9,
 				fill: variant === 'dark' ? 0xffffff : 0x000000,

@@ -9,12 +9,12 @@
 	import { Tween } from 'svelte/motion';
 
 	import {
-		BitmapText,
 		Container,
 		SpineEventEmitterProvider,
 		SpineProvider,
 		SpineSlot,
 		SpineTrack,
+		Text,
 	} from 'pixi-svelte';
 	import { FadeContainer } from 'components-pixi';
 	import { stateBetDerived } from 'state-shared';
@@ -89,22 +89,24 @@
 				/>
 				<SpineEventEmitterProvider>
 					<SpineSlot slotName="slot_multi">
-						<BitmapText
+						<Text
 							anchor={0.5}
 							text={`${Math.round(previousMultiplier.current)}×`}
 							style={{
-								fontFamily: 'gold',
+								fontFamily: 'Jersey 25',
 								fontSize: SYMBOL_SIZE * 5.2,
+								fill: 0xffffff,
 							}}
 						/>
 					</SpineSlot>
 					<SpineSlot slotName="slot_multi_next">
-						<BitmapText
+						<Text
 							anchor={0.5}
 							text={`${multiplier}×`}
 							style={{
-								fontFamily: 'gold',
+								fontFamily: 'Jersey 25',
 								fontSize: SYMBOL_SIZE * 5.2,
+								fill: 0xffffff,
 							}}
 						/>
 					</SpineSlot>

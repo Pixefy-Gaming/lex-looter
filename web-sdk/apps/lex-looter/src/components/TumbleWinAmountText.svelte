@@ -2,7 +2,7 @@
 	import { Tween } from 'svelte/motion';
 
 	import { SpineProvider, SpineTrack, SpineSlot } from 'pixi-svelte';
-	import { ResponsiveBitmapText } from 'components-pixi';
+	import { ResponsiveText } from 'components-pixi';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 
 	import { SYMBOL_SIZE } from '../game/constants';
@@ -46,11 +46,12 @@
 		}}
 	/>
 	<SpineSlot slotName="slot_win">
-		<ResponsiveBitmapText
+		<ResponsiveText
 			anchor={0.5}
 			style={{
-				fontFamily: 'gold',
+				fontFamily: 'Jersey 25',
 				fontSize: 0.65 * SYMBOL_SIZE,
+				fill: 0xffffff,
 			}}
 			text={bookEventAmountToCurrencyString(amount.current)}
 			maxWidth={props.width}

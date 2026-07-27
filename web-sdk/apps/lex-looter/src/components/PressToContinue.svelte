@@ -22,7 +22,8 @@
 			text="PRESS ANYWHERE TO CONTINUE"
 			maxWidth={mainLayout.width * 0.86}
 			style={{
-				fontSize: 19,
+				fontFamily: 'Jersey 25',
+				fontSize: 22,
 				fontWeight: '900',
 				fill: 0xffffff,
 				stroke: { color: 0x000000, width: 1 },

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 
-	import { BitmapText, Container, Sprite, type Sizes } from 'pixi-svelte';
+	import { Container, Sprite, Text, type Sizes } from 'pixi-svelte';
 
 	import { SYMBOL_SIZE } from '../game/constants';
 
@@ -31,11 +31,11 @@
 
 <Container y={-TITLE_HEIGHT * 1.2}>
 	<Sprite anchor={0.5} key={TITLE_KEY} {...TITLE_SIZES} />
-	<BitmapText
+	<Text
 		anchor={0.5}
 		y={-TITLE_HEIGHT * 0.025}
 		text="TUMBLE WIN"
-		style={{ fontFamily: 'gold', fontSize: TITLE_HEIGHT * 0.45 }}
+		style={{ fontFamily: 'Jersey 25', fontSize: TITLE_HEIGHT * 0.45, fill: 0xffffff }}
 	/>
 </Container>
 

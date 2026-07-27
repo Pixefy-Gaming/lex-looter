@@ -102,7 +102,7 @@
 	.replay-intro-title,
 	.replay-intro-label,
 	.replay-start-btn {
-		font-family: 'proxima-nova', Arial, sans-serif;
+		font-family: var(--lex-looter-ui-font);
 		text-transform: uppercase;
 	}
 
@@ -157,7 +157,7 @@
 
 	.replay-intro-value {
 		color: #ffffff;
-		font-family: 'proxima-nova', Arial, sans-serif;
+		font-family: var(--lex-looter-ui-font);
 		font-size: 16px;
 		font-weight: 800;
 		text-align: right;

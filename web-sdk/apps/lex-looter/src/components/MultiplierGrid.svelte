@@ -7,7 +7,7 @@
 </script>
 
 <script lang="ts">
-	import { BitmapText, Container } from 'pixi-svelte';
+	import { Container, Text } from 'pixi-svelte';
 
 	import BoardContainer from './BoardContainer.svelte';
 	import { getContext } from '../game/context';
@@ -42,7 +42,7 @@
 				{#if multiplier > 0}
 					<Container x={(reelIndex + 0.5) * SYMBOL_SIZE} y={(rowIndex + 0.5) * SYMBOL_SIZE}>
 						{#if multiplier > 1}
-							<BitmapText
+							<Text
 								x={-SYMBOL_SIZE * 0.05}
 								anchor={{
 									x: 0.5,
@@ -50,9 +50,10 @@
 								}}
 								text={`${multiplier} X`}
 								style={{
-									fontFamily: 'gold',
+									fontFamily: 'Jersey 25',
 									fontSize: SYMBOL_SIZE * 0.5,
-									letterSpacing: -5,
+									fill: 0xffffff,
+									letterSpacing: 0,
 								}}
 							/>
 						{/if}

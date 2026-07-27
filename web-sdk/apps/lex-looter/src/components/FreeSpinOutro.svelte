@@ -8,7 +8,7 @@
 </script>
 
 <script lang="ts">
-	import { FadeContainer, WinCountUpProvider, ResponsiveBitmapText } from 'components-pixi';
+	import { FadeContainer, WinCountUpProvider, ResponsiveText } from 'components-pixi';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 	import { waitForResolve } from 'utils-shared/wait';
 	import { CanvasSizeRectangle } from 'components-layout';
@@ -45,13 +45,14 @@
 
 				<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.5} />
 
-				<ResponsiveBitmapText
+				<ResponsiveText
 					x={context.stateLayoutDerived.canvasSizes().width * 0.5}
 					y={context.stateLayoutDerived.canvasSizes().height * 0.5}
 					anchor={{ x: 0.5, y: 0.5 }}
 					style={{
-						fontFamily: 'gold',
+						fontFamily: 'Jersey 25',
 						fontSize: context.stateLayoutDerived.canvasSizes().width * 0.06,
+						fill: 0xffffff,
 					}}
 					text={bookEventAmountToCurrencyString(countUpAmount)}
 					maxWidth={context.stateLayoutDerived.canvasSizes().width * 0.8}

@@ -54,6 +54,7 @@
 	const TURBO_SPEED_PER_SECOND = 5200;
 	const NORMAL_CHARACTER_ANIMATION_SPEED = 0.24;
 	const TURBO_CHARACTER_ANIMATION_SPEED = 0.38;
+	const LEX_FONT_FAMILY = 'Jersey 25';
 	const BOARD_ART_CROP = {
 		x: 335,
 		y: 335,
@@ -136,7 +137,7 @@
 		hitbox.visible = false;
 		const label = new PIXI.Text({
 			text: 'NONE',
-			style: { fill: 0x07110b, fontSize: 12, fontWeight: '900' },
+			style: { fill: 0x07110b, fontFamily: LEX_FONT_FAMILY, fontSize: 12, fontWeight: '900' },
 		});
 		label.anchor.set(0.5);
 		root.addChild(gfx);
@@ -151,6 +152,7 @@
 		text: 'LEX\nLOOTER',
 		style: {
 			fill: 0x00ff4a,
+			fontFamily: LEX_FONT_FAMILY,
 			fontSize: 42,
 			fontWeight: '900',
 			lineHeight: 34,
@@ -170,6 +172,7 @@
 		text: '$0.00',
 		style: {
 			fill: 0xffffff,
+			fontFamily: LEX_FONT_FAMILY,
 			fontSize: 34,
 			fontWeight: '900',
 			stroke: { color: 0x000000, width: 1 },
@@ -187,6 +190,7 @@
 		text: `0 / ${MAX_BOUNCES} STEALTH`,
 		style: {
 			fill: 0xffffff,
+			fontFamily: LEX_FONT_FAMILY,
 			fontSize: 19,
 			fontWeight: '900',
 			stroke: { color: 0x000000, width: 1 },
@@ -199,7 +203,7 @@
 
 	const metaText = new PIXI.Text({
 		text: '',
-		style: { fill: 0xffffff, fontSize: 12, fontWeight: 'bold' },
+		style: { fill: 0xffffff, fontFamily: LEX_FONT_FAMILY, fontSize: 12, fontWeight: 'bold' },
 	});
 	metaText.anchor.set(0.5, 0);
 	metaText.x = W / 2;
@@ -617,7 +621,12 @@
 
 		const label = new PIXI.Text({
 			text: style.label,
-			style: { fill: 0x07141d, fontSize: style.label.length > 4 ? 8 : 12, fontWeight: 'bold' },
+			style: {
+				fill: 0x07141d,
+				fontFamily: LEX_FONT_FAMILY,
+				fontSize: style.label.length > 4 ? 8 : 12,
+				fontWeight: 'bold',
+			},
 		});
 		label.anchor.set(0.5);
 		container.addChild(label);

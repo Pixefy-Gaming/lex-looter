@@ -1354,7 +1354,7 @@
 		border-radius: 0 !important; /* Rectangle! */
 	}
 	.win-display-mobile .mobile-label {
-		font-family: 'Poppins', sans-serif;
+		font-family: var(--lex-looter-ui-font);
 		color: var(--pipee-accent-soft);
 		font-size: 9px;
 		font-weight: 800;
@@ -1362,7 +1362,7 @@
 		text-transform: uppercase;
 	}
 	.win-display-mobile .mobile-value {
-		font-family: 'Poppins', sans-serif;
+		font-family: var(--lex-looter-ui-font);
 		font-size: 13px !important;
 		line-height: 1;
 		margin-top: 2px;
@@ -1462,14 +1462,14 @@
 		border-radius: 0 !important; /* Rectangle! */
 	}
 	.balance-display-mobile .mobile-label {
-		font-family: 'Poppins', sans-serif;
+		font-family: var(--lex-looter-ui-font);
 		color: var(--pipee-accent-soft);
 		font-size: 10px;
 		font-weight: 800;
 		letter-spacing: 1px;
 	}
 	.balance-display-mobile .mobile-value {
-		font-family: 'Poppins', sans-serif;
+		font-family: var(--lex-looter-ui-font);
 		font-size: 12px !important;
 		line-height: 1;
 		margin-top: 2px;
@@ -1492,7 +1492,7 @@
 		align-items: center;
 	}
 	.bet-info-mobile .mobile-label {
-		font-family: 'Poppins', sans-serif;
+		font-family: var(--lex-looter-ui-font);
 		color: var(--pipee-accent-soft);
 		font-size: 10px !important;
 		letter-spacing: 2px;
@@ -1500,7 +1500,7 @@
 		opacity: 0.9;
 	}
 	.bet-info-mobile .mobile-value {
-		font-family: 'Poppins', sans-serif;
+		font-family: var(--lex-looter-ui-font);
 		font-size: clamp(11px, 3.5vw, 16px) !important;
 		line-height: 1;
 		margin-top: 3px;
@@ -1750,7 +1750,7 @@
 		flex-direction: column;
 	}
 	.label {
-		font-family: 'Poppins', sans-serif;
+		font-family: var(--lex-looter-ui-font);
 		font-size: 10px;
 		color: var(--pipee-accent-soft);
 		font-weight: 400;
@@ -1758,7 +1758,7 @@
 		letter-spacing: 1px;
 	}
 	.value {
-		font-family: 'Poppins', sans-serif;
+		font-family: var(--lex-looter-ui-font);
 		font-size: 20px;
 		font-weight: 400;
 		color: white;
@@ -2026,7 +2026,7 @@
 		color: #fff;
 		padding: 12px 5px;
 		border-radius: 8px;
-		font-family: 'Poppins', sans-serif;
+		font-family: var(--lex-looter-ui-font);
 		font-size: clamp(10px, 3.2vw, 14px);
 		font-weight: 600;
 		cursor: pointer;
@@ -2077,7 +2077,7 @@
 	}
 
 	.bet-picker-hint {
-		font-family: 'Poppins', sans-serif;
+		font-family: var(--lex-looter-ui-font);
 		font-size: 9px;
 		color: var(--pipee-accent-soft);
 		text-transform: uppercase;
@@ -3175,7 +3175,7 @@
 
 	.notification-text {
 		color: white;
-		font-family: 'Poppins', sans-serif;
+		font-family: var(--lex-looter-ui-font);
 		font-size: 14px;
 		font-weight: bold;
 		text-transform: uppercase;
@@ -3287,7 +3287,7 @@
 		padding: 2px 7px;
 		box-shadow: 0 0 3px rgba(0, 255, 80, 0.35);
 		overflow: visible;
-		font-family: 'Poppins', sans-serif;
+		font-family: var(--lex-looter-ui-font);
 		font-size: 8px !important;
 		font-weight: 900;
 		letter-spacing: 0.5px;

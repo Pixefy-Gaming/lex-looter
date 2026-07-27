@@ -9,7 +9,7 @@
 
 <script lang="ts">
 	import { Container } from 'pixi-svelte';
-	import { FadeContainer, WinCountUpProvider, ResponsiveBitmapText } from 'components-pixi';
+	import { FadeContainer, WinCountUpProvider, ResponsiveText } from 'components-pixi';
 	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 	import { CanvasSizeRectangle, MainContainer } from 'components-layout';
@@ -64,13 +64,14 @@
 					>
 						{#if winLevelData?.animation}
 							<WinAnimation animationMap={winLevelData.animation}>
-								<ResponsiveBitmapText
+								<ResponsiveText
 									anchor={0.5}
 									maxWidth={2130}
 									text={bookEventAmountToCurrencyString(countUpAmount)}
 									style={{
-										fontFamily: 'gold',
+										fontFamily: 'Jersey 25',
 										fontSize: SYMBOL_SIZE * 3.6,
+										fill: 0xffffff,
 										align: 'center',
 										fontWeight: 'bold',
 										letterSpacing: 0,
@@ -78,14 +79,15 @@
 								/>
 							</WinAnimation>
 						{:else}
-							<ResponsiveBitmapText
+							<ResponsiveText
 								anchor={0.5}
 								maxWidth={context.stateLayoutDerived.canvasSizes().width /
 									context.stateLayoutDerived.mainLayout().scale}
 								text={bookEventAmountToCurrencyString(countUpAmount)}
 								style={{
-									fontFamily: 'gold',
+									fontFamily: 'Jersey 25',
 									fontSize: SYMBOL_SIZE,
+									fill: 0xffffff,
 									align: 'center',
 									fontWeight: 'bold',
 									letterSpacing: 0,

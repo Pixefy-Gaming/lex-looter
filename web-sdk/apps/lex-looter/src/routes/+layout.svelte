@@ -30,3 +30,17 @@
 <!-- File location: apps/scatter/static/loader.gif -->
 
 {@render props.children()}
+
+<style>
+	:global(:root) {
+		--lex-looter-ui-font: 'Jersey 25', sans-serif;
+	}
+
+	:global(body),
+	:global(button),
+	:global(input),
+	:global(select),
+	:global(textarea) {
+		font-family: var(--lex-looter-ui-font);
+	}
+</style>
