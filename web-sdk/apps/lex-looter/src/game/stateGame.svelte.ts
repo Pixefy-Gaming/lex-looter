@@ -188,13 +188,23 @@ export const stateGame = $state({
 	lexSkipPlayback: false,
 });
 
-const boardLayout = () => ({
-	x: stateLayoutDerived.mainLayout().width * 0.5,
-	y: stateLayoutDerived.mainLayout().height * 0.5,
-	anchor: { x: 0.5, y: 0.5 },
-	pivot: { x: BOARD_SIZES.width / 2, y: BOARD_SIZES.height / 2 },
-	...BOARD_SIZES,
-});
+const boardLayout = () => {
+	const mainLayout = stateLayoutDerived.mainLayout();
+	const canvasSizes = stateLayoutDerived.canvasSizes();
+	const y =
+		stateLayoutDerived.layoutType() === 'landscape'
+			? (canvasSizes.height * 0.37 - canvasSizes.height * 0.5) / mainLayout.scale +
+				mainLayout.height * 0.5
+			: mainLayout.height * 0.5;
+
+	return {
+		x: mainLayout.width * 0.5,
+		y,
+		anchor: { x: 0.5, y: 0.5 },
+		pivot: { x: BOARD_SIZES.width / 2, y: BOARD_SIZES.height / 2 },
+		...BOARD_SIZES,
+	};
+};
 
 const boardRaw = () =>
 	board.map((reel) => reel.reelState.symbols.map((reelSymbol) => reelSymbol.rawSymbol));
