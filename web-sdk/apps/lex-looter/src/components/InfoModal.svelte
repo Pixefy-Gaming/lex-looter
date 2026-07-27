@@ -2,7 +2,6 @@
 	import { onMount } from 'svelte';
 	import { stateConfig } from 'state-shared';
 	import { getContext } from '../game/context';
-	import config from '../game/config';
 
 	const context = getContext();
 	const layoutType = $derived(context.stateLayoutDerived.layoutType());
@@ -25,143 +24,172 @@
 	let currentPage = $state(0);
 	const totalPages = 5;
 
-	const SYMBOL_META = {
-		W: {
-			name: 'Wild',
-			frame: 'Wild_00000.png',
-			note: 'Substitutes for all regular symbols.',
-		},
-		H1: {
-			name: 'Coin',
-			frame: 'Coin_00000.png',
-			note: 'Highest regular symbol.',
-		},
-		H2: {
-			name: 'Bear',
-			frame: 'Bear_00000.png',
-			note: 'High symbol.',
-		},
-		H3: {
-			name: 'Shiba',
-			frame: 'Shiba_00000.png',
-			note: 'High symbol.',
-		},
-		H4: {
-			name: 'Pig',
-			frame: 'Pig_00000.png',
-			note: 'High symbol.',
-		},
-		L1: {
-			name: 'Kola',
-			frame: 'Kola_00000.png',
-			note: 'Low symbol.',
-		},
-		L2: {
-			name: 'Chick',
-			frame: 'Chick_00000.png',
-			note: 'Low symbol.',
-		},
-		L3: {
-			name: 'Lollipop',
-			frame: 'Lolipop_00000.png',
-			note: 'Low symbol.',
-		},
-		L4: {
-			name: 'Heart',
-			frame: 'Heart_00000.png',
-			note: 'Low symbol.',
-		},
-		L5: {
-			name: 'Star',
-			frame: 'Star_00000.png',
-			note: 'Low symbol.',
-		},
-		S: {
-			name: 'Scatter',
-			frame: 'Scatter_00000.png',
-			note: 'Triggers capsule features.',
-		},
-	} as const;
+	type SpriteFrame = {
+		x: number;
+		y: number;
+		w: number;
+		h: number;
+	};
 
-	const symbolOrder = ['W', 'H1', 'H2', 'H3', 'H4', 'L1', 'L2', 'L3', 'L4', 'L5', 'S'] as const;
+	type SpriteSheet = {
+		w: number;
+		h: number;
+	};
 
-	function getPaytableValue(symbolKey: keyof typeof SYMBOL_META, count: 3 | 4 | 5) {
-		if (symbolKey === 'S') {
-			if (count === 3) return 'Capsules';
-			if (count === 4) return 'Super';
-			return 'Hidden Bonus';
-		}
+	const objectRows = [
+		{
+			key: 'LEX',
+			name: 'Lex',
+			image: 'assets/lex/character/lexMain.png',
+			frame: { x: 0, y: 324, w: 15, h: 26 },
+			sheet: { w: 16, h: 812 },
+			effect:
+				'The main adventurer. Each wall bounce builds the tumble value and refreshes the corner chests.',
+		},
+		{
+			key: 'CLONE',
+			name: 'Clone',
+			image: 'assets/lex/character/lexClone.png',
+			frame: { x: 0, y: 324, w: 15, h: 26 },
+			sheet: { w: 16, h: 790 },
+			effect:
+				'A duplicate ball with 15 hits. Clone bounces add value, and an expired clone adds a final bonus.',
+		},
+		{
+			key: 'ORB',
+			name: 'Clone Orb',
+			image: 'assets/lex/runtime/clone-orb.png',
+			effect: 'Spawns a new Clone at the collection point.',
+		},
+		{
+			key: 'EXIT',
+			name: 'Escape Ladder',
+			image: 'assets/lex/runtime/escape.png',
+			effect: 'Cashes out the current tumble value and ends the round.',
+		},
+		{
+			key: 'BLOB',
+			name: 'Blue Blob',
+			image: 'assets/lex/character/lexBlueBlob.png',
+			frame: { x: 0, y: 134, w: 23, h: 23 },
+			sheet: { w: 23, h: 157 },
+			effect: 'Cuts the current tumble value by 50%.',
+		},
+		{
+			key: 'SLAY',
+			name: 'Slayer',
+			image: 'assets/lex/character/lexSlayer.png',
+			frame: { x: 516, y: 1433, w: 516, h: 516 },
+			sheet: { w: 1032, h: 1952 },
+			effect:
+				'Destroys the ball that hits it. A heart shield blocks the next Slayer hit against Lex.',
+		},
+		{
+			key: 'COIN',
+			name: 'Gold Coin',
+			image: 'assets/lex/runtime/coin.png',
+			effect: 'Adds 0.5x of the selected cost to the tumble value.',
+		},
+		{
+			key: 'GEM',
+			name: 'Green Gem',
+			image: 'assets/lex/runtime/diamond.png',
+			effect: 'Adds 5x of the selected cost to the tumble value.',
+		},
+		{
+			key: 'HEART',
+			name: 'Red Heart',
+			image: 'assets/lex/runtime/heart.png',
+			effect: 'Grants one shield charge against Slayer.',
+		},
+		{
+			key: 'CHEST',
+			name: 'Mystery Chest',
+			image: 'assets/lex/runtime/chest.png',
+			effect: 'Applies a random multiplier to the current tumble value.',
+		},
+	];
 
-		const symbolConfig = config.symbols[symbolKey as keyof typeof config.symbols];
-		if (!symbolConfig) return '—';
-		const paytable = 'paytable' in symbolConfig ? symbolConfig.paytable : [];
-		if (!Array.isArray(paytable)) return '—';
-		const value = paytable.find((entry) => `${count}` in entry)?.[`${count}` as '3' | '4' | '5'];
-		return typeof value === 'number' ? `${value}x` : '—';
+	function getSpriteFrameStyle(row: { image: string; frame?: SpriteFrame; sheet?: SpriteSheet }) {
+		if (!row.frame || !row.sheet) return '';
+
+		const scale = Math.min(symbolIconSize / row.frame.w, symbolIconSize / row.frame.h);
+		const renderedFrameWidth = row.frame.w * scale;
+		const renderedFrameHeight = row.frame.h * scale;
+		const backgroundX = -row.frame.x * scale + (symbolIconSize - renderedFrameWidth) / 2;
+		const backgroundY = -row.frame.y * scale + (symbolIconSize - renderedFrameHeight) / 2;
+
+		return [
+			`background-image: url(${row.image})`,
+			`background-size: ${row.sheet.w * scale}px ${row.sheet.h * scale}px`,
+			`background-position: ${backgroundX}px ${backgroundY}px`,
+		].join('; ');
 	}
-
-	const symbolRows = symbolOrder.map((symbolKey) => ({
-		key: symbolKey,
-		...SYMBOL_META[symbolKey],
-		combo3: getPaytableValue(symbolKey, 3),
-		combo4: getPaytableValue(symbolKey, 4),
-		combo5: getPaytableValue(symbolKey, 5),
-	}));
 
 	const modeRows = [
 		{
 			title: 'Base',
 			cost: '1x',
 			rtp: '96.50%',
-			maxWin: '15,000x',
+			maxWin: '8,888x',
 			detail:
-				'Standard line spins where winning outcomes may upgrade a low symbol or add a wild. Scatters trigger capsule features, with occasional inline Glitch events.',
+				'Standard Lex Looter round. One Lex ball starts in the arena, corners use the base multiplier profile, and all regular objects may appear.',
 		},
 		{
-			title: 'Extra Chance',
+			title: 'No Slayer',
 			cost: '3x',
 			rtp: '96.50%',
-			maxWin: '15,000x',
+			maxWin: '8,888x',
 			detail:
-				'At 3x cost, increases capsule-feature access and the standard-play high-symbol and wild enhancement chances while retaining inline Glitch events.',
+				'Buy mode with improved corner multipliers. Slayer is delayed out of play for the round, while escape is disabled.',
 		},
 		{
-			title: 'Capsules',
-			cost: '100x',
-			rtp: '96.50%',
-			maxWin: '15,000x',
-			detail:
-				'Direct 10-spin feature. Positive claw picks add wilds or multiplier rewards before play, with accumulated wilds capped at 15.',
-		},
-		{
-			title: 'Super Capsules',
-			cost: '250x',
-			rtp: '96.50%',
-			maxWin: '15,000x',
-			detail:
-				'Direct 14-spin feature with stronger claw rewards than Capsules and accumulated wilds capped at 15.',
-		},
-		{
-			title: 'Glitch Machine',
+			title: 'Start Clone',
 			cost: '50x',
 			rtp: '96.50%',
-			maxWin: '15,000x',
+			maxWin: '8,888x',
 			detail:
-				'A single glitch spin with 3-15 injected wilds and a 1x-100x global multiplier. No scatters can land.',
+				'Buy mode that begins with Lex and one Clone already active. Corner multipliers are stronger and escape is disabled.',
+		},
+		{
+			title: 'Lucky Lex',
+			cost: '100x',
+			rtp: '96.50%',
+			maxWin: '8,888x',
+			detail:
+				'Buy mode that starts with a Clone and a 5x mode multiplier applied to the final cashout result.',
 		},
 	];
 
 	const controlRows = [
-		'Press the spin button, or the space bar when enabled, to start the next round.',
-		'Use the left and right amount arrows to lower or raise the selected play cost.',
-		'Tap the play-cost display to open the full play-cost selection list.',
-		'Open Feature Modes to arm Extra Chance or Glitch Machine, or to start Capsules and Super Capsules directly.',
-		'Feature mode changes above 2x cost always require confirmation before they begin.',
-		'Auto Play always opens a confirmation step before it starts.',
-		'Turbo speeds up reel, feature, and result sequences while it is active.',
+		'Press Play or the spin control to start a Base round at the selected cost.',
+		'Use the left and right amount arrows to lower or raise the selected cost.',
+		'Open the feature menu to buy No Slayer, Start Clone, or Lucky Lex.',
+		'Auto Play opens a confirmation step before it starts.',
+		'Turbo speeds up Lex movement and round reveals while it is active.',
 		'Sound and music can both be toggled from the main controls and settings menu.',
-		'When skip is available during long reveals or feature sequences, tap the active skip control to fast-forward.',
-		'Replay displays the mode, base cost, real cost, multiplier, and final result before playback starts, and it can be started again after the event ends.',
+		'Replay displays the mode, cost, multiplier, and final result before playback starts.',
+	];
+
+	const payoutRows = [
+		{
+			title: 'Corner Chest',
+			detail:
+				'If Lex reaches a live corner chest, the round pays tumble value times the corner multiplier.',
+		},
+		{
+			title: 'Escape Ladder',
+			detail: 'Collecting the ladder cashes out the tumble value immediately.',
+		},
+		{
+			title: 'Bounce Limit',
+			detail:
+				'At 40 Lex wall bounces, the round reaches STEALTH and pays the current tumble value.',
+		},
+		{
+			title: 'All Balls Lost',
+			detail: 'If Slayer removes every active ball and no shield saves Lex, the round ends at 0.',
+		},
 	];
 
 	const disclaimer = $derived(
@@ -209,22 +237,62 @@
 			{#if currentPage === 0}
 				<div class="page-content">
 					<div class="page-header">
-						<h2>Symbol Values</h2>
-						<p>All awards are shown as multipliers of the {costUnitLabel}.</p>
+						<h2>Lex Looter</h2>
+						<p>Build a tumble value, dodge danger, and cash out before the arena turns on you.</p>
+					</div>
+
+					<div class="scroll-container">
+						<div class="info-card">
+							<p>
+								Lex bounces around a walled arena. Each Lex wall bounce adds value to the running
+								tumble amount and refreshes the four corner chest multipliers.
+							</p>
+							<p>
+								For the first 5 Lex bounces, corner chests stay inactive so the tumble value has
+								time to grow.
+							</p>
+							<p>
+								Clone balls can join the round, add their own bounce value, and keep the action
+								alive while they remain on the board.
+							</p>
+						</div>
+
+						<div class="table-card">
+							<div class="table-head overview-grid">
+								<span>Value Source</span>
+								<span>Award</span>
+							</div>
+							<div class="overview-grid table-row">
+								<span>Lex wall bounce</span>
+								<span>+0.12x of {costUnitLabel}</span>
+							</div>
+							<div class="overview-grid table-row">
+								<span>Clone wall bounce</span>
+								<span>+0.08x of {costUnitLabel}</span>
+							</div>
+							<div class="overview-grid table-row">
+								<span>Clone expires after 15 hits</span>
+								<span>+0.50x of {costUnitLabel}</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			{:else if currentPage === 1}
+				<div class="page-content">
+					<div class="page-header">
+						<h2>Objects</h2>
+						<p>Collect treasures, watch the hazards, and use shields to survive Slayer.</p>
 					</div>
 
 					<div class="scroll-container">
 						<div class="table-card">
-							<div class="table-head paytable-grid">
-								<span>Symbol</span>
-								<span>3</span>
-								<span>4</span>
-								<span>5</span>
-								<span>Notes</span>
+							<div class="table-head object-grid">
+								<span>Object</span>
+								<span>Effect</span>
 							</div>
 
-							{#each symbolRows as row}
-								<div class="paytable-grid table-row">
+							{#each objectRows as row}
+								<div class="object-grid table-row">
 									<span class="symbol-name">
 										<span
 											class="symbol-image"
@@ -232,65 +300,59 @@
 											style:height={`${symbolIconSize}px`}
 											style:flex-basis={`${symbolIconSize}px`}
 										>
-											{row.key}
+											{#if row.frame}
+												<span
+													class="sprite-frame"
+													style:width={`${symbolIconSize}px`}
+													style:height={`${symbolIconSize}px`}
+													style={getSpriteFrameStyle(row)}
+												></span>
+											{:else}
+												<img src={row.image} alt="" />
+											{/if}
 										</span>
 										<span>{row.name}</span>
 									</span>
-									<span>{row.combo3}</span>
-									<span>{row.combo4}</span>
-									<span>{row.combo5}</span>
-									<span class="note">{row.note}</span>
+									<span class="note">{row.effect}</span>
 								</div>
 							{/each}
-						</div>
-
-						<div class="info-card compact">
-							<p>
-								Wild substitutes for every regular symbol and also awards its own 4 and 5 of a kind.
-							</p>
-							<p>Scatter symbols do not substitute and instead trigger the capsule features.</p>
-						</div>
-					</div>
-				</div>
-			{:else if currentPage === 1}
-				<div class="page-content">
-					<div class="page-header">
-						<h2>How To Win</h2>
-						<p>Pipee Capsule uses a 5x5 reel set with 15 fixed lines.</p>
-					</div>
-
-					<div class="scroll-container">
-						<div class="info-card">
-							<p>
-								Winning combinations land from left to right on adjacent reels starting on reel 1.
-							</p>
-							<p>The layout includes 5 straight rows, 8 zigzag lines, and 2 full diagonals.</p>
-							<p>
-								3 scatters start Capsules with 10 spins. 4 scatters start Super Capsules with 14
-								spins. 5 scatters reveal the hidden 14-spin bonus.
-							</p>
-						</div>
-
-						<div class="table-card">
-							<div class="table-head">
-								<span>Line Patterns</span>
-							</div>
-							<div class="payline-text-wrap">
-								<div class="payline-text">
-									5 straight rows, 8 zigzag lines, and 2 full diagonals.
-								</div>
-							</div>
-							<p class="helper-text">
-								Row 1 is the top visible row. Row 5 is the bottom visible row.
-							</p>
 						</div>
 					</div>
 				</div>
 			{:else if currentPage === 2}
 				<div class="page-content">
 					<div class="page-header">
+						<h2>Wins</h2>
+						<p>A round ends when Lex cashes out, reaches STEALTH, or loses every active ball.</p>
+					</div>
+
+					<div class="scroll-container">
+						<div class="list-card">
+							{#each payoutRows as row}
+								<div class="list-row">
+									<strong>{row.title}</strong>
+									<span>{row.detail}</span>
+								</div>
+							{/each}
+						</div>
+
+						<div class="info-card">
+							<p>
+								Low corner multipliers are shown in red. Favourable corner multipliers use the game
+								green.
+							</p>
+							<p>
+								The win popup shows the final result, effective multiplier, and cash payout before
+								the next round begins.
+							</p>
+						</div>
+					</div>
+				</div>
+			{:else if currentPage === 3}
+				<div class="page-content">
+					<div class="page-header">
 						<h2>Modes</h2>
-						<p>Every live mode runs at 96.50% RTP with a 15,000x maximum win.</p>
+						<p>Every live mode runs at 96.50% RTP with an 8,888x maximum win.</p>
 					</div>
 
 					<div class="scroll-container">
@@ -309,24 +371,9 @@
 								</div>
 							{/each}
 						</div>
-
-						<div class="info-card">
-							<p>
-								Capsule-style features use a claw map with positive wild or multiplier rewards. The
-								collected values are accumulated before the spins begin.
-							</p>
-							<p>
-								Only the hidden five-scatter bonus upgrades every low symbol to a weighted high
-								symbol. It starts with at least 2 wilds and caps accumulated wilds at 7.
-							</p>
-							<p>
-								Capsule features cannot retrigger. Glitch Machine is a one-round mode with 3-15
-								injected wilds and a 1x-100x global multiplier for that reveal.
-							</p>
-						</div>
 					</div>
 				</div>
-			{:else if currentPage === 3}
+			{:else}
 				<div class="page-content">
 					<div class="page-header">
 						<h2>Controls</h2>
@@ -341,36 +388,8 @@
 						</div>
 
 						<div class="info-card">
-							<p>
-								The main play display always shows the selected play cost, including any active mode
-								multiplier.
-							</p>
-							<p>
-								Replay intro also shows the base cost and the real cost side by side for higher-cost
-								modes.
-							</p>
-						</div>
-					</div>
-				</div>
-			{:else}
-				<div class="page-content">
-					<div class="page-header">
-						<h2>Game Info</h2>
-						<p>Reference details for approval, rules, and player messaging.</p>
-					</div>
-
-					<div class="scroll-container">
-						<div class="info-card">
-							<p>
-								Base, Extra Chance, Capsules, Super Capsules, and Glitch Machine all return 96.50%
-								over time.
-							</p>
-							<p>The advertised maximum win is 15,000x in every available mode.</p>
 							<p>English is the supported language for this build.</p>
-						</div>
-
-						<div class="disclaimer-card">
-							{disclaimer}
+							<p>{disclaimer}</p>
 						</div>
 					</div>
 				</div>
@@ -419,10 +438,11 @@
 	}
 
 	.modal-overlay {
-		--pipee-accent: #e61e73;
-		--pipee-accent-bright: #ff4fa2;
-		--pipee-accent-soft: #ff9bcf;
-		--pipee-accent-soft-rgb: 255, 155, 207;
+		--pipee-accent: #00ff50;
+		--pipee-accent-bright: #31ff74;
+		--pipee-accent-soft: #74ff9f;
+		--pipee-accent-soft-rgb: 116, 255, 159;
+		--lex-green-rgb: 0, 255, 80;
 		position: fixed;
 		inset: 0;
 		display: flex;
@@ -482,7 +502,7 @@
 
 	.close-btn:hover {
 		color: #fff;
-		background: rgba(var(--pipee-accent-soft-rgb), 0.12);
+		background: rgba(var(--lex-green-rgb), 0.14);
 	}
 
 	.modal-body {
@@ -519,7 +539,7 @@
 		color: var(--pipee-accent-soft);
 		font-family: 'cherryBomb', sans-serif;
 		font-size: clamp(18px, 6vw, 32px);
-		letter-spacing: 1px;
+		letter-spacing: 0;
 		text-align: center;
 		text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 	}
@@ -533,16 +553,13 @@
 	.page-header p,
 	.info-card p,
 	.mode-card p,
-	.helper-text,
-	.disclaimer-card,
 	.list-row,
 	.table-row,
 	.table-head {
 		line-height: 1.55;
 	}
 
-	.page-header p,
-	.helper-text {
+	.page-header p {
 		margin: 0;
 		color: rgba(255, 255, 255, 0.78);
 	}
@@ -569,7 +586,6 @@
 	.table-card,
 	.info-card,
 	.list-card,
-	.disclaimer-card,
 	.mode-card {
 		width: 100%;
 		border: 1px solid rgba(255, 255, 255, 0.08);
@@ -579,8 +595,7 @@
 
 	.table-card,
 	.info-card,
-	.list-card,
-	.disclaimer-card {
+	.list-card {
 		max-width: 700px;
 		padding: 16px 18px;
 	}
@@ -589,7 +604,6 @@
 		text-align: center;
 	}
 
-	.info-card.compact p,
 	.info-card p {
 		margin: 0 0 10px;
 		color: rgba(255, 255, 255, 0.9);
@@ -599,11 +613,19 @@
 		margin-bottom: 0;
 	}
 
-	.paytable-grid {
+	.overview-grid,
+	.object-grid {
 		display: grid;
-		grid-template-columns: 1.3fr 0.6fr 0.6fr 0.6fr 1.8fr;
-		gap: 10px;
+		gap: 12px;
 		align-items: center;
+	}
+
+	.overview-grid {
+		grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+	}
+
+	.object-grid {
+		grid-template-columns: minmax(170px, 0.85fr) minmax(0, 1.6fr);
 	}
 
 	.table-head {
@@ -612,7 +634,7 @@
 		color: var(--pipee-accent-soft);
 		font-family: 'Bungee', cursive;
 		font-size: 0.75rem;
-		letter-spacing: 0.08em;
+		letter-spacing: 0;
 		text-transform: uppercase;
 	}
 
@@ -644,34 +666,29 @@
 		height: 42px;
 		flex: 0 0 42px;
 		border-radius: 8px;
-		background: rgba(var(--pipee-accent-soft-rgb), 0.14);
-		border: 1px solid rgba(var(--pipee-accent-soft-rgb), 0.4);
-		color: var(--pipee-accent-soft);
-		font-weight: 900;
-		font-size: 12px;
+		background: transparent;
+		border: none;
+		overflow: hidden;
 		filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.45));
+	}
+
+	.symbol-image img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		image-rendering: pixelated;
+	}
+
+	.sprite-frame {
+		display: block;
+		flex: 0 0 auto;
+		background-repeat: no-repeat;
+		image-rendering: pixelated;
 	}
 
 	.note {
 		color: rgba(255, 255, 255, 0.66);
-	}
-
-	.payline-text-wrap {
-		display: flex;
-		justify-content: center;
-		width: 100%;
-		margin-top: 14px;
-	}
-
-	.payline-text {
-		width: min(100%, 760px);
-		padding: 18px;
-		border-radius: 12px;
-		background: rgba(255, 255, 255, 0.06);
-		border: 1px solid rgba(var(--pipee-accent-soft-rgb), 0.18);
-		color: rgba(255, 255, 255, 0.82);
-		text-align: center;
-		font-weight: 700;
 	}
 
 	.mode-grid {
@@ -702,8 +719,8 @@
 		padding: 4px 10px;
 		border: 1px solid rgba(var(--pipee-accent-soft-rgb), 0.22);
 		border-radius: 999px;
-		background: rgba(var(--pipee-accent-soft-rgb), 0.15);
-		color: var(--pipee-accent-soft);
+		background: rgba(var(--lex-green-rgb), 0.15);
+		color: var(--pipee-accent);
 		font-size: 0.85rem;
 		font-weight: 700;
 		white-space: nowrap;
@@ -727,22 +744,17 @@
 	}
 
 	.list-row {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
 		padding: 10px 12px;
 		border-radius: 12px;
 		background: rgba(255, 255, 255, 0.03);
 		color: rgba(255, 255, 255, 0.9);
 	}
 
-	.disclaimer-card {
-		border-color: rgba(var(--pipee-accent-soft-rgb), 0.2);
-		background: linear-gradient(
-			90deg,
-			transparent,
-			rgba(var(--pipee-accent-soft-rgb), 0.1),
-			transparent
-		);
-		color: rgba(255, 255, 255, 0.88);
-		text-align: center;
+	.list-row strong {
+		color: var(--pipee-accent-soft);
 	}
 
 	.navigation-bar {
@@ -816,13 +828,9 @@
 			padding: 24px 12px 12px;
 		}
 
-		.paytable-grid {
-			grid-template-columns: minmax(112px, 1fr) 0.6fr 0.6fr 0.6fr;
-		}
-
-		.paytable-grid .note {
-			grid-column: 1 / -1;
-			padding-top: 4px;
+		.overview-grid,
+		.object-grid {
+			grid-template-columns: 1fr;
 		}
 
 		.mode-grid {
@@ -832,7 +840,6 @@
 		.table-card,
 		.info-card,
 		.list-card,
-		.disclaimer-card,
 		.mode-card {
 			padding-left: 14px;
 			padding-right: 14px;
@@ -870,13 +877,8 @@
 		padding: 4px 8px 0;
 	}
 
-	.modal-overlay.popout .paytable-grid {
-		grid-template-columns: 1.3fr 0.6fr 0.6fr 0.6fr 1.8fr;
-	}
-
-	.modal-overlay.popout .paytable-grid .note {
-		grid-column: auto;
-		padding-top: 0;
+	.modal-overlay.popout .object-grid {
+		grid-template-columns: minmax(155px, 0.8fr) minmax(0, 1.7fr);
 	}
 
 	.modal-overlay.popout .mode-grid {
@@ -918,17 +920,16 @@
 	.modal-overlay.popout-s .table-card,
 	.modal-overlay.popout-s .info-card,
 	.modal-overlay.popout-s .list-card,
-	.modal-overlay.popout-s .disclaimer-card,
 	.modal-overlay.popout-s .mode-card {
 		padding: 10px;
 	}
 
-	.modal-overlay.popout-s .paytable-grid,
+	.modal-overlay.popout-s .overview-grid,
+	.modal-overlay.popout-s .object-grid,
 	.modal-overlay.popout-s .table-row,
 	.modal-overlay.popout-s .info-card,
 	.modal-overlay.popout-s .list-row,
-	.modal-overlay.popout-s .mode-card,
-	.modal-overlay.popout-s .disclaimer-card {
+	.modal-overlay.popout-s .mode-card {
 		font-size: 11px;
 	}
 
@@ -940,6 +941,10 @@
 		width: 28px;
 		height: 28px;
 		flex-basis: 28px;
+	}
+
+	.modal-overlay.popout-s .object-grid {
+		grid-template-columns: 1fr;
 	}
 
 	.modal-overlay.popout-s .navigation-bar {

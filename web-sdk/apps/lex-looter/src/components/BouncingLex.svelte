@@ -172,7 +172,7 @@
 			fill: 0xffffff,
 			fontSize: 34,
 			fontWeight: '900',
-			stroke: { color: 0x000000, width: 4 },
+			stroke: { color: 0x000000, width: 1 },
 		},
 	});
 	valueText.anchor.set(0.5, 0);
@@ -189,12 +189,12 @@
 			fill: 0xffffff,
 			fontSize: 19,
 			fontWeight: '900',
-			stroke: { color: 0x000000, width: 3 },
+			stroke: { color: 0x000000, width: 1 },
 		},
 	});
 	bounceText.anchor.set(0.5, 0);
 	bounceText.x = W / 2;
-	bounceText.y = -21;
+	bounceText.y = -18;
 	hudLayer.addChild(bounceText);
 
 	const metaText = new PIXI.Text({
@@ -296,6 +296,7 @@
 		boardFrameSprite.width = W + BOARD_FRAME_OUTSET_X * 2;
 		boardFrameSprite.height = H + BOARD_FRAME_OUTSET_Y * 2;
 		boardFrameSprite.filters = [boardFrameSoftBlur];
+
 		smoothTexture(boardFrameSprite.texture);
 		bg.addChildAt(boardFrameSprite, 0);
 	};
