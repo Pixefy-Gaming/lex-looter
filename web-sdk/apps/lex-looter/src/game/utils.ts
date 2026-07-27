@@ -19,12 +19,7 @@ export const playBet = async (bet: Bet) => {
 };
 
 // resume bet
-const BOOK_EVENT_TYPES_TO_RESERVE_FOR_SNAPSHOT = [
-	'updateGlobalMult',
-	'freeSpinTrigger',
-	'updateFreeSpin',
-	'setTotalWin',
-];
+const BOOK_EVENT_TYPES_TO_RESERVE_FOR_SNAPSHOT = ['updateGlobalMult', 'setTotalWin'];
 
 export const convertTorResumableBet = (betToResume: Bet) => {
 	const resumingIndex = Number(betToResume.event);

@@ -886,19 +886,6 @@ export default [
 				anticipation: [0, 0, 0, 0, 0, 1, 2],
 			},
 			{ index: 1, type: 'setTotalWin', amount: 0 },
-			{
-				index: 2,
-				type: 'freeSpinTrigger',
-				totalFs: 12,
-				positions: [
-					{ reel: 0, row: 2 },
-					{ reel: 1, row: 1 },
-					{ reel: 4, row: 1 },
-					{ reel: 5, row: 4 },
-					{ reel: 6, row: 4 },
-				],
-			},
-			{ index: 3, type: 'updateFreeSpin', amount: 1, total: 12 },
 			{ index: 4, type: 'updateGlobalMult', globalMult: 1 },
 			{
 				index: 5,
@@ -1062,7 +1049,6 @@ export default [
 			},
 			{ index: 11, type: 'setWin', amount: 500, winLevel: 5 },
 			{ index: 12, type: 'setTotalWin', amount: 500 },
-			{ index: 13, type: 'updateFreeSpin', amount: 2, total: 12 },
 			{ index: 14, type: 'updateGlobalMult', globalMult: 2 },
 			{
 				index: 15,
@@ -1365,7 +1351,6 @@ export default [
 			},
 			{ index: 29, type: 'setWin', amount: 1180, winLevel: 5 },
 			{ index: 30, type: 'setTotalWin', amount: 1680 },
-			{ index: 31, type: 'updateFreeSpin', amount: 3, total: 12 },
 			{ index: 32, type: 'updateGlobalMult', globalMult: 3 },
 			{
 				index: 33,
@@ -1529,7 +1514,6 @@ export default [
 			},
 			{ index: 39, type: 'setWin', amount: 750, winLevel: 5 },
 			{ index: 40, type: 'setTotalWin', amount: 2430 },
-			{ index: 41, type: 'updateFreeSpin', amount: 4, total: 12 },
 			{ index: 42, type: 'updateGlobalMult', globalMult: 4 },
 			{
 				index: 43,
@@ -1631,7 +1615,6 @@ export default [
 				],
 			},
 			{ index: 45, type: 'setTotalWin', amount: 2430 },
-			{ index: 46, type: 'updateFreeSpin', amount: 5, total: 12 },
 			{ index: 47, type: 'updateGlobalMult', globalMult: 5 },
 			{
 				index: 48,
@@ -1795,7 +1778,6 @@ export default [
 			},
 			{ index: 54, type: 'setWin', amount: 800, winLevel: 5 },
 			{ index: 55, type: 'setTotalWin', amount: 3230 },
-			{ index: 56, type: 'updateFreeSpin', amount: 6, total: 12 },
 			{ index: 57, type: 'updateGlobalMult', globalMult: 6 },
 			{
 				index: 58,
@@ -2018,7 +2000,6 @@ export default [
 			},
 			{ index: 68, type: 'setWin', amount: 10200, winLevel: 9 },
 			{ index: 69, type: 'setTotalWin', amount: 13430 },
-			{ index: 70, type: 'updateFreeSpin', amount: 7, total: 12 },
 			{ index: 71, type: 'updateGlobalMult', globalMult: 7 },
 			{
 				index: 72,
@@ -2120,7 +2101,6 @@ export default [
 				],
 			},
 			{ index: 74, type: 'setTotalWin', amount: 13430 },
-			{ index: 75, type: 'updateFreeSpin', amount: 8, total: 12 },
 			{ index: 76, type: 'updateGlobalMult', globalMult: 8 },
 			{
 				index: 77,
@@ -2282,7 +2262,6 @@ export default [
 			},
 			{ index: 83, type: 'setWin', amount: 12800, winLevel: 9 },
 			{ index: 84, type: 'setTotalWin', amount: 26230 },
-			{ index: 85, type: 'updateFreeSpin', amount: 9, total: 12 },
 			{ index: 86, type: 'updateGlobalMult', globalMult: 9 },
 			{
 				index: 87,
@@ -2530,7 +2509,6 @@ export default [
 			},
 			{ index: 97, type: 'setWin', amount: 68040, winLevel: 9 },
 			{ index: 98, type: 'setTotalWin', amount: 94270 },
-			{ index: 99, type: 'updateFreeSpin', amount: 10, total: 12 },
 			{ index: 100, type: 'updateGlobalMult', globalMult: 10 },
 			{
 				index: 101,
@@ -2632,7 +2610,6 @@ export default [
 				],
 			},
 			{ index: 103, type: 'setTotalWin', amount: 94270 },
-			{ index: 104, type: 'updateFreeSpin', amount: 11, total: 12 },
 			{ index: 105, type: 'updateGlobalMult', globalMult: 11 },
 			{
 				index: 106,
@@ -2734,7 +2711,6 @@ export default [
 				],
 			},
 			{ index: 108, type: 'setTotalWin', amount: 94270 },
-			{ index: 109, type: 'updateFreeSpin', amount: 12, total: 12 },
 			{ index: 110, type: 'updateGlobalMult', globalMult: 12 },
 			{
 				index: 111,
@@ -2836,7 +2812,6 @@ export default [
 				],
 			},
 			{ index: 113, type: 'setTotalWin', amount: 94270 },
-			{ index: 114, type: 'freeSpinEnd', amount: 94270, winLevel: 9 },
 			{ index: 115, type: 'finalWin', amount: 94270 },
 		],
 		criteria: 'freegame',
@@ -3031,20 +3006,6 @@ export default [
 				anticipation: [0, 0, 0, 1, 2, 3, 4],
 			},
 			{ index: 1, type: 'setTotalWin', amount: 0 },
-			{
-				index: 2,
-				type: 'freeSpinTrigger',
-				totalFs: 15,
-				positions: [
-					{ reel: 0, row: 5 },
-					{ reel: 1, row: 6 },
-					{ reel: 2, row: 1 },
-					{ reel: 3, row: 5 },
-					{ reel: 4, row: 6 },
-					{ reel: 5, row: 2 },
-				],
-			},
-			{ index: 3, type: 'updateFreeSpin', amount: 1, total: 15 },
 			{ index: 4, type: 'updateGlobalMult', globalMult: 1 },
 			{
 				index: 5,
@@ -3146,7 +3107,6 @@ export default [
 				],
 			},
 			{ index: 7, type: 'setTotalWin', amount: 0 },
-			{ index: 8, type: 'updateFreeSpin', amount: 2, total: 15 },
 			{ index: 9, type: 'updateGlobalMult', globalMult: 2 },
 			{
 				index: 10,
@@ -3248,7 +3208,6 @@ export default [
 				],
 			},
 			{ index: 12, type: 'setTotalWin', amount: 0 },
-			{ index: 13, type: 'updateFreeSpin', amount: 3, total: 15 },
 			{ index: 14, type: 'updateGlobalMult', globalMult: 3 },
 			{
 				index: 15,
@@ -3350,7 +3309,6 @@ export default [
 				],
 			},
 			{ index: 17, type: 'setTotalWin', amount: 0 },
-			{ index: 18, type: 'updateFreeSpin', amount: 4, total: 15 },
 			{ index: 19, type: 'updateGlobalMult', globalMult: 4 },
 			{
 				index: 20,
@@ -3627,7 +3585,6 @@ export default [
 			},
 			{ index: 30, type: 'setWin', amount: 4480, winLevel: 7 },
 			{ index: 31, type: 'setTotalWin', amount: 4480 },
-			{ index: 32, type: 'updateFreeSpin', amount: 5, total: 15 },
 			{ index: 33, type: 'updateGlobalMult', globalMult: 5 },
 			{
 				index: 34,
@@ -3729,7 +3686,6 @@ export default [
 				],
 			},
 			{ index: 36, type: 'setTotalWin', amount: 4480 },
-			{ index: 37, type: 'updateFreeSpin', amount: 6, total: 15 },
 			{ index: 38, type: 'updateGlobalMult', globalMult: 6 },
 			{
 				index: 39,
@@ -3831,7 +3787,6 @@ export default [
 				],
 			},
 			{ index: 41, type: 'setTotalWin', amount: 4480 },
-			{ index: 42, type: 'updateFreeSpin', amount: 7, total: 15 },
 			{ index: 43, type: 'updateGlobalMult', globalMult: 7 },
 			{
 				index: 44,
@@ -3933,7 +3888,6 @@ export default [
 				],
 			},
 			{ index: 46, type: 'setTotalWin', amount: 4480 },
-			{ index: 47, type: 'updateFreeSpin', amount: 8, total: 15 },
 			{ index: 48, type: 'updateGlobalMult', globalMult: 8 },
 			{
 				index: 49,
@@ -4035,7 +3989,6 @@ export default [
 				],
 			},
 			{ index: 51, type: 'setTotalWin', amount: 4480 },
-			{ index: 52, type: 'updateFreeSpin', amount: 9, total: 15 },
 			{ index: 53, type: 'updateGlobalMult', globalMult: 9 },
 			{
 				index: 54,
@@ -4137,17 +4090,6 @@ export default [
 				],
 			},
 			{ index: 56, type: 'setTotalWin', amount: 4480 },
-			{
-				index: 57,
-				type: 'freeSpinRetrigger',
-				totalFs: 20,
-				positions: [
-					{ reel: 0, row: 3 },
-					{ reel: 3, row: 6 },
-					{ reel: 6, row: 3 },
-				],
-			},
-			{ index: 58, type: 'updateFreeSpin', amount: 10, total: 20 },
 			{ index: 59, type: 'updateGlobalMult', globalMult: 10 },
 			{
 				index: 60,
@@ -4372,7 +4314,6 @@ export default [
 			},
 			{ index: 70, type: 'setWin', amount: 4000, winLevel: 7 },
 			{ index: 71, type: 'setTotalWin', amount: 8480 },
-			{ index: 72, type: 'updateFreeSpin', amount: 11, total: 20 },
 			{ index: 73, type: 'updateGlobalMult', globalMult: 11 },
 			{
 				index: 74,
@@ -4536,7 +4477,6 @@ export default [
 			},
 			{ index: 80, type: 'setWin', amount: 5500, winLevel: 8 },
 			{ index: 81, type: 'setTotalWin', amount: 13980 },
-			{ index: 82, type: 'updateFreeSpin', amount: 12, total: 20 },
 			{ index: 83, type: 'updateGlobalMult', globalMult: 12 },
 			{
 				index: 84,
@@ -4638,7 +4578,6 @@ export default [
 				],
 			},
 			{ index: 86, type: 'setTotalWin', amount: 13980 },
-			{ index: 87, type: 'updateFreeSpin', amount: 13, total: 20 },
 			{ index: 88, type: 'updateGlobalMult', globalMult: 13 },
 			{
 				index: 89,
@@ -4740,7 +4679,6 @@ export default [
 				],
 			},
 			{ index: 91, type: 'setTotalWin', amount: 13980 },
-			{ index: 92, type: 'updateFreeSpin', amount: 14, total: 20 },
 			{ index: 93, type: 'updateGlobalMult', globalMult: 14 },
 			{
 				index: 94,
@@ -4904,7 +4842,6 @@ export default [
 			},
 			{ index: 100, type: 'setWin', amount: 14000, winLevel: 9 },
 			{ index: 101, type: 'setTotalWin', amount: 27980 },
-			{ index: 102, type: 'updateFreeSpin', amount: 15, total: 20 },
 			{ index: 103, type: 'updateGlobalMult', globalMult: 15 },
 			{
 				index: 104,
@@ -5066,7 +5003,6 @@ export default [
 			},
 			{ index: 110, type: 'setWin', amount: 1800, winLevel: 6 },
 			{ index: 111, type: 'setTotalWin', amount: 29780 },
-			{ index: 112, type: 'updateFreeSpin', amount: 16, total: 20 },
 			{ index: 113, type: 'updateGlobalMult', globalMult: 16 },
 			{
 				index: 114,
@@ -5168,7 +5104,6 @@ export default [
 				],
 			},
 			{ index: 116, type: 'setTotalWin', amount: 29780 },
-			{ index: 117, type: 'updateFreeSpin', amount: 17, total: 20 },
 			{ index: 118, type: 'updateGlobalMult', globalMult: 17 },
 			{
 				index: 119,
@@ -5270,7 +5205,6 @@ export default [
 				],
 			},
 			{ index: 121, type: 'setTotalWin', amount: 29780 },
-			{ index: 122, type: 'updateFreeSpin', amount: 18, total: 20 },
 			{ index: 123, type: 'updateGlobalMult', globalMult: 18 },
 			{
 				index: 124,
@@ -5372,7 +5306,6 @@ export default [
 				],
 			},
 			{ index: 126, type: 'setTotalWin', amount: 29780 },
-			{ index: 127, type: 'updateFreeSpin', amount: 19, total: 20 },
 			{ index: 128, type: 'updateGlobalMult', globalMult: 19 },
 			{
 				index: 129,
@@ -5474,7 +5407,6 @@ export default [
 				],
 			},
 			{ index: 131, type: 'setTotalWin', amount: 29780 },
-			{ index: 132, type: 'updateFreeSpin', amount: 20, total: 20 },
 			{ index: 133, type: 'updateGlobalMult', globalMult: 20 },
 			{
 				index: 134,
@@ -5576,7 +5508,6 @@ export default [
 				],
 			},
 			{ index: 136, type: 'setTotalWin', amount: 29780 },
-			{ index: 137, type: 'freeSpinEnd', amount: 29780, winLevel: 7 },
 			{ index: 138, type: 'finalWin', amount: 29780 },
 		],
 		criteria: 'freegame',
@@ -5915,19 +5846,6 @@ export default [
 				anticipation: [0, 0, 0, 0, 0, 1, 2],
 			},
 			{ index: 1, type: 'setTotalWin', amount: 0 },
-			{
-				index: 2,
-				type: 'freeSpinTrigger',
-				totalFs: 12,
-				positions: [
-					{ reel: 2, row: 5 },
-					{ reel: 3, row: 1 },
-					{ reel: 4, row: 6 },
-					{ reel: 5, row: 5 },
-					{ reel: 6, row: 2 },
-				],
-			},
-			{ index: 3, type: 'updateFreeSpin', amount: 1, total: 12 },
 			{ index: 4, type: 'updateGlobalMult', globalMult: 1 },
 			{
 				index: 5,
@@ -6029,7 +5947,6 @@ export default [
 				],
 			},
 			{ index: 7, type: 'setTotalWin', amount: 0 },
-			{ index: 8, type: 'updateFreeSpin', amount: 2, total: 12 },
 			{ index: 9, type: 'updateGlobalMult', globalMult: 2 },
 			{
 				index: 10,
@@ -6131,7 +6048,6 @@ export default [
 				],
 			},
 			{ index: 12, type: 'setTotalWin', amount: 0 },
-			{ index: 13, type: 'updateFreeSpin', amount: 3, total: 12 },
 			{ index: 14, type: 'updateGlobalMult', globalMult: 3 },
 			{
 				index: 15,
@@ -6233,7 +6149,6 @@ export default [
 				],
 			},
 			{ index: 17, type: 'setTotalWin', amount: 0 },
-			{ index: 18, type: 'updateFreeSpin', amount: 4, total: 12 },
 			{ index: 19, type: 'updateGlobalMult', globalMult: 4 },
 			{
 				index: 20,
@@ -6335,7 +6250,6 @@ export default [
 				],
 			},
 			{ index: 22, type: 'setTotalWin', amount: 0 },
-			{ index: 23, type: 'updateFreeSpin', amount: 5, total: 12 },
 			{ index: 24, type: 'updateGlobalMult', globalMult: 5 },
 			{
 				index: 25,
@@ -6623,7 +6537,6 @@ export default [
 			},
 			{ index: 39, type: 'setWin', amount: 3150, winLevel: 7 },
 			{ index: 40, type: 'setTotalWin', amount: 3150 },
-			{ index: 41, type: 'updateFreeSpin', amount: 6, total: 12 },
 			{ index: 42, type: 'updateGlobalMult', globalMult: 6 },
 			{
 				index: 43,
@@ -6785,7 +6698,6 @@ export default [
 			},
 			{ index: 49, type: 'setWin', amount: 1200, winLevel: 5 },
 			{ index: 50, type: 'setTotalWin', amount: 4350 },
-			{ index: 51, type: 'updateFreeSpin', amount: 7, total: 12 },
 			{ index: 52, type: 'updateGlobalMult', globalMult: 7 },
 			{
 				index: 53,
@@ -6887,7 +6799,6 @@ export default [
 				],
 			},
 			{ index: 55, type: 'setTotalWin', amount: 4350 },
-			{ index: 56, type: 'updateFreeSpin', amount: 8, total: 12 },
 			{ index: 57, type: 'updateGlobalMult', globalMult: 8 },
 			{
 				index: 58,
@@ -6989,7 +6900,6 @@ export default [
 				],
 			},
 			{ index: 60, type: 'setTotalWin', amount: 4350 },
-			{ index: 61, type: 'updateFreeSpin', amount: 9, total: 12 },
 			{ index: 62, type: 'updateGlobalMult', globalMult: 9 },
 			{
 				index: 63,
@@ -7091,7 +7001,6 @@ export default [
 				],
 			},
 			{ index: 65, type: 'setTotalWin', amount: 4350 },
-			{ index: 66, type: 'updateFreeSpin', amount: 10, total: 12 },
 			{ index: 67, type: 'updateGlobalMult', globalMult: 10 },
 			{
 				index: 68,
@@ -7193,7 +7102,6 @@ export default [
 				],
 			},
 			{ index: 70, type: 'setTotalWin', amount: 4350 },
-			{ index: 71, type: 'updateFreeSpin', amount: 11, total: 12 },
 			{ index: 72, type: 'updateGlobalMult', globalMult: 11 },
 			{
 				index: 73,
@@ -7527,7 +7435,6 @@ export default [
 			},
 			{ index: 87, type: 'setWin', amount: 33440, winLevel: 9 },
 			{ index: 88, type: 'setTotalWin', amount: 37790 },
-			{ index: 89, type: 'updateFreeSpin', amount: 12, total: 12 },
 			{ index: 90, type: 'updateGlobalMult', globalMult: 12 },
 			{
 				index: 91,
@@ -7629,7 +7536,6 @@ export default [
 				],
 			},
 			{ index: 93, type: 'setTotalWin', amount: 37790 },
-			{ index: 94, type: 'freeSpinEnd', amount: 37790, winLevel: 7 },
 			{ index: 95, type: 'finalWin', amount: 37790 },
 		],
 		criteria: 'winCap',
@@ -7727,18 +7633,6 @@ export default [
 				anticipation: [0, 0, 0, 0, 0, 1, 2],
 			},
 			{ index: 1, type: 'setTotalWin', amount: 0 },
-			{
-				index: 2,
-				type: 'freeSpinTrigger',
-				totalFs: 10,
-				positions: [
-					{ reel: 0, row: 2 },
-					{ reel: 3, row: 1 },
-					{ reel: 4, row: 5 },
-					{ reel: 5, row: 7 },
-				],
-			},
-			{ index: 3, type: 'updateFreeSpin', amount: 1, total: 10 },
 			{ index: 4, type: 'updateGlobalMult', globalMult: 1 },
 			{
 				index: 5,
@@ -7840,7 +7734,6 @@ export default [
 				],
 			},
 			{ index: 7, type: 'setTotalWin', amount: 0 },
-			{ index: 8, type: 'updateFreeSpin', amount: 2, total: 10 },
 			{ index: 9, type: 'updateGlobalMult', globalMult: 2 },
 			{
 				index: 10,
@@ -7942,7 +7835,6 @@ export default [
 				],
 			},
 			{ index: 12, type: 'setTotalWin', amount: 0 },
-			{ index: 13, type: 'updateFreeSpin', amount: 3, total: 10 },
 			{ index: 14, type: 'updateGlobalMult', globalMult: 3 },
 			{
 				index: 15,
@@ -8245,7 +8137,6 @@ export default [
 			},
 			{ index: 29, type: 'setWin', amount: 1080, winLevel: 5 },
 			{ index: 30, type: 'setTotalWin', amount: 1080 },
-			{ index: 31, type: 'updateFreeSpin', amount: 4, total: 10 },
 			{ index: 32, type: 'updateGlobalMult', globalMult: 4 },
 			{
 				index: 33,
@@ -8468,7 +8359,6 @@ export default [
 			},
 			{ index: 43, type: 'setWin', amount: 2480, winLevel: 6 },
 			{ index: 44, type: 'setTotalWin', amount: 3560 },
-			{ index: 45, type: 'updateFreeSpin', amount: 5, total: 10 },
 			{ index: 46, type: 'updateGlobalMult', globalMult: 5 },
 			{
 				index: 47,
@@ -8630,7 +8520,6 @@ export default [
 			},
 			{ index: 53, type: 'setWin', amount: 1300, winLevel: 5 },
 			{ index: 54, type: 'setTotalWin', amount: 4860 },
-			{ index: 55, type: 'updateFreeSpin', amount: 6, total: 10 },
 			{ index: 56, type: 'updateGlobalMult', globalMult: 6 },
 			{
 				index: 57,
@@ -8732,7 +8621,6 @@ export default [
 				],
 			},
 			{ index: 59, type: 'setTotalWin', amount: 4860 },
-			{ index: 60, type: 'updateFreeSpin', amount: 7, total: 10 },
 			{ index: 61, type: 'updateGlobalMult', globalMult: 7 },
 			{
 				index: 62,
@@ -8834,7 +8722,6 @@ export default [
 				],
 			},
 			{ index: 64, type: 'setTotalWin', amount: 4860 },
-			{ index: 65, type: 'updateFreeSpin', amount: 8, total: 10 },
 			{ index: 66, type: 'updateGlobalMult', globalMult: 8 },
 			{
 				index: 67,
@@ -8936,7 +8823,6 @@ export default [
 				],
 			},
 			{ index: 69, type: 'setTotalWin', amount: 4860 },
-			{ index: 70, type: 'updateFreeSpin', amount: 9, total: 10 },
 			{ index: 71, type: 'updateGlobalMult', globalMult: 9 },
 			{
 				index: 72,
@@ -9180,7 +9066,6 @@ export default [
 			},
 			{ index: 82, type: 'setWin', amount: 24120, winLevel: 9 },
 			{ index: 83, type: 'setTotalWin', amount: 28980 },
-			{ index: 84, type: 'updateFreeSpin', amount: 10, total: 10 },
 			{ index: 85, type: 'updateGlobalMult', globalMult: 10 },
 			{
 				index: 86,
@@ -9365,7 +9250,6 @@ export default [
 			},
 			{ index: 92, type: 'setWin', amount: 12400, winLevel: 9 },
 			{ index: 93, type: 'setTotalWin', amount: 41380 },
-			{ index: 94, type: 'freeSpinEnd', amount: 41380, winLevel: 7 },
 			{ index: 95, type: 'finalWin', amount: 41380 },
 		],
 		criteria: 'freegame',
@@ -11327,18 +11211,6 @@ export default [
 				anticipation: [0, 0, 0, 0, 0, 1, 2],
 			},
 			{ index: 1, type: 'setTotalWin', amount: 0 },
-			{
-				index: 2,
-				type: 'freeSpinTrigger',
-				totalFs: 10,
-				positions: [
-					{ reel: 0, row: 4 },
-					{ reel: 1, row: 1 },
-					{ reel: 4, row: 5 },
-					{ reel: 5, row: 2 },
-				],
-			},
-			{ index: 3, type: 'updateFreeSpin', amount: 1, total: 10 },
 			{ index: 4, type: 'updateGlobalMult', globalMult: 1 },
 			{
 				index: 5,
@@ -11440,7 +11312,6 @@ export default [
 				],
 			},
 			{ index: 7, type: 'setTotalWin', amount: 0 },
-			{ index: 8, type: 'updateFreeSpin', amount: 2, total: 10 },
 			{ index: 9, type: 'updateGlobalMult', globalMult: 2 },
 			{
 				index: 10,
@@ -11542,7 +11413,6 @@ export default [
 				],
 			},
 			{ index: 12, type: 'setTotalWin', amount: 0 },
-			{ index: 13, type: 'updateFreeSpin', amount: 3, total: 10 },
 			{ index: 14, type: 'updateGlobalMult', globalMult: 3 },
 			{
 				index: 15,
@@ -11765,7 +11635,6 @@ export default [
 			},
 			{ index: 25, type: 'setWin', amount: 570, winLevel: 5 },
 			{ index: 26, type: 'setTotalWin', amount: 570 },
-			{ index: 27, type: 'updateFreeSpin', amount: 4, total: 10 },
 			{ index: 28, type: 'updateGlobalMult', globalMult: 4 },
 			{
 				index: 29,
@@ -11988,7 +11857,6 @@ export default [
 			},
 			{ index: 39, type: 'setWin', amount: 1400, winLevel: 5 },
 			{ index: 40, type: 'setTotalWin', amount: 1970 },
-			{ index: 41, type: 'updateFreeSpin', amount: 5, total: 10 },
 			{ index: 42, type: 'updateGlobalMult', globalMult: 5 },
 			{
 				index: 43,
@@ -12213,7 +12081,6 @@ export default [
 			},
 			{ index: 53, type: 'setWin', amount: 5800, winLevel: 8 },
 			{ index: 54, type: 'setTotalWin', amount: 7770 },
-			{ index: 55, type: 'updateFreeSpin', amount: 6, total: 10 },
 			{ index: 56, type: 'updateGlobalMult', globalMult: 6 },
 			{
 				index: 57,
@@ -12402,7 +12269,6 @@ export default [
 			},
 			{ index: 63, type: 'setWin', amount: 5400, winLevel: 8 },
 			{ index: 64, type: 'setTotalWin', amount: 13170 },
-			{ index: 65, type: 'updateFreeSpin', amount: 7, total: 10 },
 			{ index: 66, type: 'updateGlobalMult', globalMult: 7 },
 			{
 				index: 67,
@@ -12504,7 +12370,6 @@ export default [
 				],
 			},
 			{ index: 69, type: 'setTotalWin', amount: 13170 },
-			{ index: 70, type: 'updateFreeSpin', amount: 8, total: 10 },
 			{ index: 71, type: 'updateGlobalMult', globalMult: 8 },
 			{
 				index: 72,
@@ -12813,7 +12678,6 @@ export default [
 			},
 			{ index: 86, type: 'setWin', amount: 7280, winLevel: 8 },
 			{ index: 87, type: 'setTotalWin', amount: 20450 },
-			{ index: 88, type: 'updateFreeSpin', amount: 9, total: 10 },
 			{ index: 89, type: 'updateGlobalMult', globalMult: 9 },
 			{
 				index: 90,
@@ -12975,7 +12839,6 @@ export default [
 			},
 			{ index: 96, type: 'setWin', amount: 1170, winLevel: 5 },
 			{ index: 97, type: 'setTotalWin', amount: 21620 },
-			{ index: 98, type: 'updateFreeSpin', amount: 10, total: 10 },
 			{ index: 99, type: 'updateGlobalMult', globalMult: 10 },
 			{
 				index: 100,
@@ -13077,7 +12940,6 @@ export default [
 				],
 			},
 			{ index: 102, type: 'setTotalWin', amount: 21620 },
-			{ index: 103, type: 'freeSpinEnd', amount: 21620, winLevel: 7 },
 			{ index: 104, type: 'finalWin', amount: 21620 },
 		],
 		criteria: 'freegame',
@@ -14964,18 +14826,6 @@ export default [
 				anticipation: [0, 0, 0, 0, 0, 1, 2],
 			},
 			{ index: 1, type: 'setTotalWin', amount: 0 },
-			{
-				index: 2,
-				type: 'freeSpinTrigger',
-				totalFs: 10,
-				positions: [
-					{ reel: 0, row: 1 },
-					{ reel: 1, row: 4 },
-					{ reel: 4, row: 6 },
-					{ reel: 5, row: 2 },
-				],
-			},
-			{ index: 3, type: 'updateFreeSpin', amount: 1, total: 10 },
 			{ index: 4, type: 'updateGlobalMult', globalMult: 1 },
 			{
 				index: 5,
@@ -15077,7 +14927,6 @@ export default [
 				],
 			},
 			{ index: 7, type: 'setTotalWin', amount: 0 },
-			{ index: 8, type: 'updateFreeSpin', amount: 2, total: 10 },
 			{ index: 9, type: 'updateGlobalMult', globalMult: 2 },
 			{
 				index: 10,
@@ -15179,7 +15028,6 @@ export default [
 				],
 			},
 			{ index: 12, type: 'setTotalWin', amount: 0 },
-			{ index: 13, type: 'updateFreeSpin', amount: 3, total: 10 },
 			{ index: 14, type: 'updateGlobalMult', globalMult: 3 },
 			{
 				index: 15,
@@ -15281,7 +15129,6 @@ export default [
 				],
 			},
 			{ index: 17, type: 'setTotalWin', amount: 0 },
-			{ index: 18, type: 'updateFreeSpin', amount: 4, total: 10 },
 			{ index: 19, type: 'updateGlobalMult', globalMult: 4 },
 			{
 				index: 20,
@@ -15443,7 +15290,6 @@ export default [
 			},
 			{ index: 26, type: 'setWin', amount: 160, winLevel: 3 },
 			{ index: 27, type: 'setTotalWin', amount: 160 },
-			{ index: 28, type: 'updateFreeSpin', amount: 5, total: 10 },
 			{ index: 29, type: 'updateGlobalMult', globalMult: 5 },
 			{
 				index: 30,
@@ -15628,7 +15474,6 @@ export default [
 			},
 			{ index: 36, type: 'setWin', amount: 1000, winLevel: 5 },
 			{ index: 37, type: 'setTotalWin', amount: 1160 },
-			{ index: 38, type: 'updateFreeSpin', amount: 6, total: 10 },
 			{ index: 39, type: 'updateGlobalMult', globalMult: 6 },
 			{
 				index: 40,
@@ -15730,7 +15575,6 @@ export default [
 				],
 			},
 			{ index: 42, type: 'setTotalWin', amount: 1160 },
-			{ index: 43, type: 'updateFreeSpin', amount: 7, total: 10 },
 			{ index: 44, type: 'updateGlobalMult', globalMult: 7 },
 			{
 				index: 45,
@@ -15832,7 +15676,6 @@ export default [
 				],
 			},
 			{ index: 47, type: 'setTotalWin', amount: 1160 },
-			{ index: 48, type: 'updateFreeSpin', amount: 8, total: 10 },
 			{ index: 49, type: 'updateGlobalMult', globalMult: 8 },
 			{
 				index: 50,
@@ -15934,7 +15777,6 @@ export default [
 				],
 			},
 			{ index: 52, type: 'setTotalWin', amount: 1160 },
-			{ index: 53, type: 'updateFreeSpin', amount: 9, total: 10 },
 			{ index: 54, type: 'updateGlobalMult', globalMult: 9 },
 			{
 				index: 55,
@@ -16096,7 +15938,6 @@ export default [
 			},
 			{ index: 61, type: 'setWin', amount: 360, winLevel: 4 },
 			{ index: 62, type: 'setTotalWin', amount: 1520 },
-			{ index: 63, type: 'updateFreeSpin', amount: 10, total: 10 },
 			{ index: 64, type: 'updateGlobalMult', globalMult: 10 },
 			{
 				index: 65,
@@ -16260,7 +16101,6 @@ export default [
 			},
 			{ index: 71, type: 'setWin', amount: 800, winLevel: 5 },
 			{ index: 72, type: 'setTotalWin', amount: 2320 },
-			{ index: 73, type: 'freeSpinEnd', amount: 2320, winLevel: 5 },
 			{ index: 74, type: 'finalWin', amount: 2320 },
 		],
 		criteria: 'freegame',

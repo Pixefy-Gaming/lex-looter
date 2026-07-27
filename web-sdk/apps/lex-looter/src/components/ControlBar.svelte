@@ -48,12 +48,6 @@
 	const balance = $derived(safeNumber(stateBet.balanceAmount));
 	const currentBet = $derived(safeNumber(stateBet.betAmount));
 	const totalBet = $derived(safeNumber(stateBetDerived.betCost()));
-	const freeSpinCount = $derived(
-		stateUi.freeSpinCounterShow ? safeNumber(stateUi.freeSpinCounterTotal) : 0,
-	);
-	const isFreeSpin = $derived(stateGame.gameType === 'freegame');
-	const freeSpinCurrent = $derived(safeNumber(stateUi.freeSpinCounterCurrent));
-	const freeSpinTotal = $derived(safeNumber(stateUi.freeSpinCounterTotal));
 	const activeBetMode = $derived(stateBetDerived.activeBetMode());
 	const activeBetModeKey = $derived((stateBet.activeBetModeKey ?? 'BASE').toUpperCase());
 	const isExtraChance = $derived(activeBetModeKey === 'EXTRA_CHANCE');
@@ -207,9 +201,7 @@
 		isInfoModalOpen || isAutoSpinModalOpen || isBetModalOpen || isMenuOpen,
 	);
 	const canStartRound = $derived(isIdle && !isBlockingUiModalOpen);
-	const hasSpinBalance = $derived(
-		stateBetDerived.isBetCostAvailable() || isFreeSpin || freeSpinCount > 0,
-	);
+	const hasSpinBalance = $derived(stateBetDerived.isBetCostAvailable());
 	const betModeMultiplier = $derived(activeBetMode?.costMultiplier ?? 1);
 	const displayBetLabel = $derived(
 		betModeMultiplier > 1 ? `${costLabel} ×${betModeMultiplier}` : costLabel,
@@ -312,7 +304,7 @@
 
 	function openBetModal() {
 		eventEmitter.broadcast({ type: 'soundPressGeneral' });
-		if (isSpinning || isFreeSpin || isReplay) return;
+		if (isSpinning || isReplay) return;
 		stateModal.modal = { name: 'betAmountMenu' };
 	}
 
@@ -329,7 +321,7 @@
 
 	function decreaseBet() {
 		eventEmitter.broadcast({ type: 'soundPressGeneral' });
-		if (isSpinning || isFreeSpin || isReplay) return;
+		if (isSpinning || isReplay) return;
 
 		const options = stateConfig.betAmountOptions ?? [];
 		if (options.length === 0) return;
@@ -346,7 +338,7 @@
 
 	function increaseBet() {
 		eventEmitter.broadcast({ type: 'soundPressGeneral' });
-		if (isSpinning || isFreeSpin || isReplay) return;
+		if (isSpinning || isReplay) return;
 
 		const options = stateConfig.betAmountOptions ?? [];
 		if (options.length === 0) return;
@@ -498,7 +490,8 @@
 			activeBetMode?.type === 'activate' &&
 			activeBetModeKey !== 'BASE'
 		) {
-			const label = activeBetMode.text.betAmountLabel || activeBetMode.text.title || activeBetModeKey;
+			const label =
+				activeBetMode.text.betAmountLabel || activeBetMode.text.title || activeBetModeKey;
 			triggerNotification(`${label.toUpperCase()} ACTIVATED`);
 		}
 
@@ -515,7 +508,6 @@
 	hotkey="Space"
 	disabled={stateConfig.jurisdiction?.disabledSpacebar ||
 		!canPressSpinButton ||
-		isFreeSpin ||
 		isBlockingUiModalOpen}
 	onpress={handleSpin}
 />
@@ -644,16 +636,14 @@
 				<div class="mobile-top-side mobile-top-side-left">
 					<div
 						class="feature-buy-portrait"
-						class:disabled={isFreeSpin || isSpinning || isFeatureBuyDisabled}
+						class:disabled={isSpinning || isFeatureBuyDisabled}
 						class:active={isFeatureButtonActive}
-						onclick={() =>
-							!isFreeSpin && !isSpinning && !isFeatureBuyDisabled && openFeatureModal()}
+						onclick={() => !isSpinning && !isFeatureBuyDisabled && openFeatureModal()}
 						data-sound-click
 						role="button"
 						tabindex="0"
-						aria-disabled={isFreeSpin || isSpinning || isFeatureBuyDisabled}
-						onkeydown={(e) =>
-							e.key === 'Enter' && !isFreeSpin && !isFeatureBuyDisabled && openFeatureModal()}
+						aria-disabled={isSpinning || isFeatureBuyDisabled}
+						onkeydown={(e) => e.key === 'Enter' && !isFeatureBuyDisabled && openFeatureModal()}
 					>
 						<img
 							src="assets/sprites/controlBar/bonusButton.png"
@@ -665,7 +655,7 @@
 							draggable="false"
 						/>
 
-						{#if isFeatureButtonActive && !isFreeSpin}
+						{#if isFeatureButtonActive}
 							<!-- svelte-ignore a11y_click_events_have_key_events -->
 							<div
 								class="mode-dismiss-btn-portrait"
@@ -709,7 +699,6 @@
 						<button
 							class="spin-button-portrait spin-button-mobile"
 							class:spinning-portrait={isSpinning}
-							class:free-spin-portrait={isFreeSpin}
 							class:ante-active-portrait={isExtraChance || isGenericFeatureActive}
 							class:glitch-active-portrait={isGlitchMachine}
 							class:multi-active-portrait={isMultiHunt}
@@ -796,11 +785,11 @@
 			<!-- Connected Bottom Section containing both Bet Controls & Balance/Win strip -->
 			<div class="bottom-container-mobile">
 				<div class="bet-row">
-					<div class="bet-controls-mobile bet-controls-row" class:disabled={isFreeSpin || isReplay}>
+					<div class="bet-controls-mobile bet-controls-row" class:disabled={isReplay}>
 						<button
 							class="arrow-btn-mobile"
 							onclick={decreaseBet}
-							disabled={isSpinning || isFreeSpin || isReplay}
+							disabled={isSpinning || isReplay}
 							aria-label={decreaseCostLabel}
 						>
 							<span class="arrow-icon-mobile arrow-down"></span>
@@ -808,7 +797,7 @@
 						<button
 							class="bet-info-mobile bet-picker-btn-portrait"
 							onclick={openBetModal}
-							disabled={isSpinning || isFreeSpin || isReplay}
+							disabled={isSpinning || isReplay}
 							aria-label={openCostSelectionLabel}
 						>
 							{#if isReplay}
@@ -822,7 +811,7 @@
 						<button
 							class="arrow-btn-mobile"
 							onclick={increaseBet}
-							disabled={isSpinning || isFreeSpin || isReplay}
+							disabled={isSpinning || isReplay}
 							aria-label={increaseCostLabel}
 						>
 							<span class="arrow-icon-mobile arrow-up"></span>
@@ -851,15 +840,14 @@
 		<div class="feature-buy-container feature-buy-landscape-container">
 			<div
 				class="feature-buy-landscape"
-				class:disabled={isFreeSpin || isSpinning || isFeatureBuyDisabled}
+				class:disabled={isSpinning || isFeatureBuyDisabled}
 				class:active={isFeatureButtonActive}
-				onclick={() => !isFreeSpin && !isSpinning && !isFeatureBuyDisabled && openFeatureModal()}
+				onclick={() => !isSpinning && !isFeatureBuyDisabled && openFeatureModal()}
 				data-sound-click
 				role="button"
 				tabindex="0"
-				aria-disabled={isFreeSpin || isSpinning || isFeatureBuyDisabled}
-				onkeydown={(e) =>
-					e.key === 'Enter' && !isFreeSpin && !isFeatureBuyDisabled && openFeatureModal()}
+				aria-disabled={isSpinning || isFeatureBuyDisabled}
+				onkeydown={(e) => e.key === 'Enter' && !isFeatureBuyDisabled && openFeatureModal()}
 			>
 				<img
 					src="assets/sprites/controlBar/bonusButton.png"
@@ -871,7 +859,7 @@
 					draggable="false"
 				/>
 
-				{#if isFeatureButtonActive && !isFreeSpin}
+				{#if isFeatureButtonActive}
 					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<div
 						class="mode-dismiss-btn-landscape"
@@ -918,11 +906,11 @@
 
 			<div class="right-group-landscape">
 				<!-- 5. Bet Controls -->
-				<div class="bet-controls-landscape" class:disabled={isFreeSpin || isReplay}>
+				<div class="bet-controls-landscape" class:disabled={isReplay}>
 					<button
 						class="bet-info-landscape bet-picker-btn-landscape"
 						onclick={openBetModal}
-						disabled={isSpinning || isFreeSpin || isReplay}
+						disabled={isSpinning || isReplay}
 						aria-label={openCostSelectionLabel}
 					>
 						{#if isReplay}
@@ -940,7 +928,7 @@
 						<button
 							class="arrow-btn"
 							onclick={increaseBet}
-							disabled={isSpinning || isFreeSpin || isReplay}
+							disabled={isSpinning || isReplay}
 							aria-label={increaseCostLabel}
 						>
 							<img
@@ -953,7 +941,7 @@
 						<button
 							class="arrow-btn"
 							onclick={decreaseBet}
-							disabled={isSpinning || isFreeSpin || isReplay}
+							disabled={isSpinning || isReplay}
 							aria-label={decreaseCostLabel}
 						>
 							<img
@@ -971,7 +959,6 @@
 					<button
 						class="spin-button-landscape"
 						class:spinning-landscape={isSpinning}
-						class:free-spin-landscape={isFreeSpin}
 						class:replay-landscape={isReplay}
 						class:ante-active-landscape={isExtraChance || isGenericFeatureActive}
 						class:glitch-active-landscape={isGlitchMachine}

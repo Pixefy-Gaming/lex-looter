@@ -13,9 +13,6 @@
 	const isScaledPopout = $derived(layoutType === 'popout' || isStakePopoutViewport);
 	const isPopoutS = $derived(isScaledPopout && canvasSizes.width <= 500);
 	const isPopoutL = $derived(isScaledPopout && canvasSizes.width > 500);
-	const popoutModalScale = $derived(
-		isScaledPopout ? Math.min(1, canvasSizes.width / 960, canvasSizes.height / 540) : 1,
-	);
 	const isSocial = $derived(stateConfig.jurisdiction?.socialCasino);
 	const costUnitLabel = $derived(isSocial ? 'play cost' : 'bet cost');
 	const symbolIconSize = $derived(isPopoutS ? 28 : 42);
@@ -227,8 +224,6 @@
 >
 	<div
 		class="modal-wrapper"
-		style:transform={isScaledPopout ? `scale(${popoutModalScale})` : undefined}
-		style:transform-origin={isScaledPopout ? 'center' : undefined}
 		onclick={(event) => event.stopPropagation()}
 	>
 		<button class="close-btn" onclick={onClose}>×</button>
@@ -445,6 +440,8 @@
 		-webkit-backdrop-filter: blur(8px);
 		z-index: 30000;
 		font-family: var(--lex-looter-ui-font);
+		padding: clamp(8px, 2.5vh, 24px);
+		box-sizing: border-box;
 	}
 
 	.modal-overlay * {
@@ -456,30 +453,30 @@
 		display: flex;
 		flex-direction: column;
 		width: 100%;
-		max-width: 800px;
-		height: 85vh;
-		max-height: 650px;
-		padding: 40px 40px 20px;
+		max-width: min(800px, calc(100vw - 24px));
+		height: min(650px, calc(100dvh - 24px));
+		padding: clamp(22px, 4vh, 40px) clamp(14px, 4vw, 40px) clamp(12px, 2.5vh, 20px);
 		overflow: hidden;
-		border-radius: 20px;
+		border-radius: clamp(12px, 2vw, 20px);
 		background: #000;
 		color: #fff;
 	}
 
 	.modal-overlay.portrait .modal-wrapper {
-		width: 76vw;
-		height: 72vh;
+		width: min(395px, calc(100vw - 16px));
+		max-width: none;
+		height: calc(100dvh - 16px);
 		max-height: none;
-		padding: 24px 12px 12px;
+		padding: 24px 10px 10px;
 	}
 
 	.close-btn {
 		position: absolute;
-		top: 20px;
-		right: 20px;
+		top: clamp(8px, 2vh, 20px);
+		right: clamp(8px, 2vh, 20px);
 		z-index: 100;
-		width: 36px;
-		height: 36px;
+		width: clamp(28px, 5.5vh, 36px);
+		height: clamp(28px, 5.5vh, 36px);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -487,7 +484,7 @@
 		border-radius: 50%;
 		background: rgba(255, 255, 255, 0.05);
 		color: #888;
-		font-size: 24px;
+		font-size: clamp(18px, 4vh, 24px);
 		cursor: pointer;
 		transition: all 0.2s;
 	}
@@ -520,17 +517,17 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		margin-bottom: 20px;
+		margin-bottom: clamp(8px, 2.5vh, 20px);
 		text-align: center;
 	}
 
 	h2 {
 		width: 100%;
-		margin: 0 0 12px;
+		margin: 0 0 clamp(6px, 1.5vh, 12px);
 		overflow-wrap: break-word;
 		color: var(--pipee-accent-soft);
 		font-family: var(--lex-looter-ui-font);
-		font-size: clamp(18px, 6vw, 32px);
+		font-size: clamp(18px, 5vh, 32px);
 		letter-spacing: 0;
 		text-align: center;
 		text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
@@ -548,7 +545,7 @@
 	.list-row,
 	.table-row,
 	.table-head {
-		line-height: 1.55;
+		line-height: 1.45;
 	}
 
 	.page-header p {
@@ -562,9 +559,9 @@
 		flex: 1;
 		flex-direction: column;
 		align-items: center;
-		gap: 16px;
+		gap: clamp(8px, 2vh, 16px);
 		min-height: 0;
-		padding: 10px 15px;
+		padding: clamp(4px, 1.5vh, 10px) clamp(6px, 2vw, 15px);
 		overflow-x: hidden;
 		overflow-y: auto;
 		scrollbar-width: none;
@@ -589,7 +586,7 @@
 	.info-card,
 	.list-card {
 		max-width: 700px;
-		padding: 16px 18px;
+		padding: clamp(10px, 2vh, 16px) clamp(10px, 2vw, 18px);
 	}
 
 	.info-card {
@@ -631,7 +628,7 @@
 	}
 
 	.table-row {
-		padding: 11px 0;
+		padding: clamp(7px, 1.8vh, 11px) 0;
 		border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 		color: rgba(255, 255, 255, 0.88);
 	}
@@ -688,11 +685,11 @@
 		max-width: 700px;
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 14px;
+		gap: clamp(8px, 2vh, 14px);
 	}
 
 	.mode-card {
-		padding: 16px;
+		padding: clamp(10px, 2vh, 16px);
 	}
 
 	.mode-top,
@@ -732,14 +729,14 @@
 	.list-card {
 		display: flex;
 		flex-direction: column;
-		gap: 10px;
+		gap: clamp(6px, 1.5vh, 10px);
 	}
 
 	.list-row {
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
-		padding: 10px 12px;
+		padding: clamp(7px, 1.5vh, 10px) clamp(8px, 2vw, 12px);
 		border-radius: 12px;
 		background: rgba(255, 255, 255, 0.03);
 		color: rgba(255, 255, 255, 0.9);
@@ -750,18 +747,19 @@
 	}
 
 	.navigation-bar {
+		flex: 0 0 auto;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: 30px;
-		margin-top: 28px;
+		gap: clamp(18px, 4vw, 30px);
+		margin-top: clamp(8px, 2.5vh, 28px);
 	}
 
 	.nav-btn {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 10px;
+		padding: clamp(5px, 1.8vh, 10px);
 		border: none;
 		background: none;
 		color: #888;
@@ -781,7 +779,7 @@
 
 	.page-indicators {
 		display: flex;
-		gap: 12px;
+		gap: clamp(8px, 2vw, 12px);
 	}
 
 	.dot {
@@ -815,8 +813,8 @@
 		}
 
 		.modal-overlay.portrait .modal-wrapper {
-			width: 76vw;
-			height: 72vh;
+			width: min(395px, calc(100vw - 16px));
+			height: calc(100dvh - 16px);
 			padding: 24px 12px 12px;
 		}
 
@@ -845,27 +843,28 @@
 
 	.modal-overlay.popout {
 		overflow: hidden;
+		padding: clamp(4px, 2vh, 10px);
 	}
 
 	.modal-overlay.popout .modal-wrapper {
-		width: 860px;
-		height: 460px;
+		width: min(860px, calc(100vw - 16px));
+		height: calc(100dvh - 16px);
 		max-width: none;
 		max-height: none;
-		padding: 24px 24px 16px;
-		border-radius: 20px;
+		padding: clamp(10px, 3vh, 24px) clamp(12px, 3vw, 24px) clamp(8px, 2vh, 16px);
+		border-radius: clamp(10px, 2vw, 20px);
 	}
 
 	.modal-overlay.popout .page-header {
-		margin-bottom: 12px;
+		margin-bottom: clamp(6px, 2vh, 12px);
 	}
 
 	.modal-overlay.popout h2 {
-		font-size: 30px;
+		font-size: clamp(18px, 5.5vh, 30px);
 	}
 
 	.modal-overlay.popout .scroll-container {
-		gap: 12px;
+		gap: clamp(6px, 2vh, 12px);
 		padding: 4px 8px 0;
 	}
 
@@ -878,42 +877,63 @@
 	}
 
 	.modal-overlay.popout .navigation-bar {
-		margin-top: 14px;
+		margin-top: clamp(5px, 2vh, 14px);
 	}
 
 	.modal-overlay.popout-s {
 		background: rgba(0, 0, 0, 0.75);
-		padding: 0;
-		overflow: visible;
+		padding: 4px;
+		overflow: hidden;
 	}
 
 	.modal-overlay.popout-s .modal-wrapper {
-		width: 250%;
-		height: 145vh;
+		width: calc(100vw - 8px);
+		height: calc(100dvh - 8px);
 		max-width: none;
 		max-height: none;
-		padding: 20px 20px 10px;
-		border-radius: 30px;
+		padding: 8px 8px 4px;
+		border-radius: 10px;
+	}
+
+	.modal-overlay.popout-s .close-btn {
+		top: 6px;
+		right: 6px;
+		width: 24px;
+		height: 24px;
+		font-size: 16px;
+	}
+
+	.modal-overlay.popout-s .modal-body {
+		min-height: 0;
 	}
 
 	.modal-overlay.popout-s h2 {
-		margin-bottom: 8px;
-		font-size: 22px;
+		margin-bottom: 3px;
+		font-size: clamp(13px, 8vh, 17px);
+		line-height: 1;
 	}
 
 	.modal-overlay.popout-s .page-header {
-		margin-bottom: 8px;
+		margin-bottom: 4px;
+		padding: 0 24px;
+	}
+
+	.modal-overlay.popout-s .page-header p {
+		font-size: clamp(8px, 4vh, 10px);
+		line-height: 1.15;
 	}
 
 	.modal-overlay.popout-s .scroll-container {
-		padding: 5px 10px;
+		gap: 5px;
+		padding: 2px 4px;
 	}
 
 	.modal-overlay.popout-s .table-card,
 	.modal-overlay.popout-s .info-card,
 	.modal-overlay.popout-s .list-card,
 	.modal-overlay.popout-s .mode-card {
-		padding: 10px;
+		border-radius: 8px;
+		padding: 6px;
 	}
 
 	.modal-overlay.popout-s .overview-grid,
@@ -922,7 +942,29 @@
 	.modal-overlay.popout-s .info-card,
 	.modal-overlay.popout-s .list-row,
 	.modal-overlay.popout-s .mode-card {
-		font-size: 11px;
+		font-size: clamp(8px, 3.8vh, 10px);
+		line-height: 1.18;
+	}
+
+	.modal-overlay.popout-s .table-head {
+		padding-bottom: 5px;
+	}
+
+	.modal-overlay.popout-s .table-row {
+		padding: 5px 0;
+	}
+
+	.modal-overlay.popout-s .info-card p {
+		margin-bottom: 5px;
+	}
+
+	.modal-overlay.popout-s .list-card {
+		gap: 4px;
+	}
+
+	.modal-overlay.popout-s .list-row {
+		padding: 5px 6px;
+		border-radius: 7px;
 	}
 
 	.modal-overlay.popout-s .symbol-name {
@@ -939,13 +981,46 @@
 		grid-template-columns: 1fr;
 	}
 
+	.modal-overlay.popout-s .mode-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 5px;
+	}
+
+	.modal-overlay.popout-s .mode-top,
+	.modal-overlay.popout-s .mode-stats {
+		gap: 5px;
+	}
+
+	.modal-overlay.popout-s .mode-top {
+		margin-bottom: 4px;
+	}
+
+	.modal-overlay.popout-s .mode-stats {
+		margin-bottom: 5px;
+		font-size: clamp(7px, 3.4vh, 9px);
+	}
+
+	.modal-overlay.popout-s h3 {
+		font-size: clamp(9px, 4vh, 11px);
+	}
+
+	.modal-overlay.popout-s .mode-cost {
+		padding: 2px 5px;
+		font-size: clamp(7px, 3.4vh, 9px);
+	}
+
 	.modal-overlay.popout-s .navigation-bar {
-		gap: 20px;
-		margin-top: 12px;
+		gap: 16px;
+		margin-top: 3px;
 	}
 
 	.modal-overlay.popout-s .nav-btn svg {
-		width: 32px;
-		height: 32px;
+		width: 22px;
+		height: 22px;
+	}
+
+	.modal-overlay.popout-s .dot {
+		width: 6px;
+		height: 6px;
 	}
 </style>

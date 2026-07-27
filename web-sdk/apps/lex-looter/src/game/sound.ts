@@ -2,7 +2,6 @@ import { createSound } from 'utils-sound';
 
 export type MusicName =
 	| 'bgm_main'
-	| 'bgm_freespin'
 	| 'bgm_winlevel_big'
 	| 'bgm_winlevel_epic'
 	| 'bgm_winlevel_max'
@@ -19,7 +18,6 @@ export type SoundEffectName =
 	| 'hit-blue-blob'
 	| 'hit-chest'
 	| 'hit-heart'
-	| 'jng_intro_fs'
 	| 'running'
 	| 'slayer'
 	| 'sfx_anticipation'
@@ -52,7 +50,6 @@ export type SoundEffectName =
 	| 'sfx_scatter_stop_5'
 	| 'sfx_scatter_win'
 	| 'sfx_scatter_win_v2'
-	| 'sfx_superfreespin'
 	| 'sfx_symbols_landing'
 	| 'sfx_wild_explode'
 	| 'sfx_winlevel_end'
@@ -60,7 +57,6 @@ export type SoundEffectName =
 	| 'sfx_winlevel_small'
 	| 'sfx_winlevel_standard'
 	| 'sfx_winlevel_substantial'
-	| 'sfx_youwon_panel'
 	| 'tumble_win_1'
 	| 'tumble_win_2'
 	| 'tumble_win_3'

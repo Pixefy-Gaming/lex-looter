@@ -393,37 +393,6 @@ export default {
 		amount: 550,
 		winLevel: 5,
 	},
-	freeSpinTrigger: {
-		type: 'freeSpinTrigger',
-		totalFs: 12,
-		positions: [
-			{
-				reel: 0,
-				row: 2,
-			},
-			{
-				reel: 1,
-				row: 1,
-			},
-			{
-				reel: 4,
-				row: 1,
-			},
-			{
-				reel: 5,
-				row: 4,
-			},
-			{
-				reel: 6,
-				row: 4,
-			},
-		],
-	},
-	updateFreeSpin: {
-		type: 'updateFreeSpin',
-		amount: 1,
-		total: 12,
-	},
 	updateGlobalMult: {
 		type: 'updateGlobalMult',
 		globalMult: 3,
@@ -438,29 +407,6 @@ export default {
 			[0, 1, 1, 1, 1, 1, 0],
 			[0, 0, 1, 1, 1, 0, 0],
 			[0, 0, 0, 1, 0, 0, 0],
-		],
-	},
-	freeSpinEnd: {
-		type: 'freeSpinEnd',
-		amount: 94270,
-		winLevel: 9,
-	},
-	freeSpinRetrigger: {
-		type: 'freeSpinRetrigger',
-		totalFs: 20,
-		positions: [
-			{
-				reel: 0,
-				row: 3,
-			},
-			{
-				reel: 3,
-				row: 6,
-			},
-			{
-				reel: 6,
-				row: 3,
-			},
 		],
 	},
 };

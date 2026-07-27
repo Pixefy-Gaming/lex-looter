@@ -19,8 +19,6 @@
 	import TumbleWinAmount from './TumbleWinAmount.svelte';
 	import GlobalMultiplier from './GlobalMultiplier.svelte';
 	import Win from './Win.svelte';
-	import FreeSpinCounter from './FreeSpinCounter.svelte';
-	import FreeSpinOutro from './FreeSpinOutro.svelte';
 	import ControlBar from './ControlBar.svelte';
 	import Transition from './Transition.svelte';
 	import BouncingLex from './BouncingLex.svelte';
@@ -130,10 +128,6 @@
 			<ControlBar />
 		{/if}
 		<Win />
-		{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
-			<FreeSpinCounter />
-		{/if}
-		<FreeSpinOutro />
 		<Transition />
 
 		{#if showReplayIntro}

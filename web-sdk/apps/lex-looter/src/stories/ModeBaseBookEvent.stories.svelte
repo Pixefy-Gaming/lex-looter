@@ -56,36 +56,6 @@
 />
 
 <Story
-	name="freeSpinTrigger"
-	args={templateArgs({
-		skipLoadingScreen: true,
-		data: events.freeSpinTrigger,
-		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
-	})}
-	{template}
-/>
-
-<Story
-	name="freeSpinRetrigger"
-	args={templateArgs({
-		skipLoadingScreen: true,
-		data: events.freeSpinRetrigger,
-		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
-	})}
-	{template}
-/>
-
-<Story
-	name="updateFreeSpin"
-	args={templateArgs({
-		skipLoadingScreen: true,
-		data: events.updateFreeSpin,
-		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
-	})}
-	{template}
-/>
-
-<Story
 	name="winInfo"
 	args={templateArgs({
 		skipLoadingScreen: true,
@@ -139,16 +109,6 @@
 	args={templateArgs({
 		skipLoadingScreen: true,
 		data: events.setWin,
-		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
-	})}
-	{template}
-/>
-
-<Story
-	name="freeSpinEnd"
-	args={templateArgs({
-		skipLoadingScreen: true,
-		data: events.freeSpinEnd,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
 	{template}

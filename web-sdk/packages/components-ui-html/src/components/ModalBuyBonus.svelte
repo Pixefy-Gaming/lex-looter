@@ -39,6 +39,7 @@
 		stateConfig.betAmountOptions.findIndex((amount) => amount === stateBet.betAmount),
 	);
 	let confirmingMode = $state<BetModeData | null>(null);
+	let modalOverlay = $state<HTMLDivElement | null>(null);
 
 	const closeModal = () => {
 		confirmingMode = null;
@@ -70,10 +71,19 @@
 		stateBet.betAmount = nextAmount;
 		eventEmitter.broadcast({ type: 'soundPressGeneral' });
 	};
+
+	$effect(() => {
+		if (stateModal.modal?.name !== 'buyBonus') return;
+
+		requestAnimationFrame(() => {
+			modalOverlay?.scrollTo({ top: 0, left: 0 });
+		});
+	});
 </script>
 
 {#if stateModal.modal?.name === 'buyBonus'}
 	<div
+		bind:this={modalOverlay}
 		class="modal-overlay {layoutType}"
 		class:stacked={stackedLayout}
 		style={`z-index: ${zIndex.modal};`}
@@ -152,35 +162,43 @@
 				{/each}
 			</div>
 
-			<div class="bet-adjust-bar">
-				<button
-					class="bet-btn"
-					onclick={() => setBetByStep(-1)}
-					disabled={betOptionIndex <= 0}
-					aria-label="Decrease bet"
-				>
-					<svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-						<path d="M19 13H5v-2h14v2z" />
-					</svg>
-				</button>
-
-				<div class="bet-display">
-					<span class="bet-label">BET</span>
-					<span class="bet-value">{numberToCurrencyString(stateBet.betAmount)}</span>
-				</div>
-
-				<button
-					class="bet-btn"
-					onclick={() => setBetByStep(1)}
-					disabled={betOptionIndex >= stateConfig.betAmountOptions.length - 1}
-					aria-label="Increase bet"
-				>
-					<svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-						<path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-					</svg>
-				</button>
-			</div>
+			<div class="bet-scroll-spacer" aria-hidden="true"></div>
 		</div>
+
+	</div>
+
+	<div
+		class="bet-adjust-bar"
+		class:stacked={stackedLayout}
+		style={`z-index: ${zIndex.modal + 1};`}
+		role="presentation"
+	>
+		<button
+			class="bet-btn"
+			onclick={() => setBetByStep(-1)}
+			disabled={betOptionIndex <= 0}
+			aria-label="Decrease bet"
+		>
+			<svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+				<path d="M19 13H5v-2h14v2z" />
+			</svg>
+		</button>
+
+		<div class="bet-display">
+			<span class="bet-label">BET</span>
+			<span class="bet-value">{numberToCurrencyString(stateBet.betAmount)}</span>
+		</div>
+
+		<button
+			class="bet-btn"
+			onclick={() => setBetByStep(1)}
+			disabled={betOptionIndex >= stateConfig.betAmountOptions.length - 1}
+			aria-label="Increase bet"
+		>
+			<svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+				<path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+			</svg>
+		</button>
 	</div>
 {/if}
 
@@ -199,6 +217,7 @@
 		color: white;
 		font-family: var(--lex-looter-ui-font, sans-serif);
 		cursor: pointer;
+		overflow: hidden;
 	}
 
 	.modal-overlay.stacked {
@@ -210,11 +229,17 @@
 	.modal-wrapper {
 		position: relative;
 		width: 100%;
+		max-height: 100%;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		gap: clamp(14px, 3vh, 30px);
 		cursor: default;
+	}
+
+	.modal-overlay.stacked .modal-wrapper {
+		display: block;
+		max-height: none;
 	}
 
 	.close-btn {
@@ -251,15 +276,21 @@
 		padding: clamp(8px, 1.5vh, 20px) clamp(8px, 2vw, 36px);
 		box-sizing: border-box;
 		scrollbar-width: none;
+		min-height: 0;
 	}
 
 	.cards-container::-webkit-scrollbar {
 		display: none;
 	}
 
+	.bet-scroll-spacer {
+		display: none;
+	}
+
 	.cards-container.stacked {
 		flex-direction: column;
 		align-items: center;
+		justify-content: flex-start;
 		overflow: visible;
 		width: 100%;
 		padding: 0 0 96px;
@@ -282,6 +313,7 @@
 		justify-content: space-between;
 		gap: 12px;
 		box-sizing: border-box;
+		overflow: hidden;
 	}
 
 	.cards-container.stacked .card {
@@ -319,6 +351,7 @@
 		align-items: center;
 		gap: 8px;
 		min-height: 96px;
+		width: 100%;
 	}
 
 	h2 {
@@ -340,6 +373,7 @@
 		line-height: 1.25;
 		text-align: center;
 		text-transform: uppercase;
+		text-wrap: balance;
 	}
 
 	.price-container {
@@ -347,6 +381,7 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 4px;
+		width: 100%;
 	}
 
 	.price-text {
@@ -355,6 +390,9 @@
 		font-weight: 900;
 		color: #ffffff;
 		line-height: 1;
+		max-width: 100%;
+		overflow-wrap: anywhere;
+		text-align: center;
 	}
 
 	.cost-formula {
@@ -481,6 +519,11 @@
 	}
 
 	.bet-adjust-bar {
+		position: fixed;
+		left: 50%;
+		bottom: clamp(14px, 3vh, 32px);
+		z-index: 2;
+		transform: translateX(-50%);
 		background: rgba(0, 0, 0, 0.55);
 		border: 1px solid rgba(255, 255, 255, 0.18);
 		border-radius: 99px;
@@ -493,11 +536,8 @@
 		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 	}
 
-	.stacked .bet-adjust-bar {
-		position: fixed;
+	.bet-adjust-bar.stacked {
 		bottom: 24px;
-		left: 50%;
-		transform: translateX(-50%);
 		background: rgba(20, 20, 20, 0.95);
 	}
 
@@ -555,8 +595,37 @@
 			padding: 14px 0 0;
 		}
 
+		.modal-wrapper {
+			gap: 12px;
+		}
+
+		.cards-container.stacked {
+			gap: 12px;
+			padding: 6px 0 118px;
+		}
+
+		.cards-container.stacked .card {
+			width: min(315px, calc(100vw - 32px));
+			flex: 0 0 auto;
+			min-height: clamp(292px, 40vh, 340px);
+			padding: 16px 14px;
+		}
+
+		.cards-container.stacked .card:last-child {
+			margin-bottom: 88px;
+		}
+
+		.bet-scroll-spacer {
+			display: block;
+			flex: 0 0 104px;
+		}
+
+		.cards-container.stacked .visual-frame {
+			height: clamp(92px, 22vh, 132px);
+		}
+
 		.card-copy {
-			min-height: 100px;
+			min-height: 88px;
 		}
 
 		.bet-adjust-bar {
@@ -575,6 +644,156 @@
 		.bet-btn {
 			width: 38px;
 			height: 38px;
+		}
+	}
+
+	@media (orientation: landscape) and (max-height: 620px) {
+		.modal-overlay {
+			align-items: center;
+			padding: clamp(6px, 2vh, 12px) clamp(8px, 2vw, 16px);
+		}
+
+		.modal-wrapper {
+			gap: clamp(6px, 2vh, 12px);
+		}
+
+		.close-btn {
+			width: clamp(28px, 7vh, 38px);
+			height: clamp(28px, 7vh, 38px);
+			border-width: 1px;
+			font-size: clamp(18px, 5vh, 26px);
+		}
+
+		.cards-container {
+			justify-content: flex-start;
+			align-items: stretch;
+			gap: clamp(8px, 1.8vw, 18px);
+			width: min(100%, 940px);
+			max-height: calc(100dvh - 70px);
+			padding: 2px clamp(24px, 6vw, 46px);
+			scroll-snap-type: x proximity;
+		}
+
+		.card {
+			flex: 0 0 clamp(112px, 29vw, 250px);
+			width: clamp(112px, 29vw, 250px);
+			min-height: 0;
+			height: min(300px, calc(100dvh - 76px));
+			padding: clamp(8px, 2.2vh, 16px) clamp(8px, 1.6vw, 16px);
+			border-radius: clamp(10px, 3vh, 16px);
+			gap: clamp(5px, 1.6vh, 10px);
+			scroll-snap-align: center;
+		}
+
+		.visual-frame {
+			height: clamp(44px, 22vh, 112px);
+			flex: 0 0 auto;
+		}
+
+		.top-visual {
+			max-width: min(100%, 170px);
+		}
+
+		.card-copy {
+			gap: 4px;
+			min-height: 0;
+		}
+
+		h2 {
+			font-size: clamp(14px, 4.4vh, 28px);
+			line-height: 0.95;
+		}
+
+		p {
+			font-size: clamp(8px, 2.2vh, 11px);
+			line-height: 1.15;
+		}
+
+		.price-container {
+			gap: 1px;
+		}
+
+		.price-text {
+			font-size: clamp(17px, 5vh, 34px);
+		}
+
+		.cost-formula {
+			font-size: clamp(8px, 2vh, 11px);
+			line-height: 1;
+		}
+
+		.action-btn {
+			padding: clamp(5px, 1.8vh, 8px) clamp(8px, 1.5vw, 14px);
+			border-width: 1px;
+			box-shadow: 0 4px 0 0 #008f2d;
+			font-size: clamp(10px, 3vh, 16px);
+			line-height: 1;
+		}
+
+		.confirm-panel {
+			gap: 6px;
+		}
+
+		.confirm-row {
+			gap: 6px;
+		}
+
+		.confirm-back-btn,
+		.confirm-ok-btn {
+			padding: clamp(5px, 1.8vh, 8px) 6px;
+			border-width: 1px;
+			font-size: clamp(9px, 2.7vh, 13px);
+			line-height: 1;
+		}
+
+		.bet-adjust-bar {
+			gap: clamp(6px, 1.4vw, 12px);
+			padding: clamp(4px, 1.4vh, 7px) clamp(8px, 1.8vw, 12px);
+		}
+
+		.bet-btn {
+			width: clamp(28px, 8vh, 38px);
+			height: clamp(28px, 8vh, 38px);
+		}
+
+		.bet-display {
+			min-width: clamp(74px, 16vw, 104px);
+			padding: clamp(4px, 1.4vh, 7px) 10px;
+			border-radius: 12px;
+		}
+
+		.bet-label {
+			font-size: clamp(7px, 1.8vh, 9px);
+		}
+
+		.bet-value {
+			font-size: clamp(14px, 4vh, 20px);
+		}
+	}
+
+	@media (orientation: landscape) and (max-height: 260px) {
+		.modal-wrapper {
+			gap: 5px;
+		}
+
+		.cards-container {
+			max-height: calc(100dvh - 52px);
+			padding-right: 42px;
+		}
+
+		.card {
+			flex-basis: clamp(104px, 26vw, 112px);
+			width: clamp(104px, 26vw, 112px);
+			height: calc(100dvh - 58px);
+		}
+
+		.visual-frame {
+			height: clamp(34px, 19vh, 46px);
+		}
+
+		p,
+		.cost-formula {
+			display: none;
 		}
 	}
 </style>

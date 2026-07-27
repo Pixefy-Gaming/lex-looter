@@ -26,12 +26,7 @@ const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinLevelData }) =>
 
 const winLevelSoundsStop = () => {
 	eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_bigwin_coinloop' });
-	if (stateBet.activeBetModeKey === 'SUPERSPIN' || stateGame.gameType === 'freegame') {
-		// check if SUPERSPIN, when finishing a bet.
-		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin' });
-	} else {
-		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_main' });
-	}
+	eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_main' });
 	eventEmitter.broadcastAsync({ type: 'uiShow' });
 };
 
@@ -312,64 +307,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	setTotalWin: async (bookEvent: BookEventOfType<'setTotalWin'>) => {
 		stateBet.winBookEventAmount = bookEvent.amount;
 	},
-	freeSpinTrigger: async (bookEvent: BookEventOfType<'freeSpinTrigger'>) => {
-		// animate scatters
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
-		await animateSymbols({ positions: bookEvent.positions });
-		// show free spin intro
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
-		await eventEmitter.broadcastAsync({ type: 'uiHide' });
-		await eventEmitter.broadcastAsync({ type: 'transition' });
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
-		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin' });
-		stateGame.gameType = 'freegame';
-		eventEmitter.broadcast({ type: 'globalMultiplierShow' });
-		await eventEmitter.broadcastAsync({
-			type: 'globalMultiplierUpdate',
-			multiplier: 1, // resets when multiplier === 1
-		});
-		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
-		eventEmitter.broadcast({
-			type: 'freeSpinCounterUpdate',
-			current: undefined,
-			total: bookEvent.totalFs,
-		});
-		await eventEmitter.broadcastAsync({ type: 'uiShow' });
-		await eventEmitter.broadcastAsync({ type: 'drawerButtonShow' });
-		eventEmitter.broadcast({ type: 'drawerFold' });
-	},
-	freeSpinRetrigger: async (bookEvent: BookEventOfType<'freeSpinTrigger'>) => {
-		// animate scatters
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
-		await animateSymbols({ positions: bookEvent.positions });
-		// show free spin intro
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
-		await eventEmitter.broadcastAsync({ type: 'uiHide' });
-		await eventEmitter.broadcastAsync({ type: 'transition' });
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
-		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin' });
-		stateGame.gameType = 'freegame';
-		eventEmitter.broadcast({ type: 'globalMultiplierShow' });
-		await eventEmitter.broadcastAsync({
-			type: 'globalMultiplierUpdate',
-			multiplier: 1, // resets when multiplier === 1
-		});
-		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
-		eventEmitter.broadcast({
-			type: 'freeSpinCounterUpdate',
-			current: undefined,
-			total: bookEvent.totalFs,
-		});
-		await eventEmitter.broadcastAsync({ type: 'uiShow' });
-	},
-	updateFreeSpin: async (bookEvent: BookEventOfType<'updateFreeSpin'>) => {
-		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
-		eventEmitter.broadcast({
-			type: 'freeSpinCounterUpdate',
-			current: bookEvent.amount,
-			total: bookEvent.total,
-		});
-	},
 	updateGlobalMult: async (bookEvent: BookEventOfType<'updateGlobalMult'>) => {
 		eventEmitter.broadcast({ type: 'globalMultiplierShow' });
 		if (bookEvent.globalMult === 1) {
@@ -379,30 +316,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			type: 'globalMultiplierUpdate',
 			multiplier: bookEvent.globalMult, // resets when multiplier === 1
 		});
-	},
-	freeSpinEnd: async (bookEvent: BookEventOfType<'freeSpinEnd'>) => {
-		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel];
-
-		await eventEmitter.broadcastAsync({ type: 'uiHide' });
-		stateGame.gameType = 'basegame';
-		eventEmitter.broadcast({ type: 'globalMultiplierHide' });
-		eventEmitter.broadcast({ type: 'freeSpinOutroShow' });
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_youwon_panel' });
-		winLevelSoundsPlay({ winLevelData });
-		await eventEmitter.broadcastAsync({
-			type: 'freeSpinOutroCountUp',
-			amount: bookEvent.amount,
-			winLevelData,
-		});
-		winLevelSoundsStop();
-		eventEmitter.broadcast({ type: 'freeSpinOutroHide' });
-		eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
-		eventEmitter.broadcast({ type: 'globalMultiplierHide' });
-		eventEmitter.broadcast({ type: 'tumbleWinAmountHide' });
-		await eventEmitter.broadcastAsync({ type: 'transition' });
-		await eventEmitter.broadcastAsync({ type: 'uiShow' });
-		await eventEmitter.broadcastAsync({ type: 'drawerUnfold' });
-		eventEmitter.broadcast({ type: 'drawerButtonHide' });
 	},
 	tumbleBoard: async (bookEvent: BookEventOfType<'tumbleBoard'>) => {
 		eventEmitter.broadcast({ type: 'boardHide' });
@@ -458,13 +371,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				| undefined;
 		}
 
-		const lastFreeSpinTriggerEvent = findLastBookEvent('freeSpinTrigger' as const);
-		const lastUpdateFreeSpinEvent = findLastBookEvent('updateFreeSpin' as const);
 		const lastSetTotalWinEvent = findLastBookEvent('setTotalWin' as const);
 		const lastUpdateGlobalMultEvent = findLastBookEvent('updateGlobalMult' as const);
 
-		if (lastFreeSpinTriggerEvent) await playBookEvent(lastFreeSpinTriggerEvent, { bookEvents });
-		if (lastUpdateFreeSpinEvent) playBookEvent(lastUpdateFreeSpinEvent, { bookEvents });
 		if (lastSetTotalWinEvent) playBookEvent(lastSetTotalWinEvent, { bookEvents });
 		if (lastUpdateGlobalMultEvent) playBookEvent(lastUpdateGlobalMultEvent, { bookEvents });
 	},

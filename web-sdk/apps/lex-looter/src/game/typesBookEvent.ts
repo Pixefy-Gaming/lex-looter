@@ -40,31 +40,10 @@ type BookEventSetTotalWin = {
 	amount: number;
 };
 
-type BookEventFreeSpinTrigger = {
-	index: number;
-	type: 'freeSpinTrigger';
-	totalFs: number;
-	positions: Position[];
-};
-
-type BookEventUpdateFreeSpin = {
-	index: number;
-	type: 'updateFreeSpin';
-	amount: number;
-	total: number;
-};
-
 type BookEventUpdateGlobalMult = {
 	index: number;
 	type: 'updateGlobalMult';
 	globalMult: number;
-};
-
-type BookEventFreeSpinEnd = {
-	index: number;
-	type: 'freeSpinEnd';
-	amount: number;
-	winLevel: number;
 };
 
 type BookEventTumbleBoard = {
@@ -92,13 +71,6 @@ type BookEventUpdateGrid = {
 	index: number;
 	type: 'updateGrid';
 	gridMultipliers: number[][];
-};
-
-type BookEventFreeSpinRetrigger = {
-	index: number;
-	type: 'freeSpinRetrigger';
-	totalFs: number;
-	positions: Position[];
 };
 
 // customised
@@ -344,17 +316,13 @@ export type BookEvent =
 	| BookEventWinInfo
 	| BookEventSetTumbleWin
 	| BookEventSetTotalWin
-	| BookEventFreeSpinTrigger
-	| BookEventUpdateFreeSpin
 	| BookEventUpdateGlobalMult
 	| BookEventTumbleBoard
 	| BookEventCreateBonusSnapshot
 	| BookEventFinalWin
 	| BookEventSetWin
-	| BookEventFreeSpinEnd
 	// new
 	| BookEventUpdateGrid
-	| BookEventFreeSpinRetrigger
 	// customised
 	| BookEventCreateBonusSnapshot
 	// Lex Looter
