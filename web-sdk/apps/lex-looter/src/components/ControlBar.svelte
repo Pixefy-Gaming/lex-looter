@@ -465,6 +465,7 @@
 	function deactivateMode() {
 		eventEmitter.broadcast({ type: 'soundPressGeneral' });
 		stateBet.activeBetModeKey = 'BASE';
+		triggerNotification('FEATURE DISABLED');
 	}
 
 	// --- FEATURE NOTIFICATION LOGIC ---
@@ -489,24 +490,19 @@
 		triggerNotification(lowFundsLabel);
 	});
 
-	// Use a variable to track previous states to only trigger on activation (false -> true)
-	let prevExtraChance = false;
-	let prevGlitchMachine = false;
-	let prevMultiHunt = false;
+	let previousActiveBetModeKey = 'BASE';
 
 	$effect(() => {
-		if (isExtraChance && !prevExtraChance) {
-			triggerNotification('EXTRA CHANCE ACTIVATED');
+		if (
+			activeBetModeKey !== previousActiveBetModeKey &&
+			activeBetMode?.type === 'activate' &&
+			activeBetModeKey !== 'BASE'
+		) {
+			const label = activeBetMode.text.betAmountLabel || activeBetMode.text.title || activeBetModeKey;
+			triggerNotification(`${label.toUpperCase()} ACTIVATED`);
 		}
-		if (isGlitchMachine && !prevGlitchMachine) {
-			triggerNotification('GLITCH MACHINE ACTIVATED');
-		}
-		if (isMultiHunt && !prevMultiHunt) {
-			triggerNotification('MULTI HUNT ACTIVATED');
-		}
-		prevExtraChance = isExtraChance;
-		prevGlitchMachine = isGlitchMachine;
-		prevMultiHunt = isMultiHunt;
+
+		previousActiveBetModeKey = activeBetModeKey;
 	});
 	// ----------------------------------
 </script>
