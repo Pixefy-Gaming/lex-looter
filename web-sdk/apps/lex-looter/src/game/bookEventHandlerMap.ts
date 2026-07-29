@@ -141,6 +141,20 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.lex.mainAlive = bookEvent.mainAlive ?? stateGame.lex.mainAlive;
 		applyCloneSnapshots(bookEvent.clones);
 		applyCloneUpdates(bookEvent.cloneUpdates);
+		const cloneBounces = (bookEvent.cloneUpdates ?? []).filter(
+			(cloneUpdate) => cloneUpdate.bounced && cloneUpdate.alive,
+		);
+		if (cloneBounces.length > 0) {
+			const nextSerial = stateGame.lex.cloneBounceSerial + 1;
+			stateGame.lex.cloneBounceSerial = nextSerial;
+			stateGame.lex.lastCloneBounces = cloneBounces.map((cloneUpdate) => ({
+				id: cloneUpdate.id,
+				notation: cloneUpdate.notation,
+				serial: nextSerial,
+			}));
+		} else {
+			stateGame.lex.lastCloneBounces = [];
+		}
 		stateGame.lex.cloneCount = bookEvent.cloneCount ?? Object.keys(stateGame.lex.clones).length;
 		stateGame.lex.modeMultiplier = bookEvent.modeMultiplier ?? stateGame.lex.modeMultiplier;
 		stateGame.lex.lastResolvedObjectId = undefined;

@@ -108,6 +108,12 @@ export type LexClonePlaybackState = {
 	alive: boolean;
 };
 
+export type LexCloneBounce = {
+	id: string;
+	notation: BoardNotation;
+	serial: number;
+};
+
 export type LexPlaybackState = {
 	roundSerial: number;
 	mode: string;
@@ -122,6 +128,8 @@ export type LexPlaybackState = {
 	mainAlive: boolean;
 	cloneCount: number;
 	clones: Record<string, LexClonePlaybackState>;
+	cloneBounceSerial: number;
+	lastCloneBounces: LexCloneBounce[];
 	shieldCount: number;
 	corners: Record<LexCornerKey, number | null>;
 	activeObjects: Record<string, LexActiveObject>;
@@ -163,6 +171,8 @@ export const createInitialLexPlaybackState = (): LexPlaybackState => ({
 	mainAlive: false,
 	cloneCount: 0,
 	clones: {},
+	cloneBounceSerial: 0,
+	lastCloneBounces: [],
 	shieldCount: 0,
 	corners: { tl: null, tr: null, bl: null, br: null },
 	activeObjects: {},

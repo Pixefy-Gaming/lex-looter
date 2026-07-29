@@ -236,6 +236,7 @@
 	let cloneSheet: PIXI.Spritesheet | undefined;
 	let blueBlobSheet: PIXI.Spritesheet | undefined;
 	let slayerSheet: PIXI.Spritesheet | undefined;
+	let normalizedSlayerTextures: PIXI.Texture[] = [];
 	let gameAssetSheet: PIXI.Spritesheet | undefined;
 	let mainBall: LexDisplay | undefined;
 	let cloneDisplays: Record<
@@ -496,6 +497,33 @@
 			.map(([, texture]) => texture);
 	};
 
+	const normalizeAnimationTextures = (animationTextures: PIXI.Texture[]) => {
+		if (animationTextures.length === 0) return [];
+
+		const maxWidth = Math.max(...animationTextures.map((texture) => texture.orig.width));
+		const maxHeight = Math.max(...animationTextures.map((texture) => texture.orig.height));
+
+		return animationTextures.map((texture) => {
+			const width = texture.orig.width;
+			const height = texture.orig.height;
+			const trim = new PIXI.Rectangle(
+				(maxWidth - width) / 2,
+				(maxHeight - height) / 2,
+				width,
+				height,
+			);
+			const normalizedTexture = new PIXI.Texture({
+				source: texture.source,
+				frame: texture.frame,
+				orig: new PIXI.Rectangle(0, 0, maxWidth, maxHeight),
+				trim,
+				rotate: texture.rotate,
+			});
+			smoothTexture(normalizedTexture);
+			return normalizedTexture;
+		});
+	};
+
 	const getLexAnimationForDelta = (dx: number, dy: number) => {
 		if (Math.abs(dx) >= Math.abs(dy)) {
 			return dx < 0 ? 'unarmed_run_left' : 'unarmed_run_right';
@@ -566,7 +594,7 @@
 			object === 'blue_blob'
 				? getSheetAnimationTextures(blueBlobSheet, 'Frame')
 				: object === 'slayer' && resolved
-					? getSheetAnimationTextures(slayerSheet, 'Slayer')
+					? normalizedSlayerTextures
 					: [];
 		const gameAssetObjectTextures: Partial<Record<LexObjectName, PIXI.Texture>> = {
 			coin: gameAssetSheet?.textures['coin.png'],
@@ -803,6 +831,21 @@
 		});
 	};
 
+	const queueCloneBounceCashNumberPopAnimation = () => {
+		const lex = context.stateGame.lex;
+		if (lex.tumbleValue <= 0) return;
+
+		for (const cloneBounce of lex.lastCloneBounces) {
+			cashNumberPopAnimation.queue({
+				id: `clone-bounce:${cloneBounce.id}:${cloneBounce.serial}`,
+				roundSerial: lex.roundSerial,
+				point: notationToPixelCenter(cloneBounce.notation),
+				label: formatMoney(lex.tumbleValue),
+				tint: 0xd7fff4,
+			});
+		}
+	};
+
 	const shouldHideMainLexForEscape = () => {
 		const objectId = context.stateGame.lex.lastResolvedObjectId;
 		const activeObject = objectId ? context.stateGame.lex.activeObjects[objectId] : undefined;
@@ -980,6 +1023,7 @@
 		queuePickupBurstAnimation();
 		queueCashNumberPopAnimation();
 		queueBounceCashNumberPopAnimation();
+		queueCloneBounceCashNumberPopAnimation();
 		renderBalls();
 		collisionReactionAnimation.syncBounceCount();
 		queueLexPath();
@@ -1065,6 +1109,7 @@
 		context.stateGame.lex.corner;
 		context.stateGame.lex.lastResolvedObjectId;
 		context.stateGame.lex.lastResolvedObject;
+		context.stateGame.lex.lastCloneBounces;
 		context.stateGame.lex.activeObjects;
 		context.stateGame.lex.clones;
 		context.stateGame.lex.corners;
@@ -1127,6 +1172,9 @@
 			if (blueBlobSheet) Object.values(blueBlobSheet.textures).forEach(smoothTexture);
 			if (slayerSheet) Object.values(slayerSheet.textures).forEach(smoothTexture);
 			if (gameAssetSheet) Object.values(gameAssetSheet.textures).forEach(smoothTexture);
+			normalizedSlayerTextures = normalizeAnimationTextures(
+				getSheetAnimationTextures(slayerSheet, 'Slayer'),
+			);
 			Object.values(textures).forEach(smoothTexture);
 			renderLogoAsset();
 			renderBoardFrame();
@@ -1138,6 +1186,7 @@
 			cloneSheet = undefined;
 			blueBlobSheet = undefined;
 			slayerSheet = undefined;
+			normalizedSlayerTextures = [];
 			gameAssetSheet = undefined;
 			textures = {};
 			renderBoardFrame();
@@ -1167,6 +1216,8 @@
 		mainBall?.destroy();
 		boardSprite?.destroy();
 		boardFrameSprite?.destroy();
+		normalizedSlayerTextures.forEach((texture) => texture.destroy(false));
+		normalizedSlayerTextures = [];
 		for (const clone of Object.values(cloneDisplays)) clone.display.destroy();
 		for (const container of Object.values(objectContainers)) container.destroy({ children: true });
 		cloneDisplays = {};
