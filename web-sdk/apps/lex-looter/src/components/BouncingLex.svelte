@@ -10,6 +10,7 @@
 	import { createCollisionReactionController } from '../animation/collisionReaction';
 	import { createCornerAnticipationController } from '../animation/cornerAnticipation';
 	import { createHeartHudAnimationController, type HeartHudSlot } from '../animation/heart';
+	import { createCashNumberPopController } from '../animation/cashNumberPop';
 	import { createObjectSpawnAnimationController } from '../animation/objectSpawn';
 	import { createObjectResolveAnimationController } from '../animation/objectResolve';
 	import { createPickupBurstController } from '../animation/pickupBurst';
@@ -371,6 +372,9 @@
 		renderHeartHudAssets();
 	};
 
+	const formatSignedMoney = (amount: number) =>
+		amount < 0 ? `-${formatMoney(Math.abs(amount))}` : `+${formatMoney(amount)}`;
+
 	const drawCorner = (corner: CornerState, multiplier: number | null) => {
 		let fillColor = 0x20242a;
 		let textColor = 0x444444;
@@ -683,6 +687,12 @@
 		isSkipPlayback: () => context.stateGame.lexSkipPlayback,
 	});
 
+	const cashNumberPopAnimation = createCashNumberPopController({
+		layer: effectLayer,
+		isTurbo: () => stateBet.isTurbo,
+		isSkipPlayback: () => context.stateGame.lexSkipPlayback,
+	});
+
 	const objectSpawnAnimation = createObjectSpawnAnimationController({
 		isTurbo: () => stateBet.isTurbo,
 		isSkipPlayback: () => context.stateGame.lexSkipPlayback,
@@ -741,6 +751,55 @@
 			roundSerial: context.stateGame.lex.roundSerial,
 			object: activeObject.object,
 			point: getObjectPoint(activeObject.notation, activeObject.x, activeObject.y),
+		});
+	};
+
+	const queueCashNumberPopAnimation = () => {
+		const resolvedObject = context.stateGame.lex.lastResolvedObject;
+		if (!resolvedObject) return;
+
+		let amount = 0;
+		let tint = 0xfff1a8;
+		if (resolvedObject.result === 'collect') {
+			amount = resolvedObject.amount;
+			tint = resolvedObject.object === 'diamond' ? 0x9dffe0 : 0xfff1a8;
+		} else if (resolvedObject.result === 'halve') {
+			amount = resolvedObject.delta;
+			tint = 0x8fd0ff;
+		} else if (resolvedObject.result === 'cashout') {
+			amount = resolvedObject.totalWin;
+			tint = 0xffffff;
+		} else if (
+			resolvedObject.result === 'destroy' &&
+			resolvedObject.object === 'slayer' &&
+			resolvedObject.remainingBalls === 0
+		) {
+			amount = -context.stateGame.lex.tumbleValue;
+			tint = 0xff6868;
+		}
+
+		if (amount === 0) return;
+
+		const collectorAt = resolvedObject.collectorAt ?? resolvedObject.lexAt;
+		cashNumberPopAnimation.queue({
+			id: `${resolvedObject.objectId}:${resolvedObject.result}`,
+			roundSerial: context.stateGame.lex.roundSerial,
+			point: notationToPixelCenter(collectorAt),
+			label: formatSignedMoney(amount),
+			tint,
+		});
+	};
+
+	const queueBounceCashNumberPopAnimation = () => {
+		const lex = context.stateGame.lex;
+		if (lex.mainBounces <= 0 || lex.tumbleValue <= 0) return;
+
+		cashNumberPopAnimation.queue({
+			id: `bounce:${lex.mainBounces}`,
+			roundSerial: lex.roundSerial,
+			point: notationToPixelCenter(lex.lexNotation),
+			label: formatMoney(lex.tumbleValue),
+			tint: 0xffffff,
 		});
 	};
 
@@ -817,6 +876,7 @@
 			collisionReactionAnimation.clear();
 			lexTrailAnimation.clear();
 			pickupBurstAnimation.clear();
+			cashNumberPopAnimation.clear();
 			objectSpawnAnimation.clear();
 			objectResolveAnimation.clear();
 			cornerAnticipationAnimation.clear();
@@ -918,6 +978,8 @@
 		}
 		renderObjects();
 		queuePickupBurstAnimation();
+		queueCashNumberPopAnimation();
+		queueBounceCashNumberPopAnimation();
 		renderBalls();
 		collisionReactionAnimation.syncBounceCount();
 		queueLexPath();
@@ -962,6 +1024,7 @@
 		heartHudAnimation.update(ticker.deltaMS);
 		lexTrailAnimation.update(ticker.deltaMS);
 		pickupBurstAnimation.update(ticker.deltaMS);
+		cashNumberPopAnimation.update(ticker.deltaMS);
 		objectSpawnAnimation.update(ticker.deltaMS);
 		objectResolveAnimation.update(ticker.deltaMS);
 		if (mainBall) {
@@ -1001,6 +1064,7 @@
 		context.stateGame.lex.totalWin;
 		context.stateGame.lex.corner;
 		context.stateGame.lex.lastResolvedObjectId;
+		context.stateGame.lex.lastResolvedObject;
 		context.stateGame.lex.activeObjects;
 		context.stateGame.lex.clones;
 		context.stateGame.lex.corners;
@@ -1095,6 +1159,7 @@
 		heartHudAnimation.clear();
 		lexTrailAnimation.clear();
 		pickupBurstAnimation.clear();
+		cashNumberPopAnimation.clear();
 		collisionReactionAnimation.clear();
 		objectSpawnAnimation.clear();
 		objectResolveAnimation.clear();

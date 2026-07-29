@@ -191,6 +191,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			};
 		}
 		stateGame.lex.lastResolvedObjectId = bookEvent.objectId;
+		stateGame.lex.lastResolvedObject = bookEvent;
 
 		if ('tumbleValue' in bookEvent) {
 			stateGame.lex.tumbleValue = bookEvent.tumbleValue;

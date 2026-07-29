@@ -126,6 +126,7 @@ export type LexPlaybackState = {
 	corners: Record<LexCornerKey, number | null>;
 	activeObjects: Record<string, LexActiveObject>;
 	lastResolvedObjectId?: string;
+	lastResolvedObject?: BookEventOfType<'objectResolve'>;
 	roundEnded: boolean;
 	roundEndReason?: LexRoundEndReason;
 	totalWin: number;
@@ -166,6 +167,7 @@ export const createInitialLexPlaybackState = (): LexPlaybackState => ({
 	corners: { tl: null, tr: null, bl: null, br: null },
 	activeObjects: {},
 	lastResolvedObjectId: undefined,
+	lastResolvedObject: undefined,
 	roundEnded: false,
 	roundEndReason: undefined,
 	totalWin: 0,
