@@ -2134,8 +2134,8 @@
 		max-width: 250px !important;
 		z-index: 10005;
 		padding: 8px !important;
-		bottom: 28px !important;
-		left: 51.8% !important;
+		bottom: 48px !important;
+		left: 64px !important;
 		right: auto !important;
 		transform-origin: bottom left !important;
 	}
@@ -2147,9 +2147,10 @@
 		max-width: 250px !important;
 		z-index: 10005;
 		padding: 8px !important;
-		bottom: -54px !important;
-		left: 19.8% !important;
+		bottom: 30px !important;
+		left: 86px !important;
 		right: auto !important;
+		transform-origin: bottom center !important;
 	}
 
 	.popout-s .auto-modal {
@@ -2159,9 +2160,16 @@
 		max-width: 250px !important;
 		z-index: 10005;
 		padding: 8px !important;
-		bottom: -32px !important;
-		right: -3% !important;
-		left: auto !important;
+		bottom: 32px !important;
+		left: 182px !important;
+		right: auto !important;
+		transform-origin: bottom center !important;
+	}
+
+	.popout-s .setting-menu-overlay {
+		left: 70px !important;
+		bottom: 42px !important;
+		transform-origin: bottom left !important;
 	}
 
 	/* Large Overlays (Feature Buy, Info) - Now handled in respective components */
@@ -2191,11 +2199,22 @@
 		overflow: visible !important;
 	}
 
+	.popout-s .modal-backdrop {
+		position: fixed !important;
+		inset: 0 !important;
+		width: 100vw !important;
+		height: 100vh !important;
+		top: 0 !important;
+		left: 0 !important;
+		transform: none !important;
+		background: transparent !important;
+	}
+
 	.popout-s .skip-playback-btn {
-		width: 32px;
-		height: 32px;
+		width: 28px;
+		height: 28px;
 		bottom: 27px;
-		--skip-scale: 1;
+		--skip-scale: 0.62;
 	}
 
 	.popout-s .feature-buy-landscape-container {

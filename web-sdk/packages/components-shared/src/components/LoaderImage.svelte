@@ -19,7 +19,44 @@
 
 <style lang="scss">
 	.loader {
-		width: 100%;
-		max-width: var(--max-width-value);
+		width: var(--loader-size, var(--max-width-value));
+		max-width: 70vw;
+		height: auto;
+	}
+
+	@media (max-width: 1200px) {
+		.loader {
+			--loader-size: 220px;
+		}
+	}
+
+	@media (max-width: 1024px) {
+		.loader {
+			--loader-size: 200px;
+		}
+	}
+
+	@media (max-width: 800px) {
+		.loader {
+			--loader-size: 170px;
+		}
+	}
+
+	@media (max-width: 425px) {
+		.loader {
+			--loader-size: 150px;
+		}
+	}
+
+	@media (max-width: 400px) {
+		.loader {
+			--loader-size: 130px;
+		}
+	}
+
+	@media (max-width: 320px) {
+		.loader {
+			--loader-size: 115px;
+		}
 	}
 </style>

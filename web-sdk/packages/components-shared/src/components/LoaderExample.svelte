@@ -11,7 +11,7 @@
 </script>
 
 <LoaderBase
-	maxWidth={300}
+	maxWidth={220}
 	backgroundColor={'#000000'}
 	timeout={2000}
 	src={props.src}

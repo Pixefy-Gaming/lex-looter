@@ -164,7 +164,6 @@
 
 			<div class="bet-scroll-spacer" aria-hidden="true"></div>
 		</div>
-
 	</div>
 
 	<div
@@ -772,28 +771,256 @@
 	}
 
 	@media (orientation: landscape) and (max-height: 260px) {
+		.modal-overlay {
+			align-items: flex-start;
+			justify-content: center;
+			padding: 8px 8px 54px;
+		}
+
 		.modal-wrapper {
-			gap: 5px;
+			gap: 4px;
+			height: calc(100dvh - 68px);
 		}
 
 		.cards-container {
-			max-height: calc(100dvh - 52px);
-			padding-right: 42px;
+			justify-content: center;
+			align-items: stretch;
+			gap: 8px;
+			height: 100%;
+			max-height: none;
+			padding: 0 34px;
 		}
 
 		.card {
-			flex-basis: clamp(104px, 26vw, 112px);
-			width: clamp(104px, 26vw, 112px);
-			height: calc(100dvh - 58px);
+			flex: 0 0 104px;
+			width: 104px;
+			height: 100%;
+			min-height: 0;
+			padding: 7px 7px 8px;
+			gap: 4px;
+			justify-content: space-between;
+			border-radius: 10px;
 		}
 
 		.visual-frame {
-			height: clamp(34px, 19vh, 46px);
+			height: 42px;
+		}
+
+		.top-visual {
+			max-width: min(100%, 66px);
+		}
+
+		.card-copy {
+			gap: 2px;
+			min-height: 15px;
+		}
+
+		h2 {
+			font-size: 9px;
+			line-height: 1;
+		}
+
+		.price-container {
+			gap: 0;
+		}
+
+		.price-text {
+			font-size: 12px;
+		}
+
+		.action-btn {
+			min-height: 19px;
+			margin-top: 0;
+			padding: 3px 6px;
+			box-shadow: 0 2px 0 0 #008f2d;
+			font-size: 8px;
+		}
+
+		.confirm-back-btn,
+		.confirm-ok-btn {
+			min-height: 18px;
+			padding: 3px;
+			font-size: 7px;
+		}
+
+		.bet-adjust-bar {
+			bottom: 10px;
+			gap: 8px;
+			padding: 4px 8px;
+		}
+
+		.bet-btn {
+			width: 28px;
+			height: 28px;
+		}
+
+		.bet-display {
+			min-width: 88px;
+			padding: 4px 8px;
+		}
+
+		.bet-label {
+			font-size: 7px;
+		}
+
+		.bet-value {
+			font-size: 14px;
 		}
 
 		p,
 		.cost-formula {
 			display: none;
+		}
+	}
+
+	@media (orientation: landscape) and (max-width: 500px) and (max-height: 260px) {
+		.modal-overlay {
+			background: rgba(0, 0, 0, 0.82);
+			backdrop-filter: blur(8px);
+			-webkit-backdrop-filter: blur(8px);
+			align-items: center;
+			padding: 4px;
+		}
+
+		.modal-wrapper {
+			position: relative;
+			width: 100%;
+			height: 100dvh;
+			gap: 1px;
+			padding: 0 3px;
+			box-sizing: border-box;
+		}
+
+		.close-btn {
+			top: 2px;
+			right: 4px;
+			width: 22px;
+			height: 22px;
+			font-size: 15px;
+			background: rgba(0, 0, 0, 0.45);
+		}
+
+		.cards-container {
+			position: absolute;
+			top: 52%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			justify-content: center;
+			align-items: stretch;
+			flex-wrap: nowrap;
+			gap: 6px;
+			width: 100%;
+			height: clamp(108px, 52dvh, 124px);
+			max-height: clamp(108px, 52dvh, 124px);
+			overflow-y: hidden;
+			overflow-x: auto;
+			padding: 2px 28px 0 8px;
+			scroll-snap-type: x proximity;
+		}
+
+		.card {
+			background: #070d0c;
+			flex: 0 0 112px;
+			width: 112px;
+			height: 100%;
+			min-height: 0;
+			padding: 6px;
+			gap: 2px;
+			scroll-snap-align: center;
+		}
+
+		.card.active {
+			background: #070d0c;
+		}
+
+		.visual-frame {
+			height: clamp(38px, 22vh, 50px);
+			flex: 0 0 auto;
+		}
+
+		.top-visual {
+			max-width: min(100%, 78px);
+		}
+
+		.card-copy {
+			gap: 1px;
+			min-height: 0;
+		}
+
+		h2 {
+			font-size: 10px;
+			line-height: 1;
+		}
+
+		p {
+			display: -webkit-box;
+			-webkit-box-orient: vertical;
+			-webkit-line-clamp: 2;
+			overflow: hidden;
+			font-size: 5px;
+			line-height: 1.1;
+		}
+
+		.price-container {
+			gap: 0;
+		}
+
+		.price-text {
+			font-size: 12px;
+		}
+
+		.cost-formula {
+			display: block;
+			font-size: 5px;
+			line-height: 1;
+			opacity: 0.72;
+		}
+
+		.action-btn {
+			min-height: 17px;
+			padding: 3px 5px 2px;
+			box-shadow: 0 2px 0 0 #008f2d;
+			font-size: 7px;
+			line-height: 1;
+		}
+
+		.confirm-back-btn,
+		.confirm-ok-btn {
+			min-height: 16px;
+			padding: 2px;
+			font-size: 6px;
+			line-height: 1;
+		}
+
+		.confirm-row {
+			gap: 3px;
+		}
+
+		.bet-adjust-bar {
+			bottom: 8px;
+			gap: 3px;
+			padding: 1px 5px;
+			background: rgba(20, 20, 20, 0.95);
+			border-radius: 40px;
+		}
+
+		.bet-btn {
+			width: 17px;
+			height: 17px;
+		}
+
+		.bet-display {
+			min-width: 60px;
+			padding: 1px 5px;
+			border-radius: 20px;
+		}
+
+		.bet-label {
+			font-size: 5px;
+		}
+
+		.bet-value {
+			font-size: 10px;
 		}
 	}
 </style>
