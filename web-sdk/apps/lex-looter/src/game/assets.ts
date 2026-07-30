@@ -111,7 +111,7 @@ export default {
 	tumble_multiplier: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('spines/tumbleWin/tumble_win.atlas'),
+			atlas: `${assetUrl('spines/tumbleWin/tumble_win.atlas')}?alias=tumble_multiplier`,
 			skeleton: assetUrl('spines/tumbleWin/tumble_multiplier.json'),
 			scale: 2,
 		},

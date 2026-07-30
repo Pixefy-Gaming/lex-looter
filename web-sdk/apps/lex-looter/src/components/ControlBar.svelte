@@ -2021,7 +2021,8 @@
 	}
 
 	.bet-opt:hover {
-		background: #2a2a2a;
+		background: var(--pipee-accent);
+		color: black;
 		border-color: var(--pipee-accent-soft);
 	}
 
@@ -2029,7 +2030,7 @@
 		background: var(--pipee-accent);
 		color: #000;
 		border-color: #fff;
-		box-shadow: 0 0 12px var(--pipee-accent-glow);
+		box-shadow: 0 0 15px var(--pipee-accent-glow);
 	}
 
 	.bet-picker-btn-landscape,

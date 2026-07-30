@@ -1149,7 +1149,8 @@
 					? (gameAssetSheet.textures['logo.png'] ?? Object.values(gameAssetSheet.textures)[0])
 					: (gameAsset as PIXI.Texture | undefined),
 				cloneBall: cloneSheet
-					? (cloneSheet.textures['unarmed_run_front1.png'] ?? Object.values(cloneSheet.textures)[0])
+					? (cloneSheet.textures['lexClone_unarmed_run_front1.png'] ??
+						Object.values(cloneSheet.textures)[0])
 					: (cloneAsset as PIXI.Texture | undefined),
 				slayer: slayerSheet
 					? (slayerSheet.textures['Slayer1.png'] ?? Object.values(slayerSheet.textures)[0])
