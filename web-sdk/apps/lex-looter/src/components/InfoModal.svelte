@@ -403,7 +403,7 @@
 				</button>
 
 				<div class="page-indicators">
-					{#each Array(totalPages) as _, index}
+					{#each Array.from({ length: totalPages }, (_value, index) => index) as index}
 						<div class="dot" class:active={index === currentPage}></div>
 					{/each}
 				</div>

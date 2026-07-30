@@ -23,16 +23,6 @@
 	} from '../game/notation';
 	import type { LexCornerKey, LexObjectName, LexRoundEndReason } from '../game/typesBookEvent';
 
-	type Props = {
-		betAmount?: number;
-		highMultMode?: boolean;
-		noBoomActive?: boolean;
-		onCornerHit?: (data: { payout: number; multiplier: number }) => void;
-		onComplete?: (data: { payout: number }) => void;
-	};
-
-	const _props: Props = $props();
-
 	const context = getContext();
 	const parentCtx = getContextParent();
 
@@ -1120,23 +1110,6 @@
 	};
 
 	$effect(() => {
-		context.stateGame.lex.roundSerial;
-		context.stateGame.lex.lexNotation;
-		context.stateGame.lex.lexPath;
-		context.stateGame.lex.tumbleValue;
-		context.stateGame.lex.mainBounces;
-		context.stateGame.lex.mainAlive;
-		context.stateGame.lex.cloneCount;
-		context.stateGame.lex.shieldCount;
-		context.stateGame.lex.roundEnded;
-		context.stateGame.lex.totalWin;
-		context.stateGame.lex.corner;
-		context.stateGame.lex.lastResolvedObjectId;
-		context.stateGame.lex.lastResolvedObject;
-		context.stateGame.lex.lastCloneBounces;
-		context.stateGame.lex.activeObjects;
-		context.stateGame.lex.clones;
-		context.stateGame.lex.corners;
 		renderFromBookState();
 	});
 

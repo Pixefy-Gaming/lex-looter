@@ -53,8 +53,6 @@ const waitLexPlaybackStepInterruptible = async (duration = 220) => {
 	if (stateGame.lexSkipPlayback) return;
 	const timeoutDuration = stateBet.isTurbo ? Math.round(duration * 0.18) : duration;
 	await new Promise<void>((resolve) => {
-		let timeout: ReturnType<typeof setTimeout>;
-		let interval: ReturnType<typeof setInterval>;
 		let resolved = false;
 		const finish = () => {
 			if (resolved) return;
@@ -63,15 +61,15 @@ const waitLexPlaybackStepInterruptible = async (duration = 220) => {
 			clearInterval(interval);
 			resolve();
 		};
-		timeout = setTimeout(finish, timeoutDuration);
-		interval = setInterval(() => {
+		const timeout = setTimeout(finish, timeoutDuration);
+		const interval = setInterval(() => {
 			if (stateGame.lexSkipPlayback) finish();
 		}, 16);
 	});
 };
 
 const applyCloneSnapshots = (clones: BookEventOfType<'bounceUpdate'>['clones'] = []) => {
-	let nextClones = { ...stateGame.lex.clones };
+	const nextClones = { ...stateGame.lex.clones };
 	for (const clone of clones) {
 		if (!clone.alive) {
 			delete nextClones[clone.id];

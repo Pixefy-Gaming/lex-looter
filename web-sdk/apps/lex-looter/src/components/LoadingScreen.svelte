@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Container, Graphics, Sprite, SpriteSheet } from 'pixi-svelte';
+	import type { Graphics as PixiGraphics } from 'pixi.js';
 	import { FadeContainer } from 'components-pixi';
 	import { MainContainer } from 'components-layout';
 
@@ -50,7 +51,7 @@
 	const COLOR_PROGRESS = 0x00ff50;
 	const COLOR_BORDER = 0x06351b;
 
-	const drawProgressBar = (g: any) => {
+	const drawProgressBar = (g: PixiGraphics) => {
 		g.clear();
 		g.lineStyle(3, COLOR_BORDER, 0.9);
 		g.beginFill(COLOR_BASE);

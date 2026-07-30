@@ -10,7 +10,6 @@
 		stateI18n,
 		stateModal,
 		stateUi,
-		stateUrlDerived,
 	} from 'state-shared';
 	import { getContext } from '../game/context';
 	import ControlToggleIcon from './ControlToggleIcon.svelte';
@@ -47,7 +46,6 @@
 	const isRoundInProgress = $derived(stateXstateDerived.isPlaying());
 	const balance = $derived(safeNumber(stateBet.balanceAmount));
 	const currentBet = $derived(safeNumber(stateBet.betAmount));
-	const totalBet = $derived(safeNumber(stateBetDerived.betCost()));
 	const activeBetMode = $derived(stateBetDerived.activeBetMode());
 	const activeBetModeKey = $derived((stateBet.activeBetModeKey ?? 'BASE').toUpperCase());
 	const isExtraChance = $derived(activeBetModeKey === 'EXTRA_CHANCE');
@@ -87,34 +85,8 @@
 	let isHudHidden = $state(false);
 	let stopDisabled = $state(false);
 
-	function getLiveSessionParams() {
-		let searchParams: URLSearchParams | undefined;
-		if (typeof window !== 'undefined') {
-			searchParams = new URLSearchParams(window.location.search);
-		}
-
-		const sessionID =
-			searchParams?.get('sessionID') ||
-			searchParams?.get('sessionId') ||
-			searchParams?.get('session_id') ||
-			searchParams?.get('session-id') ||
-			stateUrlDerived.sessionID();
-		const rgsUrl =
-			searchParams?.get('rgs_url') ||
-			searchParams?.get('rgsUrl') ||
-			searchParams?.get('rgs-url') ||
-			stateUrlDerived.rgsUrl();
-
-		return { sessionID, rgsUrl };
-	}
-
 	const cloneReplayBet = () =>
 		stateBet.replayBet ? JSON.parse(JSON.stringify(stateBet.replayBet)) : null;
-
-	function isDemoPreviewOnly() {
-		const { sessionID, rgsUrl } = getLiveSessionParams();
-		return stateUrlDerived.demo() && (!sessionID || !rgsUrl);
-	}
 
 	let isMenuOpen = $state(false);
 	let isInfoModalOpen = $state(false);
@@ -200,8 +172,6 @@
 	const isBlockingUiModalOpen = $derived(
 		isInfoModalOpen || isAutoSpinModalOpen || isBetModalOpen || isMenuOpen,
 	);
-	const canStartRound = $derived(isIdle && !isBlockingUiModalOpen);
-	const hasSpinBalance = $derived(stateBetDerived.isBetCostAvailable());
 	const betModeMultiplier = $derived(activeBetMode?.costMultiplier ?? 1);
 	const displayBetLabel = $derived(
 		betModeMultiplier > 1 ? `${costLabel} ×${betModeMultiplier}` : costLabel,
@@ -214,7 +184,6 @@
 				: !stopDisabled && (!stateBet.isTurbo || stateBetDerived.hasAutoBetCounter()),
 	);
 	const betLevels = $derived(stateConfig.betAmountOptions ?? []);
-	const isDemoPreview = $derived.by(() => isDemoPreviewOnly());
 
 	eventEmitter.subscribeOnMount({
 		uiHide: () => {
