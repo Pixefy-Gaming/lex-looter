@@ -95,12 +95,166 @@
 		THEME_COLORS.cloverGreen,
 	];
 
+	type TransitionProfile = {
+		scanlineSpacing: number;
+		spectralCount: number;
+		spectralOffset: number;
+		spectralHeight: number;
+		corruptionCount: number;
+		corruptionWidth: number;
+		corruptionHeight: number;
+		glassCount: number;
+		glassMinWidth: number;
+		glassMaxWidth: number;
+		glassMinHeight: number;
+		glassMaxHeight: number;
+		alphaScale: number;
+		flashHeight: number;
+	};
+
+	const getTransitionProfile = (width: number, height: number): TransitionProfile => {
+		const portrait = height > width;
+
+		if (width <= 320) {
+			return {
+				scanlineSpacing: 10,
+				spectralCount: 20,
+				spectralOffset: 52,
+				spectralHeight: 5,
+				corruptionCount: 9,
+				corruptionWidth: 56,
+				corruptionHeight: 34,
+				glassCount: 4,
+				glassMinWidth: 64,
+				glassMaxWidth: 180,
+				glassMinHeight: 52,
+				glassMaxHeight: 150,
+				alphaScale: 0.72,
+				flashHeight: 7,
+			};
+		}
+
+		if (portrait && width <= 375) {
+			return {
+				scanlineSpacing: 9,
+				spectralCount: 24,
+				spectralOffset: 62,
+				spectralHeight: 6,
+				corruptionCount: 11,
+				corruptionWidth: 64,
+				corruptionHeight: 40,
+				glassCount: 5,
+				glassMinWidth: 76,
+				glassMaxWidth: 220,
+				glassMinHeight: 60,
+				glassMaxHeight: 180,
+				alphaScale: 0.76,
+				flashHeight: 8,
+			};
+		}
+
+		if (portrait && width <= 425) {
+			return {
+				scanlineSpacing: 8,
+				spectralCount: 28,
+				spectralOffset: 72,
+				spectralHeight: 7,
+				corruptionCount: 13,
+				corruptionWidth: 72,
+				corruptionHeight: 48,
+				glassCount: 6,
+				glassMinWidth: 88,
+				glassMaxWidth: 260,
+				glassMinHeight: 72,
+				glassMaxHeight: 220,
+				alphaScale: 0.8,
+				flashHeight: 9,
+			};
+		}
+
+		if (width <= 400 && height <= 300) {
+			return {
+				scanlineSpacing: 9,
+				spectralCount: 18,
+				spectralOffset: 48,
+				spectralHeight: 5,
+				corruptionCount: 8,
+				corruptionWidth: 52,
+				corruptionHeight: 28,
+				glassCount: 3,
+				glassMinWidth: 60,
+				glassMaxWidth: 170,
+				glassMinHeight: 42,
+				glassMaxHeight: 110,
+				alphaScale: 0.68,
+				flashHeight: 6,
+			};
+		}
+
+		if (width <= 800 && height <= 500) {
+			return {
+				scanlineSpacing: 8,
+				spectralCount: 34,
+				spectralOffset: 96,
+				spectralHeight: 8,
+				corruptionCount: 15,
+				corruptionWidth: 90,
+				corruptionHeight: 56,
+				glassCount: 7,
+				glassMinWidth: 100,
+				glassMaxWidth: 320,
+				glassMinHeight: 80,
+				glassMaxHeight: 220,
+				alphaScale: 0.84,
+				flashHeight: 10,
+			};
+		}
+
+		if (width <= 1024 && height <= 650) {
+			return {
+				scanlineSpacing: 7,
+				spectralCount: 44,
+				spectralOffset: 140,
+				spectralHeight: 10,
+				corruptionCount: 20,
+				corruptionWidth: 120,
+				corruptionHeight: 68,
+				glassCount: 9,
+				glassMinWidth: 120,
+				glassMaxWidth: 420,
+				glassMinHeight: 88,
+				glassMaxHeight: 280,
+				alphaScale: 0.92,
+				flashHeight: 12,
+			};
+		}
+
+		return {
+			scanlineSpacing: 6,
+			spectralCount: 60,
+			spectralOffset: 200,
+			spectralHeight: 12,
+			corruptionCount: 25,
+			corruptionWidth: 150,
+			corruptionHeight: 80,
+			glassCount: 12,
+			glassMinWidth: 150,
+			glassMaxWidth: 600,
+			glassMinHeight: 100,
+			glassMaxHeight: 400,
+			alphaScale: 1,
+			flashHeight: 15,
+		};
+	};
+
+	const transitionProfile = $derived(getTransitionProfile(canvasSizes.width, canvasSizes.height));
+
 	// Scanline Layer: Subtle horizontal texture
 	const scanlines = $derived.by(() => {
 		const p = $progress;
 		if (p <= 0.05) return [];
 		const layers = [];
-		const spacing = 6;
+		const spacing = transitionProfile.scanlineSpacing;
 		const count = Math.floor(canvasSizes.height / spacing);
 		for (let i = 0; i < count; i += 2) {
 			layers.push({
@@ -109,7 +263,7 @@
 				width: canvasSizes.width,
 				height: 1,
 				backgroundColor: THEME_COLORS.boardShadow,
-				backgroundAlpha: 0.18 * p,
+				backgroundAlpha: 0.18 * p * transitionProfile.alphaScale,
 			});
 		}
 		return layers;
@@ -119,22 +273,22 @@
 		if (p <= 0.02) return [];
 
 		const layers = [];
-		const count = Math.floor(60 * p);
+		const count = Math.floor(transitionProfile.spectralCount * p);
 		for (let i = 0; i < count; i++) {
 			const s = (jitterSeed + i * 0.17) % 1;
 			const color = GLITCH_COLORS[i % GLITCH_COLORS.length];
 
 			// Very wide, very thin horizontal "slices"
 			const w = canvasSizes.width * (0.4 + s * 0.8);
-			const h = 1 + s * 12;
+			const h = 1 + s * transitionProfile.spectralHeight;
 
 			layers.push({
-				x: (canvasSizes.width - w) * 0.5 + (s - 0.5) * 200 * p,
+				x: (canvasSizes.width - w) * 0.5 + (s - 0.5) * transitionProfile.spectralOffset * p,
 				y: ((s * 13) % 1) * canvasSizes.height - h * 0.5,
 				width: w,
 				height: h,
 				backgroundColor: color,
-				backgroundAlpha: (0.12 + s * 0.4) * p,
+				backgroundAlpha: (0.12 + s * 0.4) * p * transitionProfile.alphaScale,
 			});
 		}
 		return layers;
@@ -146,11 +300,12 @@
 		if (p <= 0.1) return [];
 
 		const layers = [];
-		const count = 25;
+		const count = transitionProfile.corruptionCount;
 		for (let i = 0; i < count; i++) {
 			const s = (jitterSeed + i * 0.11) % 1;
-			const w = (s > 0.5 ? 40 + s * 150 : canvasSizes.width * 0.6) * p * 1.5;
-			const h = s > 0.5 ? canvasSizes.height * 0.2 : 5 + s * 80;
+			const w =
+				(s > 0.5 ? 40 + s * transitionProfile.corruptionWidth : canvasSizes.width * 0.6) * p * 1.5;
+			const h = s > 0.5 ? canvasSizes.height * 0.2 : 5 + s * transitionProfile.corruptionHeight;
 			const color =
 				i % 3 === 0
 					? THEME_COLORS.boardShadow
@@ -164,7 +319,7 @@
 				width: w,
 				height: h,
 				backgroundColor: color,
-				backgroundAlpha: 0.4 * p,
+				backgroundAlpha: 0.4 * p * transitionProfile.alphaScale,
 			});
 		}
 		return layers;
@@ -176,11 +331,11 @@
 		if (p <= 0.05) return [];
 
 		const layers = [];
-		const count = 12;
+		const count = transitionProfile.glassCount;
 		for (let i = 0; i < count; i++) {
 			const s = (jitterSeed * (i + 13)) % 1;
-			const w = 150 + s * 600;
-			const h = 100 + s * 400;
+			const w = transitionProfile.glassMinWidth + s * transitionProfile.glassMaxWidth;
+			const h = transitionProfile.glassMinHeight + s * transitionProfile.glassMaxHeight;
 
 			// Main glass pane
 			layers.push({
@@ -189,10 +344,10 @@
 				width: w,
 				height: h,
 				backgroundColor: THEME_COLORS.softHighlight,
-				backgroundAlpha: 0.1 * p,
+				backgroundAlpha: 0.1 * p * transitionProfile.alphaScale,
 				borderColor: THEME_COLORS.lexGreen,
 				borderWidth: 1.5,
-				borderAlpha: 0.3 * p,
+				borderAlpha: 0.3 * p * transitionProfile.alphaScale,
 				borderRadius: 2,
 			});
 
@@ -203,7 +358,7 @@
 					width: w * 0.9,
 					height: 2,
 					backgroundColor: THEME_COLORS.coinGold,
-					backgroundAlpha: 0.42 * p,
+					backgroundAlpha: 0.42 * p * transitionProfile.alphaScale,
 				});
 			}
 		}
@@ -238,9 +393,9 @@
 			x={0}
 			y={((jitterSeed * 17) % 1) * canvasSizes.height}
 			width={canvasSizes.width}
-			height={1 + jitterSeed * 15}
+			height={1 + jitterSeed * transitionProfile.flashHeight}
 			backgroundColor={THEME_COLORS.softHighlight}
-			backgroundAlpha={0.34 * $progress}
+			backgroundAlpha={0.34 * $progress * transitionProfile.alphaScale}
 		/>
 	</Container>
 {/if}
