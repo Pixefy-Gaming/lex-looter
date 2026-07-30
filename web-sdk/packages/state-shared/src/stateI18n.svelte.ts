@@ -1,6 +1,9 @@
 import { i18n, type Messages } from '@lingui/core';
 import { type Language } from './stateUrl.svelte';
 
+// The local catalogs are plain strings, so production needs a compiler to avoid Lingui warnings.
+i18n.setMessagesCompiler((message) => message as never);
+
 export const stateI18n = $state({
 	i18n
 });
