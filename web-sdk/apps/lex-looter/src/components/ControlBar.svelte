@@ -305,7 +305,10 @@
 	function openBetModal() {
 		eventEmitter.broadcast({ type: 'soundPressGeneral' });
 		if (isSpinning || isReplay) return;
-		stateModal.modal = { name: 'betAmountMenu' };
+		stateModal.modal = null;
+		isAutoSpinModalOpen = false;
+		isMenuOpen = false;
+		isBetModalOpen = true;
 	}
 
 	function closeBetModal() {

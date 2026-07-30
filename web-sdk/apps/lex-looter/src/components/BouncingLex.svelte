@@ -53,8 +53,11 @@
 	const MAX_BOUNCES = 40;
 	const NORMAL_SPEED_PER_SECOND = 2200;
 	const TURBO_SPEED_PER_SECOND = 5200;
-	const NORMAL_CHARACTER_ANIMATION_SPEED = 0.24;
-	const TURBO_CHARACTER_ANIMATION_SPEED = 0.38;
+	const NORMAL_CHARACTER_ANIMATION_SPEED = 0.3;
+	const TURBO_CHARACTER_ANIMATION_SPEED = 0.48;
+	const CHARACTER_MAX_LEAN = 0.16;
+	const CHARACTER_LEAN_LERP = 0.22;
+	const CHARACTER_SETTLE_LERP = 0.14;
 	const LEX_FONT_FAMILY = 'Jersey 25';
 	const BOARD_ART_CROP = {
 		x: 335,
@@ -461,6 +464,23 @@
 	const getCharacterAnimationSpeed = () =>
 		stateBet.isTurbo ? TURBO_CHARACTER_ANIMATION_SPEED : NORMAL_CHARACTER_ANIMATION_SPEED;
 
+	const lerp = (from: number, to: number, amount: number) => from + (to - from) * amount;
+
+	const setMovementLean = (display: LexDisplay, dx: number, dy: number, isClone: boolean) => {
+		const distance = Math.hypot(dx, dy);
+		if (distance <= 0) return;
+		const horizontalLean = (dx / distance) * CHARACTER_MAX_LEAN;
+		const verticalLean = (dy / distance) * CHARACTER_MAX_LEAN * 0.45;
+		const targetRotation = horizontalLean - verticalLean;
+		display.rotation = lerp(display.rotation, targetRotation, CHARACTER_LEAN_LERP);
+		display.skew.x = lerp(display.skew.x, horizontalLean * (isClone ? 0.28 : 0.36), 0.18);
+	};
+
+	const settleMovementLean = (display: LexDisplay) => {
+		display.rotation = lerp(display.rotation, 0, CHARACTER_SETTLE_LERP);
+		display.skew.x = lerp(display.skew.x, 0, CHARACTER_SETTLE_LERP);
+	};
+
 	const getRunTextures = (
 		sheet: PIXI.Spritesheet | undefined,
 		animationName = 'unarmed_run_front',
@@ -793,7 +813,7 @@
 			tint = resolvedObject.object === 'diamond' ? 0x9dffe0 : 0xfff1a8;
 		} else if (resolvedObject.result === 'halve') {
 			amount = resolvedObject.delta;
-			tint = 0x8fd0ff;
+			tint = 0xff6868;
 		} else if (resolvedObject.result === 'cashout') {
 			amount = resolvedObject.totalWin;
 			tint = 0xffffff;
@@ -1076,7 +1096,9 @@
 			if (context.stateGame.lexSkipPlayback) snapDisplayToFinalTarget(mainBall, pathTargets);
 			moveDisplayTowardTargets(mainBall, pathTargets, speed, (dx, dy) => {
 				setLexAnimation(getLexAnimationForDelta(dx, dy));
+				setMovementLean(mainBall as LexDisplay, dx, dy, false);
 			});
+			if (pathTargets.length === 0) settleMovementLean(mainBall);
 			lexTrailAnimation.add(getDisplayCenter(mainBall), false, 'main');
 		}
 		collisionReactionAnimation.update(ticker.deltaMS);
@@ -1090,7 +1112,9 @@
 			}
 			moveDisplayTowardTargets(clone.display, clone.pathTargets, speed, (dx, dy) => {
 				setCloneAnimation(cloneId, getLexAnimationForDelta(dx, dy));
+				setMovementLean(clone.display, dx, dy, true);
 			});
+			if (clone.pathTargets.length === 0) settleMovementLean(clone.display);
 			lexTrailAnimation.add(getDisplayCenter(clone.display), true, cloneId);
 		}
 	};

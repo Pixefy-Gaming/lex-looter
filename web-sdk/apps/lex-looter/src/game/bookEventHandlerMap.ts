@@ -371,6 +371,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'multiplierGridUpdate', grid: bookEvent.gridMultipliers });
 	},
 	finalWin: async (bookEvent: BookEventOfType<'finalWin'>) => {
+		const finalAmount = Math.max(stateGame.lex.totalWin, bookEvent.amount);
+		stateGame.lex.totalWin = finalAmount;
+		stateBet.winBookEventAmount = finalAmount;
 		eventEmitter.broadcast({ type: 'multiplierGridClear' });
 		eventEmitter.broadcast({ type: 'multiplierGridHide' });
 		eventEmitter.broadcast({ type: 'globalMultiplierHide' });

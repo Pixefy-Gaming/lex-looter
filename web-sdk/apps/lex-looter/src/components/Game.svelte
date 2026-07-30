@@ -25,6 +25,7 @@
 	import BoardContainer from './BoardContainer.svelte';
 	import BonusModal from './BonusModal.svelte';
 	import ReplayIntro from './ReplayIntro.svelte';
+	import RoundEndResult from './RoundEndResult.svelte';
 	import { stateXstateDerived } from '../game/stateXstate';
 
 	const context = getContext();
@@ -135,6 +136,8 @@
 		{/if}
 	{/if}
 </App>
+
+<RoundEndResult />
 
 <Modals>
 	{#snippet version()}
