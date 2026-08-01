@@ -145,6 +145,9 @@
 				mode: stateUrlDerived.mode(),
 				version: stateUrlDerived.version(),
 				event: stateUrlDerived.event(),
+				language: stateUrlDerived.lang(),
+				currency: stateUrlDerived.currency(),
+				amount: replayAmountFromUrl,
 			});
 
 			if (data?.error) throw data;
@@ -158,13 +161,18 @@
 				stateBet.wageredBetAmount = replayAmount;
 				stateBet.activeBetModeKey = replayMode;
 
-				// @ts-ignore
-				stateBet.betToResume = {
+				const replayBet = {
 					...data,
 					event: '0',
 					active: true,
 					mode: replayMode,
 				};
+
+				// @ts-ignore
+				stateBet.betToResume = replayBet;
+				// @ts-ignore
+				stateBet.replayBet = replayBet;
+				stateUi.config.replayStatus = 'ready';
 			}
 		} catch (error) {
 			console.error(error);
@@ -175,9 +183,12 @@
 	onMount(async () => {
 		if(stateUrlDerived.replay()) {
 			stateUi.config.mode = 'replay';
+			stateUi.config.replayStatus = 'ready';
 			await handleReplay();
 		} else {
 			stateUi.config.mode = 'default';
+			stateUi.config.replayStatus = 'ready';
+			stateBet.replayBet = null;
 			await authenticate();
 		};
 

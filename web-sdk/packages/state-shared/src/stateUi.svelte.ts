@@ -54,6 +54,7 @@ export const AUTO_SPINS_SINGLE_WIN_LIMIT_MULTIPLIER_MAP = {
 };
 
 export type UIConfigMode = 'default' | 'replay';
+export type UIReplayStatus = 'ready' | 'playing' | 'finished';
 
 export const stateUi = $state({
 	autoSpinsText: '10' as AutoSpinsText,
@@ -67,5 +68,6 @@ export const stateUi = $state({
 	drawerButtonShow: false,
 	config: {
 		mode: 'default' as UIConfigMode,
+		replayStatus: 'ready' as UIReplayStatus,
 	}
 });

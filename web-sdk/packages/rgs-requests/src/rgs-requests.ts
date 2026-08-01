@@ -90,11 +90,23 @@ export const requestReplay = async (options: {
 	mode: string;
 	event: string;
 	rgsUrl: string;
+	language?: string;
+	currency?: string;
+	amount?: number;
 }) => {
+	const searchParams = new URLSearchParams();
+	if (options.language) searchParams.set('lang', options.language);
+	if (options.currency) searchParams.set('currency', options.currency);
+	if (typeof options.amount === 'number' && Number.isFinite(options.amount)) {
+		searchParams.set('amount', `${Math.round(options.amount * API_AMOUNT_MULTIPLIER)}`);
+	}
+
 	const data = await rgsFetcher.get({
 		rgsUrl: options.rgsUrl,
 		// @ts-ignore TODO: update the schema.ts
-		url: `/bet/replay/${options.game}/${options.version}/${options.mode}/${options.event}`,
+		url: `/bet/replay/${options.game}/${options.version}/${options.mode}/${options.event}${
+			searchParams.size ? `?${searchParams.toString()}` : ''
+		}`,
 	});
 
 	return data;

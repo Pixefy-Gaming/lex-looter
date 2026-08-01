@@ -7,7 +7,7 @@
 	import { App } from 'pixi-svelte';
 
 	import { GameVersion, Modals } from 'components-ui-html';
-	import { stateBet, stateModal, stateUrlDerived } from 'state-shared';
+	import { stateBet, stateModal, stateUi, stateUrlDerived } from 'state-shared';
 
 	import { getContext } from '../game/context';
 	import EnableSound from './EnableSound.svelte';
@@ -31,19 +31,20 @@
 	const context = getContext();
 	let showReplayIntro = $state(stateUrlDerived.replay());
 	let replayStarting = $state(false);
-	let replayStarted = $state(false);
 	let replayPlaybackSeen = $state(false);
-	let replayRoundSnapshot = $state(stateBet.betToResume);
 	const hideControlBar = $derived(stateModal.modal?.name === 'buyBonus');
+
+	const cloneReplayBet = () =>
+		stateBet.replayBet ? JSON.parse(JSON.stringify(stateBet.replayBet)) : null;
 
 	const waitForReplayRound = async () => {
 		for (let attempt = 0; attempt < 40; attempt += 1) {
-			const replayRound = stateBet.betToResume ?? replayRoundSnapshot;
+			const replayRound = cloneReplayBet() ?? stateBet.betToResume;
 			if (replayRound) return replayRound;
 			await new Promise((resolve) => setTimeout(resolve, 50));
 		}
 
-		return stateBet.betToResume ?? replayRoundSnapshot;
+		return cloneReplayBet() ?? stateBet.betToResume;
 	};
 
 	const startReplay = async () => {
@@ -57,7 +58,6 @@
 			return;
 		}
 
-		replayRoundSnapshot = replayRound;
 		stateBet.betToResume = {
 			...replayRound,
 			event: '0',
@@ -70,7 +70,7 @@
 
 		showReplayIntro = false;
 		replayPlaybackSeen = false;
-		replayStarted = true;
+		stateUi.config.replayStatus = 'playing';
 		await tick();
 		context.eventEmitter.broadcast({ type: 'resumeBet' });
 		replayStarting = false;
@@ -81,7 +81,7 @@
 	});
 
 	$effect(() => {
-		if (!stateUrlDerived.replay() || !replayStarted) return;
+		if (!stateUrlDerived.replay() || stateUi.config.replayStatus !== 'playing') return;
 
 		if (stateXstateDerived.isResumingBet()) {
 			replayPlaybackSeen = true;
@@ -90,7 +90,7 @@
 
 		if (replayPlaybackSeen && stateXstateDerived.isIdle()) {
 			showReplayIntro = true;
-			replayStarted = false;
+			stateUi.config.replayStatus = 'finished';
 		}
 	});
 </script>
