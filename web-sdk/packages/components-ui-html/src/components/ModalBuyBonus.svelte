@@ -1023,4 +1023,14 @@
 			font-size: 10px;
 		}
 	}
+
+	@media (orientation: landscape) and (min-width: 501px) and (max-width: 900px) and (max-height: 520px) {
+		.modal-wrapper {
+			transform: translateY(-22px);
+		}
+
+		.close-btn {
+			top: -38px;
+		}
+	}
 </style>

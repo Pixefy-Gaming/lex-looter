@@ -13,6 +13,13 @@
 	const props: Props = $props();
 	const context = getContext();
 	const mainLayout = $derived(context.stateLayoutDerived.mainLayout());
+	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
+	const isMobileL = $derived(
+		context.stateLayoutDerived.layoutType() === 'portrait' &&
+			canvasSizes.width <= 425 &&
+			canvasSizes.height >= 760,
+	);
+	const bottomOffset = $derived(isMobileL ? 104 : 56);
 	let pulseTime = $state(0);
 	const pulse = $derived((Math.sin(pulseTime * 0.0032) + 1) * 0.5);
 	const pulseScale = $derived(1 + pulse * 0.025);
@@ -32,7 +39,7 @@
 <MainContainer alignVertical="bottom">
 	<Container
 		x={mainLayout.width * 0.5}
-		y={mainLayout.height - 56}
+		y={mainLayout.height - bottomOffset}
 		scale={pulseScale}
 		alpha={pulseAlpha}
 	>

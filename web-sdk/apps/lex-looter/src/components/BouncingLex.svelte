@@ -25,6 +25,13 @@
 
 	const context = getContext();
 	const parentCtx = getContextParent();
+	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
+	const isMobileL = $derived(
+		context.stateLayoutDerived.layoutType() === 'portrait' &&
+			canvasSizes.width <= 425 &&
+			canvasSizes.height >= 760,
+	);
+	const hudYOffset = $derived(isMobileL ? -30 : 0);
 
 	const W = CANVAS_WIDTH;
 	const H = CANVAS_HEIGHT;
@@ -93,6 +100,24 @@
 	root.scale.set(_SCALE);
 	root.x = Math.round((BOARD_SIZES.width - W * _SCALE) / 2);
 	root.y = Math.round((BOARD_SIZES.height - H * _SCALE) / 2) + CANVAS_Y_OFFSET;
+
+	$effect(() => {
+		hudLayer.y = hudYOffset;
+		logoContainer.x = isMobileL ? W / 2 : 145;
+		logoContainer.y = isMobileL ? -370 : -42;
+		logoContainer.scale.set(isMobileL ? 2 : 1);
+		valueText.x = W / 2;
+		valueText.y = isMobileL ? -252 : -70;
+		valueText.scale.set(isMobileL ? 1.45 : 1);
+		bounceText.x = W / 2;
+		bounceText.y = isMobileL ? -168 : 2;
+		bounceText.scale.set(isMobileL ? 1.35 : 1);
+		for (const [index, heartSlot] of heartHud.entries()) {
+			heartSlot.container.x = isMobileL ? W / 2 - 50 + index * 50 : W / 2 + 145 + index * 40;
+			heartSlot.container.y = isMobileL ? -105 : -24;
+			heartSlot.container.scale.set(isMobileL ? 1.25 : 1);
+		}
+	});
 
 	const bg = new PIXI.Container();
 	const bgFallback = new PIXI.Graphics();
@@ -190,7 +215,7 @@
 			stroke: { color: 0x000000, width: 1 },
 		},
 	});
-	bounceText.anchor.set(0.5, 0);
+	bounceText.anchor.set(0.5);
 	bounceText.x = W / 2;
 	bounceText.y = -18;
 	hudLayer.addChild(bounceText);
@@ -360,7 +385,17 @@
 
 	const updateHud = () => {
 		stealthPill.clear();
-		stealthPill.roundRect(W / 2 - 100, -28, 200, 40, 20);
+		const stealthPillY = isMobileL ? -195 : -28;
+		const stealthPillScale = isMobileL ? 1.35 : 1;
+		const stealthPillWidth = 200 * stealthPillScale;
+		const stealthPillHeight = 40 * stealthPillScale;
+		stealthPill.roundRect(
+			W / 2 - stealthPillWidth / 2,
+			stealthPillY,
+			stealthPillWidth,
+			stealthPillHeight,
+			20 * stealthPillScale,
+		);
 		stealthPill.fill({ color: 0x151515, alpha: 0.95 });
 		stealthPill.stroke({ color: 0x00ff4a, width: 2, alpha: 0.95 });
 		renderHeartHudAssets();
@@ -727,6 +762,12 @@
 
 	const cashNumberPopAnimation = createCashNumberPopController({
 		layer: effectLayer,
+		boardWidth: W,
+		boardHeight: H,
+		getViewport: () => ({
+			...context.stateLayoutDerived.canvasSizes(),
+			layoutType: context.stateLayoutDerived.layoutType(),
+		}),
 		isTurbo: () => stateBet.isTurbo,
 		isSkipPlayback: () => context.stateGame.lexSkipPlayback,
 	});

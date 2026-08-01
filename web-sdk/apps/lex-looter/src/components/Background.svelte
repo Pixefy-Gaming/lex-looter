@@ -9,13 +9,28 @@
 
 	const context = getContext();
 	const backgroundBlur = new PIXI.BlurFilter({ strength: 6, quality: 4 });
-	const BACKGROUND_BLUR_OVERSCAN = 24;
-	const backgroundProps = $derived({
-		x: context.stateLayoutDerived.canvasSizes().width * 0.5,
-		y: context.stateLayoutDerived.canvasSizes().height * 0.5,
-		width: context.stateLayoutDerived.canvasSizes().width + BACKGROUND_BLUR_OVERSCAN * 2,
-		height: context.stateLayoutDerived.canvasSizes().height + BACKGROUND_BLUR_OVERSCAN * 2,
-	});
+	const BACKGROUND_RATIO = 800 / 436;
+	const BACKGROUND_BLUR_OVERSCAN = 120;
+	const backgroundProps = $derived(
+		getCoverBackgroundProps(context.stateLayoutDerived.canvasSizes()),
+	);
+
+	function getCoverBackgroundProps(canvasSizes: { width: number; height: number }) {
+		const targetWidth = canvasSizes.width + BACKGROUND_BLUR_OVERSCAN * 2;
+		const targetHeight = canvasSizes.height + BACKGROUND_BLUR_OVERSCAN * 2;
+		const targetRatio = targetWidth / Math.max(targetHeight, 1);
+		const backgroundWidth =
+			targetRatio > BACKGROUND_RATIO ? targetWidth : targetHeight * BACKGROUND_RATIO;
+		const backgroundHeight =
+			targetRatio > BACKGROUND_RATIO ? targetWidth / BACKGROUND_RATIO : targetHeight;
+
+		return {
+			x: canvasSizes.width * 0.5,
+			y: canvasSizes.height * 0.5,
+			width: backgroundWidth,
+			height: backgroundHeight,
+		};
+	}
 	const activateBonusSelected = $derived(
 		!['BASE', 'base', undefined].includes(stateBet.activeBetModeKey),
 	);

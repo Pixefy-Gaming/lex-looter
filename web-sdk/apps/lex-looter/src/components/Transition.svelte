@@ -153,6 +153,25 @@
 			};
 		}
 
+		if (portrait && width >= 390 && width <= 425 && height >= 760) {
+			return {
+				scanlineSpacing: 7,
+				spectralCount: 34,
+				spectralOffset: 84,
+				spectralHeight: 8,
+				corruptionCount: 16,
+				corruptionWidth: 86,
+				corruptionHeight: 56,
+				glassCount: 8,
+				glassMinWidth: 96,
+				glassMaxWidth: 300,
+				glassMinHeight: 82,
+				glassMaxHeight: 260,
+				alphaScale: 0.86,
+				flashHeight: 10,
+			};
+		}
+
 		if (portrait && width <= 425) {
 			return {
 				scanlineSpacing: 8,

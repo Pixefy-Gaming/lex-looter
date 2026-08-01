@@ -228,7 +228,7 @@
 	});
 
 	$effect(() => {
-		stateGame.isUiModalOpen = isBlockingUiModalOpen;
+		stateGame.isUiModalOpen = controlBarLayoutType !== 'popout' && isBlockingUiModalOpen;
 	});
 
 	$effect(() => {
@@ -2104,13 +2104,28 @@
 	.popout-l .auto-modal,
 	.popout-l .menu-overlay {
 		position: absolute !important;
-		bottom: 120px !important;
-		left: 50% !important;
+		bottom: 112px !important;
 		right: auto !important;
-		width: 90% !important;
-		max-width: 350px;
-		transform: translateX(-50%) scale(0.9) !important;
+		width: 320px !important;
+		max-width: 320px;
+		transform: scale(0.78) !important;
+		transform-origin: bottom center !important;
 		z-index: 10005;
+	}
+
+	.popout-l .setting-menu-overlay {
+		left: clamp(70px, 12vw, 116px) !important;
+		transform-origin: bottom left !important;
+	}
+
+	.popout-l .bet-modal {
+		left: 50% !important;
+		transform: translateX(-50%) scale(0.78) !important;
+	}
+
+	.popout-l .auto-modal {
+		left: clamp(340px, 54vw, 440px) !important;
+		transform-origin: bottom right !important;
 	}
 
 	.popout .inline-win-display {
@@ -2121,6 +2136,17 @@
 
 	.popout-l .menu-overlay {
 		z-index: 10005;
+	}
+
+	.popout-l .modal-backdrop {
+		position: fixed !important;
+		inset: 0 !important;
+		width: 100vw !important;
+		height: 100vh !important;
+		top: 0 !important;
+		left: 0 !important;
+		transform: none !important;
+		background: transparent !important;
 	}
 
 	/* --------------------------------------------------------- */
@@ -2746,6 +2772,21 @@
 			width: 22px;
 			height: 22px;
 			flex: 0 0 22px;
+		}
+	}
+
+	@media (min-width: 390px) and (max-width: 425px) and (min-height: 760px) {
+		.control-bar-wrapper.portrait {
+			--skip-scale: 1.2;
+		}
+
+		.skip-playback-btn {
+			bottom: 92%;
+		}
+
+		.balance-display-mobile,
+		.win-display-mobile {
+			transform: translateY(-10px);
 		}
 	}
 
