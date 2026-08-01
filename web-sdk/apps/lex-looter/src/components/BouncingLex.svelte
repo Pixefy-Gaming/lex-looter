@@ -31,7 +31,20 @@
 			canvasSizes.width <= 425 &&
 			canvasSizes.height >= 760,
 	);
-	const hudYOffset = $derived(isMobileL ? -30 : 0);
+	const isMobileM = $derived(
+		context.stateLayoutDerived.layoutType() === 'portrait' &&
+			canvasSizes.width <= 375 &&
+			canvasSizes.height >= 640 &&
+			canvasSizes.height < 760,
+	);
+	const isMobileS = $derived(
+		context.stateLayoutDerived.layoutType() === 'portrait' &&
+			canvasSizes.width <= 340 &&
+			canvasSizes.height >= 540 &&
+			canvasSizes.height < 640,
+	);
+	const hasMobileTopHud = $derived(isMobileL || isMobileM || isMobileS);
+	const hudYOffset = $derived(isMobileL ? -30 : isMobileM ? -18 : isMobileS ? -12 : 0);
 
 	const W = CANVAS_WIDTH;
 	const H = CANVAS_HEIGHT;
@@ -84,7 +97,7 @@
 		escape: 'Escaped',
 		bounceLimit: 'Bounce Limit Hit',
 		slayer: 'Slayed',
-		allBallsLost: 'All Balls Lost',
+		allBallsLost: 'LEX LOST',
 		safetyStop: 'Safety Stop',
 	};
 	type LexDisplay = PIXI.Sprite | PIXI.AnimatedSprite | PIXI.Graphics;
@@ -103,20 +116,27 @@
 
 	$effect(() => {
 		hudLayer.y = hudYOffset;
-		logoContainer.x = isMobileL ? W / 2 : 145;
-		logoContainer.y = isMobileL ? -370 : -42;
-		logoContainer.scale.set(isMobileL ? 2 : 1);
+		logoContainer.x = hasMobileTopHud ? W / 2 : 145;
+		logoContainer.y = isMobileL ? -370 : isMobileM ? -340 : isMobileS ? -292 : -42;
+		logoContainer.scale.set(isMobileL ? 2 : isMobileM ? 2 : isMobileS ? 1.78 : 1);
 		valueText.x = W / 2;
-		valueText.y = isMobileL ? -252 : -70;
-		valueText.scale.set(isMobileL ? 1.45 : 1);
+		valueText.y = isMobileL ? -252 : isMobileM ? -210 : isMobileS ? -182 : -70;
+		valueText.scale.set(isMobileL ? 1.45 : isMobileM ? 1.28 : isMobileS ? 1.15 : 1);
 		bounceText.x = W / 2;
-		bounceText.y = isMobileL ? -168 : 2;
-		bounceText.scale.set(isMobileL ? 1.35 : 1);
+		bounceText.y = isMobileL ? -168 : isMobileM ? -140 : isMobileS ? -120 : 2;
+		bounceText.scale.set(isMobileL ? 1.35 : isMobileM ? 1.18 : isMobileS ? 1.05 : 1);
 		for (const [index, heartSlot] of heartHud.entries()) {
-			heartSlot.container.x = isMobileL ? W / 2 - 50 + index * 50 : W / 2 + 145 + index * 40;
-			heartSlot.container.y = isMobileL ? -105 : -24;
-			heartSlot.container.scale.set(isMobileL ? 1.25 : 1);
+			heartSlot.container.x = hasMobileTopHud
+				? W / 2 -
+					(isMobileL ? 50 : isMobileM ? 44 : 40) +
+					index * (isMobileL ? 50 : isMobileM ? 44 : 40)
+				: W / 2 + 145 + index * 40;
+			heartSlot.container.y = isMobileL ? -105 : isMobileM ? -88 : isMobileS ? -74 : -24;
+			heartSlot.container.scale.set(isMobileL ? 1.25 : isMobileM ? 1.1 : isMobileS ? 1 : 1);
 		}
+		metaText.x = W / 2;
+		metaText.y = isMobileL ? -62 : isMobileM ? -52 : isMobileS ? -42 : 14;
+		metaText.scale.set(isMobileL ? 2 : isMobileM ? 1.65 : isMobileS ? 1.45 : 1);
 	});
 
 	const bg = new PIXI.Container();
@@ -224,7 +244,7 @@
 		text: '',
 		style: { fill: 0xffffff, fontFamily: LEX_FONT_FAMILY, fontSize: 12, fontWeight: 'bold' },
 	});
-	metaText.anchor.set(0.5, 0);
+	metaText.anchor.set(0.5);
 	metaText.x = W / 2;
 	metaText.y = 14;
 	hudLayer.addChild(metaText);
@@ -385,8 +405,8 @@
 
 	const updateHud = () => {
 		stealthPill.clear();
-		const stealthPillY = isMobileL ? -195 : -28;
-		const stealthPillScale = isMobileL ? 1.35 : 1;
+		const stealthPillY = isMobileL ? -195 : isMobileM ? -163 : isMobileS ? -141 : -28;
+		const stealthPillScale = isMobileL ? 1.35 : isMobileM ? 1.18 : isMobileS ? 1.05 : 1;
 		const stealthPillWidth = 200 * stealthPillScale;
 		const stealthPillHeight = 40 * stealthPillScale;
 		stealthPill.roundRect(

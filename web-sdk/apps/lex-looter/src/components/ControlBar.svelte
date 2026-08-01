@@ -126,6 +126,21 @@
 	);
 	const isPopoutS = $derived(controlBarLayoutType === 'popout' && canvasSizes.width <= 500);
 	const isPopoutL = $derived(controlBarLayoutType === 'popout' && canvasSizes.width > 500);
+	const isMobileL = $derived(
+		controlBarLayoutType === 'portrait' && canvasSizes.width <= 425 && canvasSizes.height >= 760,
+	);
+	const isMobileM = $derived(
+		controlBarLayoutType === 'portrait' &&
+			canvasSizes.width <= 389 &&
+			canvasSizes.height >= 620 &&
+			canvasSizes.height < 760,
+	);
+	const isMobileS = $derived(
+		controlBarLayoutType === 'portrait' &&
+			canvasSizes.width <= 340 &&
+			canvasSizes.height >= 540 &&
+			canvasSizes.height < 620,
+	);
 	const cbScale = $derived.by(() => {
 		if (controlBarLayoutType === 'portrait') return 1;
 		if (controlBarLayoutType === 'popout') {
@@ -228,7 +243,12 @@
 	});
 
 	$effect(() => {
-		stateGame.isUiModalOpen = controlBarLayoutType !== 'popout' && isBlockingUiModalOpen;
+		stateGame.isUiModalOpen =
+			controlBarLayoutType !== 'popout' &&
+			!isMobileL &&
+			!isMobileM &&
+			!isMobileS &&
+			isBlockingUiModalOpen;
 	});
 
 	$effect(() => {
@@ -2784,9 +2804,66 @@
 			bottom: 92%;
 		}
 
+		.portrait .modal-backdrop {
+			position: fixed !important;
+			inset: auto 0 0 0 !important;
+			top: auto !important;
+			bottom: 0 !important;
+			left: 0 !important;
+			width: 100vw !important;
+			height: 100vh !important;
+			transform: none !important;
+			background: transparent !important;
+		}
+
+		.portrait .bet-modal,
+		.portrait .auto-modal,
+		.portrait .setting-menu-overlay {
+			bottom: 180px !important;
+			left: 50% !important;
+			right: auto !important;
+			width: min(92vw, 390px) !important;
+			max-width: calc(100vw - 34px) !important;
+			transform: translateX(-50%) !important;
+		}
+
 		.balance-display-mobile,
 		.win-display-mobile {
 			transform: translateY(-10px);
+		}
+	}
+
+	@media (min-width: 341px) and (max-width: 389px) and (min-height: 620px) and (max-height: 759px) {
+		.control-bar-wrapper.portrait {
+			--skip-scale: 0.97;
+		}
+
+		.skip-playback-btn {
+			bottom: 92%;
+		}
+
+		.portrait .modal-backdrop {
+			position: fixed !important;
+			inset: auto 0 0 0 !important;
+			top: auto !important;
+			bottom: 0 !important;
+			left: 0 !important;
+			width: 100vw !important;
+			height: 100vh !important;
+			transform: none !important;
+			background: transparent !important;
+		}
+
+		.portrait .bet-modal,
+		.portrait .auto-modal,
+		.portrait .setting-menu-overlay {
+			box-sizing: border-box !important;
+			bottom: 140px !important;
+			left: 50% !important;
+			right: auto !important;
+			width: min(92vw, 345px) !important;
+			max-width: calc(100vw - 30px) !important;
+			transform: translateX(-50%) !important;
 		}
 	}
 
@@ -2796,8 +2873,36 @@
 			gap: 8px;
 		}
 
+		.control-bar-wrapper.portrait {
+			--skip-scale: 0.9;
+		}
+
 		.skip-playback-btn {
-			bottom: 100%;
+			bottom: 92%;
+		}
+
+		.portrait .modal-backdrop {
+			position: fixed !important;
+			inset: auto 0 0 0 !important;
+			top: auto !important;
+			bottom: 0 !important;
+			left: 0 !important;
+			width: 100vw !important;
+			height: 100vh !important;
+			transform: none !important;
+			background: transparent !important;
+		}
+
+		.portrait .bet-modal,
+		.portrait .auto-modal,
+		.portrait .setting-menu-overlay {
+			box-sizing: border-box !important;
+			bottom: 118px !important;
+			left: 50% !important;
+			right: auto !important;
+			width: min(92vw, 294px) !important;
+			max-width: calc(100vw - 26px) !important;
+			transform: translateX(-50%) !important;
 		}
 
 		.turbo-btn-mobile {

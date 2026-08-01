@@ -19,7 +19,19 @@
 			canvasSizes.width <= 425 &&
 			canvasSizes.height >= 760,
 	);
-	const bottomOffset = $derived(isMobileL ? 104 : 56);
+	const isMobileM = $derived(
+		context.stateLayoutDerived.layoutType() === 'portrait' &&
+			canvasSizes.width <= 375 &&
+			canvasSizes.height >= 640 &&
+			canvasSizes.height < 760,
+	);
+	const isMobileS = $derived(
+		context.stateLayoutDerived.layoutType() === 'portrait' &&
+			canvasSizes.width <= 340 &&
+			canvasSizes.height >= 540 &&
+			canvasSizes.height < 640,
+	);
+	const bottomOffset = $derived(isMobileL ? 104 : isMobileM ? 88 : isMobileS ? 76 : 56);
 	let pulseTime = $state(0);
 	const pulse = $derived((Math.sin(pulseTime * 0.0032) + 1) * 0.5);
 	const pulseScale = $derived(1 + pulse * 0.025);
