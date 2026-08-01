@@ -7,6 +7,8 @@ export const requestAuthenticate = async (options: {
 	sessionID: string;
 	rgsUrl: string;
 	language: string;
+	currency?: string;
+	social?: boolean;
 }) => {
 	const data = await rgsFetcher.post({
 		rgsUrl: options.rgsUrl,
@@ -14,6 +16,8 @@ export const requestAuthenticate = async (options: {
 		variables: {
 			sessionID: options.sessionID,
 			language: options.language,
+			currency: options.currency,
+			social: options.social,
 		},
 	});
 

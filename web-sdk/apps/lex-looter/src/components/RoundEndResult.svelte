@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { tweened } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
+	import { stateConfig, stateUrlDerived } from 'state-shared';
+	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 
 	import { getContext } from '../game/context';
 	import type { LexRoundEndReason } from '../game/typesBookEvent';
@@ -10,20 +12,20 @@
 
 	const RESULT_POPUP_MIN_BOOK_EVENT_AMOUNT = 10 * 100;
 	const SPECIAL_RESULT_MIN_BOOK_EVENT_AMOUNT = 1 * 100;
-	const formatMoney = (amount: number) => `$${(amount / 100).toFixed(2)}`;
 	const SPECIAL_REASON_LABELS: Partial<Record<LexRoundEndReason, string>> = {
 		escape: 'ESCAPED',
 		bounceLimit: 'HIT LIMIT',
 	};
 	const animatedAmount = tweened(0, { easing: cubicOut });
 
-	const getResultTitle = (amount: number, resultReason?: LexRoundEndReason) => {
+	const getResultTitle = (amount: number, resultReason: LexRoundEndReason | undefined, social: boolean) => {
 		const multiplier = amount / 100;
-		if (multiplier >= 100) return 'EPIC WIN';
-		if (multiplier >= 50) return 'MEGA WIN';
-		if (multiplier >= 25) return 'SUPER WIN';
-		if (multiplier >= 10) return 'BIG WIN';
-		return resultReason ? (SPECIAL_REASON_LABELS[resultReason] ?? 'BIG WIN') : 'BIG WIN';
+		const resultWord = social ? 'RESULT' : 'WIN';
+		if (multiplier >= 100) return `EPIC ${resultWord}`;
+		if (multiplier >= 50) return `MEGA ${resultWord}`;
+		if (multiplier >= 25) return `SUPER ${resultWord}`;
+		if (multiplier >= 10) return `BIG ${resultWord}`;
+		return resultReason ? (SPECIAL_REASON_LABELS[resultReason] ?? `BIG ${resultWord}`) : `BIG ${resultWord}`;
 	};
 
 	const getCountUpDuration = (amount: number) => {
@@ -54,8 +56,9 @@
 		isSpecialReason ? Math.max(lex.totalWin, lex.tumbleValue) : lex.totalWin,
 	);
 	const hasWin = $derived(resultBookEventAmount > 0);
-	const popupAmount = $derived(formatMoney($animatedAmount));
-	const popupTitle = $derived(getResultTitle($animatedAmount, popupReason));
+	const isSocial = $derived(stateConfig.jurisdiction?.socialCasino || stateUrlDerived.social());
+	const popupAmount = $derived(bookEventAmountToCurrencyString($animatedAmount));
+	const popupTitle = $derived(getResultTitle($animatedAmount, popupReason, isSocial));
 	const shouldShowResult = $derived(
 		!!reason &&
 			(resultBookEventAmount >= RESULT_POPUP_MIN_BOOK_EVENT_AMOUNT ||

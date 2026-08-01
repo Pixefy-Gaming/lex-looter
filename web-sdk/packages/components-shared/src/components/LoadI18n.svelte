@@ -7,7 +7,7 @@
 
 	import { onMount, type Snippet } from 'svelte';
 
-	import { stateUrlDerived, type Language } from 'state-shared';
+	import { stateConfig, stateUrlDerived, type Language } from 'state-shared';
 	import type { MessagesMap } from 'utils-shared/i18n';
 
 	type Props = {
@@ -28,8 +28,9 @@
 
 	onMount(() => {
 		try {
-			const messages = loadMessages(stateUrlDerived.lang());
-			stateI18nDerived.init(stateUrlDerived.lang(), messages);
+			const language = stateConfig.jurisdiction?.socialCasino ? 'en' : stateUrlDerived.lang();
+			const messages = loadMessages(language);
+			stateI18nDerived.init(language, messages);
 		} catch (error) {
 			console.error("Loading fallback locale 'en' because of error", error);
 			try {

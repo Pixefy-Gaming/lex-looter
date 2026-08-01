@@ -102,6 +102,8 @@ export interface components {
 		req_authenticate: {
 			sessionID: components['schemas']['SessionID'];
 			language?: components['schemas']['Language'];
+			currency?: string;
+			social?: boolean;
 		};
 		/**
 		 * @description Describe the result of an API call to the casino.

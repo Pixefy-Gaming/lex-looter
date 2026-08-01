@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { stateConfig } from 'state-shared';
+	import { stateConfig, stateUrlDerived } from 'state-shared';
 	import { getContext } from '../game/context';
 
 	const context = getContext();
@@ -13,8 +13,12 @@
 	const isScaledPopout = $derived(layoutType === 'popout' || isStakePopoutViewport);
 	const isPopoutS = $derived(isScaledPopout && canvasSizes.width <= 500);
 	const isPopoutL = $derived(isScaledPopout && canvasSizes.width > 500);
-	const isSocial = $derived(stateConfig.jurisdiction?.socialCasino);
+	const isSocial = $derived(stateConfig.jurisdiction?.socialCasino || stateUrlDerived.social());
 	const costUnitLabel = $derived(isSocial ? 'play cost' : 'bet cost');
+	const resultLabel = $derived(isSocial ? 'result' : 'win');
+	const finalResultLabel = $derived(isSocial ? 'final result' : 'cash payout');
+	const featureActionLabel = $derived(isSocial ? 'activate' : 'buy');
+	const maxResultLabel = $derived(isSocial ? 'Max Result' : 'Max Win');
 	const symbolIconSize = $derived(isPopoutS ? 28 : 42);
 
 	let { onClose } = $props<{ onClose: () => void }>();
@@ -62,7 +66,7 @@
 			key: 'EXIT',
 			name: 'Escape Ladder',
 			image: 'assets/lex/runtime/escape.png',
-			effect: 'Cashes out the current tumble value and ends the round.',
+			effect: 'Awards the current tumble value and ends the round.',
 		},
 		{
 			key: 'BLOB',
@@ -128,7 +132,7 @@
 			title: 'Base',
 			cost: '1x',
 			rtp: '96.50%',
-			maxWin: '8,888x',
+			maxWin: '35x',
 			detail:
 				'Standard Lex Looter round. One Lex ball starts in the arena, corners use the base multiplier profile, and all regular objects may appear.',
 		},
@@ -138,7 +142,7 @@
 			rtp: '96.50%',
 			maxWin: '8,888x',
 			detail:
-				'Buy mode with improved corner multipliers. Slayer is delayed out of play for the round, while escape is disabled.',
+				'Feature mode with improved corner multipliers. Slayer is delayed out of play for the round, while escape is disabled.',
 		},
 		{
 			title: 'Start Clone',
@@ -146,7 +150,7 @@
 			rtp: '96.50%',
 			maxWin: '8,888x',
 			detail:
-				'Buy mode that begins with Lex and one Clone already active. Corner multipliers are stronger and escape is disabled.',
+				'Feature mode that begins with Lex and one Clone already active. Corner multipliers are stronger and escape is disabled.',
 		},
 		{
 			title: 'Lucky Lex',
@@ -154,34 +158,34 @@
 			rtp: '96.50%',
 			maxWin: '8,888x',
 			detail:
-				'Buy mode that starts with a Clone and a 5x mode multiplier applied to the final cashout result.',
+				'Feature mode that starts with a Clone and a 5x mode multiplier applied to the final result.',
 		},
 	];
 
-	const controlRows = [
-		'Press Play or the spin control to start a Base round at the selected cost.',
+	const controlRows = $derived([
+		`Press Play or the spin control to start a Base round at the selected ${costUnitLabel}.`,
 		'Use the left and right amount arrows to lower or raise the selected cost.',
-		'Open the feature menu to buy No Slayer, Start Clone, or Lucky Lex.',
+		`Open the feature menu to ${featureActionLabel} No Slayer, Start Clone, or Lucky Lex.`,
 		'Auto Play opens a confirmation step before it starts.',
 		'Turbo speeds up Lex movement and round reveals while it is active.',
 		'Sound and music can both be toggled from the main controls and settings menu.',
-		'Replay displays the mode, cost, multiplier, and final result before playback starts.',
-	];
+		`Replay displays the mode, cost, multiplier, and ${resultLabel} before playback starts.`,
+	]);
 
 	const payoutRows = [
 		{
 			title: 'Corner Chest',
 			detail:
-				'If Lex reaches a live corner chest, the round pays tumble value times the corner multiplier.',
+				'If Lex reaches a live corner chest, the round awards tumble value times the corner multiplier.',
 		},
 		{
 			title: 'Escape Ladder',
-			detail: 'Collecting the ladder cashes out the tumble value immediately.',
+			detail: 'Collecting the ladder awards the tumble value immediately.',
 		},
 		{
 			title: 'Bounce Limit',
 			detail:
-				'At 40 Lex wall bounces, the round reaches STEALTH and pays the current tumble value.',
+				'At 40 Lex wall bounces, the round reaches STEALTH and awards the current tumble value.',
 		},
 		{
 			title: 'All Balls Lost',
@@ -191,7 +195,7 @@
 
 	const disclaimer = $derived(
 		isSocial
-			? 'Malfunction voids all wins and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Winnings are settled according to the amount received from the Remote Game Server and not from events within the web browser. TM and © 2026.'
+			? 'Malfunction voids all awards and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Awards are settled according to the amount received from the Remote Game Server and not from events within the web browser. TM and © 2026.'
 			: 'Malfunction voids all wins and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Winnings are settled according to the amount received from the Remote Game Server and not from events within the web browser. TM and © 2026 Stake Engine.',
 	);
 
@@ -233,7 +237,7 @@
 				<div class="page-content">
 					<div class="page-header">
 						<h2>Lex Looter</h2>
-						<p>Build a tumble value, dodge danger, and cash out before the arena turns on you.</p>
+						<p>Build a tumble value, dodge danger, and claim a result before the arena turns on you.</p>
 					</div>
 
 					<div class="scroll-container">
@@ -317,8 +321,8 @@
 			{:else if currentPage === 2}
 				<div class="page-content">
 					<div class="page-header">
-						<h2>Wins</h2>
-						<p>A round ends when Lex cashes out, reaches STEALTH, or loses every active ball.</p>
+						<h2>{isSocial ? 'Results' : 'Wins'}</h2>
+						<p>A round ends when Lex claims a result, reaches STEALTH, or loses every active ball.</p>
 					</div>
 
 					<div class="scroll-container">
@@ -337,8 +341,8 @@
 								green.
 							</p>
 							<p>
-								The win popup shows the final result, effective multiplier, and cash payout before
-								the next round begins.
+								The result popup shows the final result, effective multiplier, and
+								{finalResultLabel} before the next round begins.
 							</p>
 						</div>
 					</div>
@@ -347,7 +351,7 @@
 				<div class="page-content">
 					<div class="page-header">
 						<h2>Modes</h2>
-						<p>Every live mode runs at 96.50% RTP with an 8,888x maximum win.</p>
+						<p>Every mode runs at 96.50% RTP. Maximum results are listed per mode.</p>
 					</div>
 
 					<div class="scroll-container">
@@ -360,7 +364,7 @@
 									</div>
 									<div class="mode-stats">
 										<span>RTP {mode.rtp}</span>
-										<span>Max Win {mode.maxWin}</span>
+										<span>{maxResultLabel} {mode.maxWin}</span>
 									</div>
 									<p>{mode.detail}</p>
 								</div>

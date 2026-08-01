@@ -33,6 +33,8 @@
 				rgsUrl: stateUrlDerived.rgsUrl(),
 				sessionID: stateUrlDerived.sessionID(),
 				language: stateUrlDerived.lang(),
+				currency: stateUrlDerived.currency(),
+				social: stateUrlDerived.social(),
 			});
 
 			// error

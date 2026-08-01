@@ -10,6 +10,7 @@
 		stateI18n,
 		stateModal,
 		stateUi,
+		stateUrlDerived,
 	} from 'state-shared';
 	import { getContext } from '../game/context';
 	import ControlToggleIcon from './ControlToggleIcon.svelte';
@@ -33,7 +34,7 @@
 		return formatCurrency(safeNumber(value));
 	}
 
-	const isSocial = $derived(stateConfig.jurisdiction?.socialCasino);
+	const isSocial = $derived(stateConfig.jurisdiction?.socialCasino || stateUrlDerived.social());
 	const betLabel = $derived(isSocial ? 'PLAY' : i18nDerived.bet());
 	const costLabel = $derived(isSocial ? 'PLAY' : 'BET');
 	const balanceLabel = $derived(isSocial ? 'FUNDS' : i18nDerived.balance());

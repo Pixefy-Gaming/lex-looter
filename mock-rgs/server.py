@@ -30,6 +30,7 @@ CORS(app)  # Enable CORS for web-sdk frontend
 
 # In-memory session storage
 sessions = {}
+replays = {}
 INITIAL_BALANCE = 1000000000  # $1000 with 6 decimal precision
 API_AMOUNT_MULTIPLIER = 1_000_000
 MIN_BET = 10_000  # $0.01
@@ -285,6 +286,27 @@ class Session:
             "state": self.current_book.get('events', []),  # web-sdk expects 'state'
         }
 
+    def build_replay_response(self, active=False):
+        """Build a replay payload from the current or last round."""
+        round_data = self.build_round_response(active=active)
+        if not round_data and self.last_completed_round:
+            round_data = self.last_completed_round
+        if not round_data:
+            return None
+
+        response = dict(round_data)
+        response["costMultiplier"] = (
+            self.current_bet_amount / self.current_base_bet_amount
+            if self.current_base_bet_amount
+            else response.get("debitAmount", 0) / response.get("amount", 1)
+        )
+        # Frontend replay UI displays multiplier directly as x, while play payloads use
+        # the RGS integer format where 100 = 1x.
+        response["payoutMultiplier"] = response.get("payoutMultiplier", 0) / 100.0
+        response["currency"] = self.currency
+        response["language"] = self.language
+        return response
+
 
 @app.route('/wallet/authenticate', methods=['POST'])
 def authenticate():
@@ -293,6 +315,7 @@ def authenticate():
     session_id = data.get('sessionID') or data.get('playerID')
     language = data.get('language', 'en')
     currency = data.get('currency', 'USD')
+    social = bool(data.get('social')) or currency in {"XSC", "XGC"}
     
     if not session_id:
         session_id = str(uuid.uuid4())
@@ -320,7 +343,7 @@ def authenticate():
             "betLevels": SUPPORTED_BET_LEVELS,
             "betModes": session.get_rgs_bet_modes_config(),
             "jurisdiction": {
-                "socialCasino": False,
+                "socialCasino": social,
                 "disabledFullscreen": False,
                 "disabledTurbo": False,
                 "disabledSuperTurbo": False,
@@ -423,6 +446,10 @@ def play():
             "state": book.get('events', []),  # web-sdk expects 'state' not 'events'
         }
     }
+
+    replay_payload = session.build_replay_response(active=True)
+    if replay_payload:
+        replays[session.round_id] = replay_payload
     
     all_events = book.get('events', [])
     event_types = [e.get('type') for e in all_events]
@@ -450,7 +477,10 @@ def end_round():
     
     # Add win amount to balance (calculated from actual game)
     session.balance += session.win_amount
+    replay_payload = session.build_replay_response(active=False)
     session.last_completed_round = session.build_round_response(active=False)
+    if replay_payload:
+        replays[session.round_id] = replay_payload
     
     session.round_active = False
     session.current_base_bet_amount = None
@@ -468,6 +498,57 @@ def end_round():
     
     print(f"✅ Round ended | Final Balance: ${session.balance/1000000:.2f}")
     return jsonify(response)
+
+
+@app.route('/bet/replay/<game>/<version>/<mode>/<event>', methods=['GET'])
+def replay(game, version, mode, event):
+    """Return a stored replay round by round id, with a live fallback for local testing."""
+    replay_payload = replays.get(event)
+    if replay_payload:
+        return jsonify({
+            **replay_payload,
+            "game": game,
+            "version": version,
+            "mode": replay_payload.get("mode") or mode,
+            "event": event,
+        })
+
+    session_id = f"replay-{event or uuid.uuid4()}"
+    session = sessions.setdefault(session_id, Session(session_id))
+    session.initialize_game()
+    session.currency = request.args.get("currency", session.currency)
+    session.language = request.args.get("language", session.language)
+
+    requested_amount = request.args.get("amount", SUPPORTED_BET_LEVELS[0])
+    amount, amount_error = parse_bet_amount(requested_amount)
+    if amount_error:
+        amount = SUPPORTED_BET_LEVELS[0]
+
+    resolved_mode = session.resolve_mode_name(mode)
+    if resolved_mode is None:
+        return invalid_request(f"Unsupported replay mode: {mode}")
+
+    cost_multiplier = session.get_mode_cost_multiplier(resolved_mode)
+    session.current_base_bet_amount = amount
+    session.current_bet_amount = int(round(amount * cost_multiplier, 0))
+    session.round_id = event or str(uuid.uuid4())
+    session.current_mode = session.get_mode_display_name(resolved_mode)
+    session.current_event_index = 0
+    session.current_book = session.run_game_round(mode=resolved_mode)
+    if not session.current_book:
+        return jsonify({"error": "ERR_GEN", "message": "Game engine error"}), 500
+
+    payout_multiplier_raw = session.current_book.get('payoutMultiplier', 0)
+    session.win_amount = int(round(amount * (payout_multiplier_raw / 100.0), 0))
+    replay_payload = session.build_replay_response(active=False)
+    replays[session.round_id] = replay_payload
+
+    return jsonify({
+        **replay_payload,
+        "game": game,
+        "version": version,
+        "event": session.round_id,
+    })
 
 
 @app.route('/wallet/balance', methods=['POST'])

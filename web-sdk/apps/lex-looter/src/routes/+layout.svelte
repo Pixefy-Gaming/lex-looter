@@ -34,13 +34,16 @@
 <style>
 	:global(:root) {
 		--lex-looter-ui-font: 'Jersey 25', sans-serif;
+		touch-action: manipulation;
 	}
 
 	:global(body),
+	:global(canvas),
 	:global(button),
 	:global(input),
 	:global(select),
 	:global(textarea) {
 		font-family: var(--lex-looter-ui-font);
+		touch-action: manipulation;
 	}
 </style>

@@ -108,7 +108,7 @@
 	const effectLayer = new PIXI.Container();
 	const ballLayer = new PIXI.Container();
 	const trailLayer = new PIXI.Container();
-	const CANVAS_Y_OFFSET = -35;
+	const CANVAS_Y_OFFSET = -45;
 	const _SCALE = Math.min(BOARD_SIZES.width / W, BOARD_SIZES.height / H);
 	root.scale.set(_SCALE);
 	root.x = Math.round((BOARD_SIZES.width - W * _SCALE) / 2);
@@ -120,10 +120,10 @@
 		logoContainer.y = isMobileL ? -370 : isMobileM ? -340 : isMobileS ? -292 : -42;
 		logoContainer.scale.set(isMobileL ? 2 : isMobileM ? 2 : isMobileS ? 1.78 : 1);
 		valueText.x = W / 2;
-		valueText.y = isMobileL ? -252 : isMobileM ? -210 : isMobileS ? -182 : -70;
+		valueText.y = isMobileL ? -252 : isMobileM ? -210 : isMobileS ? -182 : -94;
 		valueText.scale.set(isMobileL ? 1.45 : isMobileM ? 1.28 : isMobileS ? 1.15 : 1);
 		bounceText.x = W / 2;
-		bounceText.y = isMobileL ? -168 : isMobileM ? -140 : isMobileS ? -120 : 2;
+		bounceText.y = isMobileL ? -168 : isMobileM ? -140 : isMobileS ? -120 : -28;
 		bounceText.scale.set(isMobileL ? 1.35 : isMobileM ? 1.18 : isMobileS ? 1.05 : 1);
 		for (const [index, heartSlot] of heartHud.entries()) {
 			heartSlot.container.x = hasMobileTopHud
@@ -242,7 +242,13 @@
 
 	const metaText = new PIXI.Text({
 		text: '',
-		style: { fill: 0xffffff, fontFamily: LEX_FONT_FAMILY, fontSize: 12, fontWeight: 'bold' },
+		style: {
+			fill: 0xffffff,
+			fontFamily: LEX_FONT_FAMILY,
+			fontSize: 18,
+			fontWeight: '900',
+			stroke: { color: 0x000000, width: 2 },
+		},
 	});
 	metaText.anchor.set(0.5);
 	metaText.x = W / 2;
@@ -405,13 +411,12 @@
 
 	const updateHud = () => {
 		stealthPill.clear();
-		const stealthPillY = isMobileL ? -195 : isMobileM ? -163 : isMobileS ? -141 : -28;
 		const stealthPillScale = isMobileL ? 1.35 : isMobileM ? 1.18 : isMobileS ? 1.05 : 1;
 		const stealthPillWidth = 200 * stealthPillScale;
 		const stealthPillHeight = 40 * stealthPillScale;
 		stealthPill.roundRect(
-			W / 2 - stealthPillWidth / 2,
-			stealthPillY,
+			bounceText.x - stealthPillWidth / 2,
+			bounceText.y - stealthPillHeight / 2,
 			stealthPillWidth,
 			stealthPillHeight,
 			20 * stealthPillScale,
