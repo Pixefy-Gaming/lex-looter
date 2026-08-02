@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { stateBet, stateConfig, stateUrlDerived } from 'state-shared';
+	import { stateBet } from 'state-shared';
 	import { bookEventAmountToNormalisedAmount, numberToCurrencyString } from 'utils-shared';
 	import { getContext } from '../game/context';
 
@@ -23,7 +23,7 @@
 	const { stateLayoutDerived } = getContext();
 
 	const layoutType = $derived(stateLayoutDerived.layoutType());
-	const modeLabel = (mode: string | undefined) => (mode || 'BASE').replace(/_/g, ' ').toUpperCase();
+	const modeLabel = (mode: string | undefined) => (mode || 'base').replace(/_/g, ' ').toLowerCase();
 	const normalizeMultiplier = (value: number) => (value > 50 ? value / 100 : value);
 	const firstFiniteNumber = (...values: unknown[]) =>
 		values.map(Number).find((value) => Number.isFinite(value));
@@ -40,7 +40,6 @@
 			return amount === undefined ? largestAmount : Math.max(largestAmount, amount);
 		}, 0);
 	};
-	const isSocial = $derived(stateConfig.jurisdiction?.socialCasino || stateUrlDerived.social());
 	const replayRound = $derived(
 		((stateBet.replayBet ?? stateBet.betToResume) as ReplayRound | null) ?? null,
 	);
@@ -57,64 +56,70 @@
 	const payoutMultiplier = $derived(
 		betAmount > 0 ? payout / betAmount : normalizeMultiplier(replayRound?.payoutMultiplier || 0),
 	);
-	const title = $derived(again ? 'Replay Complete' : 'Replay Ready');
 	const buttonLabel = $derived(starting ? 'Starting' : again ? 'Play Again' : 'Start Replay');
-	const costLabel = $derived(isSocial ? 'Play Cost' : 'Bet');
-	const resultLabel = $derived(isSocial ? 'Result' : 'Win');
+	const replayTitle = $derived(again ? 'Replay Complete' : 'Replay');
+	const formatMultiplier = (value: number) => `${Number(value.toFixed(6))}×`;
 </script>
 
 <div class="replay-intro-overlay" class:finished={again}></div>
 <div class="replay-intro-wrapper {layoutType}">
-	<section class="replay-intro-card" aria-label="Replay details">
-		<div class="replay-logo" aria-label="Lex Looter"></div>
-		<div class="replay-intro-title">{title}</div>
+	<section
+		class="replay-intro-card"
+		aria-label="Replay details"
+		aria-modal="true"
+		aria-labelledby="replay-intro-title"
+		role="dialog"
+	>
+		<div class="replay-intro-title" id="replay-intro-title">{replayTitle}</div>
+		<div class="replay-intro-heading">BET REPLAY</div>
 
-		<div class="replay-intro-rows">
+		<div class="replay-intro-panel">
 			<div class="replay-intro-row">
-				<span class="replay-intro-label">Mode</span>
+				<span class="replay-intro-label">MODE</span>
 				<span class="replay-intro-value">{modeLabel(activeMode)}</span>
 			</div>
+			<div class="replay-intro-divider"></div>
 			<div class="replay-intro-row">
-				<span class="replay-intro-label">{costLabel}</span>
+				<span class="replay-intro-label">BASE BET</span>
 				<span class="replay-intro-value">{numberToCurrencyString(betAmount)}</span>
 			</div>
-			{#if costMultiplier > 1}
-				<div class="replay-intro-row">
-					<span class="replay-intro-label">Cost</span>
-					<span class="replay-intro-value">
-						{numberToCurrencyString(realCost)}
-						<span class="replay-cost-mult">({costMultiplier}x)</span>
-					</span>
-				</div>
-			{/if}
 			<div class="replay-intro-row">
-				<span class="replay-intro-label">Multiplier</span>
-				<span class="replay-intro-value">{payoutMultiplier.toLocaleString()}x</span>
+				<span class="replay-intro-label">COST MULTIPLIER</span>
+				<span class="replay-intro-value">{formatMultiplier(costMultiplier)}</span>
 			</div>
 			<div class="replay-intro-row highlight">
-				<span class="replay-intro-label">{resultLabel}</span>
+				<span class="replay-intro-label">TOTAL BET COST</span>
+				<span class="replay-intro-value">{numberToCurrencyString(realCost)}</span>
+			</div>
+			<div class="replay-intro-divider"></div>
+			<div class="replay-intro-row">
+				<span class="replay-intro-label">PAYOUT MULTIPLIER</span>
+				<span class="replay-intro-value">{formatMultiplier(payoutMultiplier)}</span>
+			</div>
+			<div class="replay-intro-row highlight">
+				<span class="replay-intro-label">TOTAL WIN</span>
 				<span class="replay-intro-value">{numberToCurrencyString(payout, { exactWin: true })}</span>
 			</div>
 		</div>
 
 		<button class="replay-start-btn" onclick={onstart} disabled={starting}>
+			<span aria-hidden="true">▶</span>
 			{buttonLabel}
 		</button>
+		<div class="replay-intro-note">
+			This is a replay of a previous bet round. No bets will be placed.
+		</div>
 	</section>
 </div>
 
 <style>
 	.replay-intro-overlay {
-		--lex-green: #00ff50;
-		--lex-green-soft: rgba(0, 255, 80, 0.2);
-		--lex-purple: #9900ff;
-		--lex-panel: rgba(0, 0, 0, 0.92);
 		position: fixed;
 		inset: 0;
-		z-index: 9999;
-		background: rgba(0, 0, 0, 0.74);
-		backdrop-filter: blur(5px) saturate(0.75);
-		-webkit-backdrop-filter: blur(5px) saturate(0.75);
+		z-index: 2999;
+		background: rgba(0, 0, 0, 0.85);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
 		pointer-events: none;
 	}
 
@@ -127,9 +132,11 @@
 	.replay-intro-wrapper {
 		--lex-green: #00ff50;
 		--lex-purple: #9900ff;
+		--lex-green-soft: rgba(0, 255, 80, 0.14);
+		--lex-green-muted: rgba(0, 255, 80, 0.72);
 		position: fixed;
 		inset: 0;
-		z-index: 10000;
+		z-index: 3000;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -145,166 +152,153 @@
 	}
 
 	.replay-intro-card {
-		position: relative;
-		width: min(430px, 100%);
+		width: min(500px, 100%);
 		max-height: 100%;
-		box-sizing: border-box;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 14px;
-		padding: 22px 30px 30px;
-		overflow: hidden;
-		border: 2px solid var(--lex-green);
-		border-radius: 10px;
+		gap: 10px;
+		padding: 14px 20px 16px;
+		box-sizing: border-box;
+		border: 1px solid rgba(0, 255, 80, 0.55);
+		border-radius: 8px;
 		background:
-			linear-gradient(180deg, rgba(0, 255, 80, 0.08), transparent 32%),
-			linear-gradient(160deg, rgba(2, 6, 5, 0.98), rgba(18, 10, 30, 0.98));
+			linear-gradient(180deg, rgba(0, 255, 80, 0.06), transparent 38%),
+			rgba(5, 10, 12, 0.94);
 		box-shadow:
-			0 18px 50px rgba(0, 0, 0, 0.7),
-			0 0 0 3px rgba(153, 0, 255, 0.65),
-			0 0 34px rgba(0, 255, 80, 0.22);
+			0 10px 40px rgba(0, 0, 0, 0.8),
+			0 0 0 2px rgba(153, 0, 255, 0.55),
+			0 0 30px rgba(0, 255, 80, 0.16);
 		color: #ffffff;
+		font-family: 'Poppins', sans-serif;
 		overflow-x: hidden;
 		overflow-y: auto;
 		overscroll-behavior: contain;
 		pointer-events: auto;
-		scrollbar-width: thin;
-		scrollbar-color: rgba(0, 255, 80, 0.55) rgba(0, 0, 0, 0.25);
-	}
-
-	.replay-intro-card::before {
-		position: absolute;
-		inset: 8px;
-		border: 1px solid rgba(255, 255, 255, 0.08);
-		border-radius: 6px;
-		content: '';
-		pointer-events: none;
-	}
-
-	.replay-logo {
-		width: 210px;
-		height: 144px;
-		margin: -8px 0 -4px;
-		background-image: url('/assets/lex/loading-logo/logo-lex.png');
-		background-position: -845px -429px;
-		background-repeat: no-repeat;
-		background-size: 2063px 720px;
-		filter:
-			drop-shadow(4px 4px 0 #000)
-			drop-shadow(0 0 12px rgba(0, 255, 80, 0.36));
-		user-select: none;
+		scrollbar-width: none;
 	}
 
 	.replay-intro-title,
 	.replay-intro-label,
 	.replay-start-btn {
-		font-family: var(--lex-looter-ui-font);
 		text-transform: uppercase;
 	}
 
 	.replay-intro-title {
 		color: var(--lex-green);
-		font-size: 34px;
+		font-size: 12px;
 		font-weight: 900;
-		line-height: 1;
+		letter-spacing: 1.5px;
 		text-align: center;
-		text-shadow:
-			3px 3px 0 #000,
-			-2px 0 0 var(--lex-purple),
-			2px 0 0 var(--lex-purple),
-			0 2px 0 var(--lex-purple),
-			0 0 18px rgba(0, 255, 80, 0.28);
 	}
 
-	.replay-intro-rows {
+	.replay-intro-heading {
+		color: #fff;
+		font-size: 20px;
+		font-weight: 800;
+		letter-spacing: 0.03em;
+		text-transform: uppercase;
+	}
+
+	.replay-intro-panel {
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
 		width: 100%;
-		margin-top: 6px;
+		padding: 12px;
+		box-sizing: border-box;
+		border-radius: 8px;
+		background: rgba(3, 7, 14, 0.52);
 	}
 
 	.replay-intro-row {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		gap: 18px;
-		min-height: 38px;
-		padding: 7px 0;
-		border-bottom: 1px solid rgba(0, 255, 80, 0.16);
+		gap: 12px;
+		padding: 2px 0;
+		font-size: 11px;
 	}
 
 	.replay-intro-row.highlight {
-		margin-top: 4px;
-		padding: 12px 14px;
-		border: 1px solid rgba(0, 255, 80, 0.62);
-		border-radius: 8px;
+		margin: 0 -2px;
+		padding: 8px 10px;
+		border-radius: 7px;
 		background:
-			linear-gradient(90deg, rgba(0, 255, 80, 0.16), rgba(153, 0, 255, 0.12)),
-			rgba(0, 0, 0, 0.42);
-		box-shadow: inset 0 0 18px rgba(0, 255, 80, 0.08);
+			linear-gradient(90deg, rgba(0, 255, 80, 0.14), rgba(153, 0, 255, 0.1)),
+			rgba(255, 255, 255, 0.03);
+	}
+
+	.replay-intro-divider {
+		height: 1px;
+		margin: 2px 0;
+		background: rgba(255, 255, 255, 0.18);
 	}
 
 	.replay-intro-label {
-		color: rgba(0, 255, 80, 0.82);
-		font-size: 12px;
-		font-weight: 900;
+		flex: 0 0 auto;
+		color: rgba(255, 255, 255, 0.65);
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.08em;
 		white-space: nowrap;
-		text-shadow: 2px 2px 0 #000;
 	}
 
 	.replay-intro-value {
+		min-width: 0;
 		color: #ffffff;
-		font-family: var(--lex-looter-ui-font);
-		font-size: 18px;
-		font-weight: 900;
+		font-size: 11px;
+		font-weight: 700;
+		overflow-wrap: anywhere;
 		text-align: right;
-		text-shadow: 2px 2px 0 #000;
-		word-break: break-word;
 	}
 
-	.replay-cost-mult {
-		color: rgba(0, 255, 80, 0.72);
-		font-size: 12px;
-		margin-left: 4px;
+	.replay-intro-row.highlight .replay-intro-value {
+		color: var(--lex-green);
+		font-size: 13px;
 	}
 
 	.replay-start-btn {
-		min-height: 52px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
 		width: 100%;
-		border: 2px solid #000;
+		margin-top: 2px;
+		padding: 10px 20px;
+		border: 1px solid rgba(0, 255, 80, 0.7);
 		border-radius: 8px;
 		background: var(--lex-green);
 		color: #031009;
 		cursor: pointer;
-		font-size: 17px;
+		font-size: 11px;
 		font-weight: 900;
-		box-shadow:
-			0 5px 0 #063015,
-			0 0 20px rgba(0, 255, 80, 0.25);
-		text-shadow: none;
+		letter-spacing: 1px;
 		transition:
-			transform 0.12s ease,
-			filter 0.12s ease;
+			background 0.2s,
+			transform 0.1s;
 	}
 
 	.replay-start-btn:hover {
-		filter: brightness(1.08);
-		transform: translateY(-1px);
+		background: #42ff78;
+		transform: scale(1.03);
 	}
 
 	.replay-start-btn:active {
-		box-shadow:
-			0 2px 0 #063015,
-			0 0 14px rgba(0, 255, 80, 0.2);
-		transform: translateY(3px);
+		transform: scale(0.98);
 	}
 
 	.replay-start-btn:disabled {
 		cursor: default;
-		opacity: 0.58;
+		opacity: 0.72;
 		transform: none;
+	}
+
+	.replay-intro-note {
+		color: rgba(255, 255, 255, 0.45);
+		font-size: 9px;
+		line-height: 1.3;
+		text-align: center;
 	}
 
 	@media (max-height: 600px) and (orientation: landscape) {
@@ -313,53 +307,45 @@
 		}
 
 		.replay-intro-card {
-			width: min(410px, 100%);
-			gap: 7px;
-			padding: 10px 22px 14px;
-		}
-
-		.replay-logo {
-			width: 150px;
-			height: 103px;
-			margin: -8px 0 -8px;
-			background-position: -604px -308px;
-			background-size: 1474px 514px;
+			width: min(500px, 100%);
+			gap: 6px;
+			padding: 10px 16px 12px;
 		}
 
 		.replay-intro-title {
-			font-size: 24px;
-		}
-
-		.replay-intro-rows {
-			gap: 4px;
-			margin-top: 2px;
-		}
-
-		.replay-intro-row {
-			min-height: 28px;
-			padding: 4px 0;
-		}
-
-		.replay-intro-row.highlight {
-			margin-top: 2px;
-			padding: 8px 10px;
-		}
-
-		.replay-intro-label,
-		.replay-cost-mult {
 			font-size: 10px;
 		}
 
+		.replay-intro-heading {
+			font-size: 17px;
+		}
+
+		.replay-intro-panel {
+			gap: 5px;
+			padding: 8px 10px;
+		}
+
+		.replay-intro-row,
+		.replay-intro-label,
 		.replay-intro-value {
-			font-size: 14px;
+			font-size: 10px;
+		}
+
+		.replay-intro-row.highlight {
+			padding: 5px 8px;
+		}
+
+		.replay-intro-row.highlight .replay-intro-value {
+			font-size: 12px;
 		}
 
 		.replay-start-btn {
-			min-height: 42px;
-			font-size: 13px;
-			box-shadow:
-				0 4px 0 #063015,
-				0 0 16px rgba(0, 255, 80, 0.22);
+			padding: 8px 16px;
+			font-size: 10px;
+		}
+
+		.replay-intro-note {
+			font-size: 8px;
 		}
 	}
 
@@ -370,130 +356,59 @@
 
 		.replay-intro-card {
 			width: min(360px, 100%);
-			gap: 4px;
-			padding: 7px 16px 9px;
-			border-width: 1px;
+			gap: 3px;
+			padding: 6px 12px 7px;
 		}
 
-		.replay-logo {
-			width: 104px;
-			height: 72px;
-			margin: -8px 0 -10px;
-			background-position: -419px -214px;
-			background-size: 1022px 357px;
-		}
-
-		.replay-intro-title {
-			font-size: 18px;
-		}
-
-		.replay-intro-rows {
-			gap: 2px;
-			margin-top: 0;
-		}
-
+		.replay-intro-title,
+		.replay-intro-heading,
 		.replay-intro-row {
-			min-height: 22px;
-			padding: 2px 0;
+			font-size: 9px;
+		}
+
+		.replay-intro-panel {
+			gap: 2px;
+			padding: 5px 8px;
 		}
 
 		.replay-intro-row.highlight {
-			padding: 4px 7px;
+			padding: 2px 5px;
 		}
 
-		.replay-intro-label,
-		.replay-cost-mult {
-			font-size: 8px;
-			text-shadow: 1px 1px 0 #000;
-		}
-
-		.replay-intro-value {
+		.replay-intro-row.highlight .replay-intro-value {
 			font-size: 11px;
-			text-shadow: 1px 1px 0 #000;
 		}
 
 		.replay-start-btn {
-			min-height: 32px;
+			padding: 6px 15px;
 			font-size: 10px;
-			box-shadow:
-				0 2px 0 #063015,
-				0 0 12px rgba(0, 255, 80, 0.18);
 		}
 	}
 
 	@media (max-width: 520px) and (orientation: portrait) {
 		.replay-intro-card {
-			width: min(390px, 100%);
-			gap: 10px;
-			padding: 18px 20px 22px;
+			width: min(500px, 100%);
+			padding: 14px 18px 16px;
 		}
 
-		.replay-logo {
-			width: 180px;
-			height: 124px;
-			margin: -8px 0 -8px;
-			background-position: -724px -370px;
-			background-size: 1768px 617px;
-		}
-
-		.replay-intro-title {
-			font-size: 28px;
-		}
-
-		.replay-intro-row {
-			gap: 12px;
-			min-height: 34px;
-		}
-
-		.replay-intro-value {
-			font-size: 16px;
+		.replay-intro-heading {
+			font-size: 18px;
 		}
 	}
 
 	@media (max-width: 420px) and (orientation: portrait) {
 		.replay-intro-card {
-			padding: 20px 22px 26px;
-		}
-
-		.replay-logo {
-			width: 180px;
-			height: 124px;
-			background-position: -724px -370px;
-			background-size: 1768px 617px;
-		}
-
-		.replay-intro-title {
-			font-size: 29px;
+			padding: 12px 14px 14px;
 		}
 	}
 
 	@media (max-width: 360px) {
-		.replay-intro-card {
-			padding: 16px 16px 20px;
-		}
-
-		.replay-logo {
-			width: 150px;
-			height: 103px;
-			background-position: -604px -308px;
-			background-size: 1474px 514px;
-		}
-
-		.replay-intro-title {
-			font-size: 24px;
-		}
-
 		.replay-intro-label {
 			font-size: 10px;
 		}
 
 		.replay-intro-value {
-			font-size: 14px;
-		}
-
-		.replay-start-btn {
-			min-height: 46px;
-			font-size: 14px;
+			font-size: 10px;
 		}
 	}
 </style>
