@@ -43,25 +43,69 @@
 			canvasSizes.height >= 540 &&
 			canvasSizes.height < 640,
 	);
+	const canvasRatio = $derived(canvasSizes.width / Math.max(canvasSizes.height, 1));
+	const isPopoutS = $derived(
+		context.stateLayoutDerived.layoutType() === 'landscape' &&
+			canvasSizes.width <= 500 &&
+			canvasSizes.height <= 260 &&
+			canvasRatio >= 1.55,
+	);
+	const isPopoutL = $derived(
+		context.stateLayoutDerived.layoutType() === 'landscape' &&
+			canvasSizes.width > 500 &&
+			canvasSizes.width <= 900 &&
+			canvasSizes.height <= 520 &&
+			canvasRatio >= 1.55,
+	);
 	const hasMobileTopHud = $derived(isMobileL || isMobileM || isMobileS);
 	const hudYOffset = $derived(isMobileL ? -30 : isMobileM ? -18 : isMobileS ? -12 : 0);
+	const mobileCornerMultiplierYOffset = $derived(
+		isMobileL ? 34 : isMobileM ? 28 : isMobileS ? 24 : 0,
+	);
+	const mobileCornerMultiplierXOffset = $derived(
+		isMobileL ? 18 : isMobileM ? 15 : isMobileS ? 13 : 0,
+	);
 
 	const W = CANVAS_WIDTH;
 	const H = CANVAS_HEIGHT;
-	const CELL_SIZE = 20;
+	const CELL_SIZE = 17.009;
 	const BALL_SIZE = 35;
 	const OBJ_SIZE = 30;
 	const ESCAPE_OBJ_SIZE = 44;
 	const CORNER_SIZE = 58;
-	const CORNER_TAB_WIDTH = 42;
-	const CORNER_TAB_HEIGHT = 28;
-	const CORNER_TAB_OUTSET = 5;
-	const CORNER_CHEST_WIDTH = 32;
-	const CORNER_CHEST_HEIGHT = 24;
-	const CORNER_HITBOX_WIDTH = CELL_SIZE * 1.5;
-	const CORNER_HITBOX_HEIGHT = CELL_SIZE * 1.1;
+	const CORNER_TAB_DESKTOP = {
+		width: 78,
+		height: 42,
+		outset: 8,
+		fontSize: 22,
+		chestWidth: 46,
+		chestHeight: 34,
+	};
+	const CORNER_TAB_POP_OUT_L = {
+		width: 70,
+		height: 38,
+		outset: 7,
+		fontSize: 20,
+		chestWidth: 42,
+		chestHeight: 31,
+	};
+	const CORNER_TAB_POP_OUT_S = {
+		width: 60,
+		height: 34,
+		outset: 6,
+		fontSize: 17,
+		chestWidth: 36,
+		chestHeight: 27,
+	};
+	const cornerTabLayout = $derived(
+		isPopoutS
+			? CORNER_TAB_POP_OUT_S
+			: isPopoutL || hasMobileTopHud
+				? CORNER_TAB_POP_OUT_L
+				: CORNER_TAB_DESKTOP,
+	);
 	const MAX_BOUNCES = 40;
-	const NORMAL_SPEED_PER_SECOND = 3400;
+	const NORMAL_SPEED_PER_SECOND = 4800;
 	const TURBO_SPEED_PER_SECOND = 5200;
 	const NORMAL_CHARACTER_ANIMATION_SPEED = 0.3;
 	const TURBO_CHARACTER_ANIMATION_SPEED = 0.48;
@@ -430,6 +474,7 @@
 		amount < 0 ? `-${formatMoney(Math.abs(amount))}` : `+${formatMoney(amount)}`;
 
 	const drawCorner = (corner: CornerState, multiplier: number | null) => {
+		const tab = cornerTabLayout;
 		let fillColor = 0x20242a;
 		let textColor = 0x444444;
 		let text = 'NONE';
@@ -450,36 +495,50 @@
 
 		const isTop = corner.key === 'tl' || corner.key === 'tr';
 		const isRight = corner.key === 'tr' || corner.key === 'br';
-		const chestX = isRight ? W - CORNER_CHEST_WIDTH : 0;
-		const chestY = isTop ? 0 : H - CORNER_CHEST_HEIGHT;
-		const hitboxX = isRight ? W - CORNER_HITBOX_WIDTH : 0;
-		const hitboxY = isTop ? 0 : H - CORNER_HITBOX_HEIGHT;
-		const tabX = isRight ? W + CORNER_TAB_OUTSET : -CORNER_TAB_WIDTH - CORNER_TAB_OUTSET;
-		const tabY = chestY + (CORNER_CHEST_HEIGHT - CORNER_TAB_HEIGHT) / 2;
+		const chestX = isRight ? W - tab.chestWidth : 0;
+		const chestY = isTop ? 0 : H - tab.chestHeight;
+		const hitboxWidth = Math.ceil(tab.chestWidth / CELL_SIZE) * CELL_SIZE;
+		const hitboxHeight = Math.ceil(tab.chestHeight / CELL_SIZE) * CELL_SIZE;
+		const hitboxX = isRight ? W - hitboxWidth : 0;
+		const hitboxY = isTop ? 0 : H - hitboxHeight;
+		const tabX =
+			(isRight ? W + tab.outset : -tab.width - tab.outset) +
+			(isRight ? -mobileCornerMultiplierXOffset : mobileCornerMultiplierXOffset);
+		const tabY =
+			chestY +
+			(tab.chestHeight - tab.height) / 2 +
+			(isTop ? -mobileCornerMultiplierYOffset : mobileCornerMultiplierYOffset);
 
 		corner.gfx.clear();
-		corner.gfx.rect(tabX, tabY, CORNER_TAB_WIDTH, CORNER_TAB_HEIGHT);
+		corner.gfx.roundRect(tabX, tabY, tab.width, tab.height, 4);
 		corner.gfx.fill({ color: fillColor, alpha: 0.95 });
-		corner.gfx.stroke({ color: 0x080808, width: 2 });
+		corner.gfx.stroke({ color: 0x080808, width: 3 });
 		corner.label.text = text;
 		corner.label.style.fill = textColor;
-		corner.label.x = tabX + CORNER_TAB_WIDTH / 2;
-		corner.label.y = tabY + CORNER_TAB_HEIGHT / 2;
+		corner.label.style.fontSize = tab.fontSize;
+		corner.label.scale.set(1);
+		const maxLabelWidth = tab.width - 10;
+		if (corner.label.width > maxLabelWidth) {
+			const labelScale = maxLabelWidth / corner.label.width;
+			corner.label.scale.set(labelScale);
+		}
+		corner.label.x = tabX + tab.width / 2;
+		corner.label.y = tabY + tab.height / 2;
 
 		const chestTexture = gameAssetSheet?.textures['chest.png'] ?? textures.chest;
 		if (chestTexture) {
 			corner.chest.visible = true;
 			corner.chest.texture = chestTexture;
 			smoothTexture(corner.chest.texture);
-			fitSprite(corner.chest, CORNER_CHEST_WIDTH, CORNER_CHEST_HEIGHT);
-			corner.chest.x = chestX + CORNER_CHEST_WIDTH / 2;
-			corner.chest.y = chestY + CORNER_CHEST_HEIGHT / 2;
+			fitSprite(corner.chest, tab.chestWidth, tab.chestHeight);
+			corner.chest.x = chestX + tab.chestWidth / 2;
+			corner.chest.y = chestY + tab.chestHeight / 2;
 		} else {
 			corner.chest.visible = false;
 		}
 
 		corner.hitbox.clear();
-		corner.hitbox.rect(hitboxX, hitboxY, CORNER_HITBOX_WIDTH, CORNER_HITBOX_HEIGHT);
+		corner.hitbox.rect(hitboxX, hitboxY, hitboxWidth, hitboxHeight);
 	};
 
 	const fitSprite = (

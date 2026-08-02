@@ -3,6 +3,7 @@
 from functools import lru_cache
 from pathlib import Path
 from decimal import Decimal, ROUND_HALF_UP
+from math import ceil
 import random
 import runpy
 
@@ -33,6 +34,11 @@ class GameCalculations(Executables):
     DIAMOND_BONUS = 5.0
 
     CORNER_KEYS = ("tl", "tr", "bl", "br")
+    CORNER_HITBOX_CELL_SIZE = 17.009
+    CORNER_HITBOX_CHEST_WIDTH = 46
+    CORNER_HITBOX_CHEST_HEIGHT = 34
+    CORNER_ZONE_COLS = ceil(CORNER_HITBOX_CHEST_WIDTH / CORNER_HITBOX_CELL_SIZE)
+    CORNER_ZONE_ROWS = ceil(CORNER_HITBOX_CHEST_HEIGHT / CORNER_HITBOX_CELL_SIZE)
     BOARD_COLS = BOARD_COLS
     BOARD_ROWS = BOARD_ROWS
     CANVAS_WIDTH = CANVAS_WIDTH
@@ -181,12 +187,12 @@ class GameCalculations(Executables):
         }
 
     def corner_for_notation(self, notation: str) -> str | None:
-        """Return the corner key when notation reaches a 2-column by 1-row corner chest zone."""
+        """Return the corner key when notation reaches the chest hitbox zone."""
         cell = notation_to_cell(notation)
         col = cell["col"]
         row = cell["row"]
-        zone_cols = 2
-        zone_rows = 1
+        zone_cols = self.CORNER_ZONE_COLS
+        zone_rows = self.CORNER_ZONE_ROWS
         if col < zone_cols and row >= self.BOARD_ROWS - zone_rows:
             return "tl"
         if col >= self.BOARD_COLS - zone_cols and row >= self.BOARD_ROWS - zone_rows:
