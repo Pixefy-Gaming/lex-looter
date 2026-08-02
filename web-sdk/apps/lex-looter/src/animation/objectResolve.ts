@@ -40,7 +40,7 @@ const OBJECT_COLORS: Record<LexObjectName, number> = {
 	heart: 0xff5a7a,
 };
 
-const FINAL_ALPHA = 0.16;
+const FINAL_ALPHA = 0;
 const FINAL_SCALE_X = 1.36;
 const FINAL_SCALE_Y = 0.16;
 

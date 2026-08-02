@@ -575,14 +575,14 @@
 
 	const lerp = (from: number, to: number, amount: number) => from + (to - from) * amount;
 
-	const setMovementLean = (display: LexDisplay, dx: number, dy: number, isClone: boolean) => {
+	const setMovementLean = (display: LexDisplay, dx: number, dy: number) => {
 		const distance = Math.hypot(dx, dy);
 		if (distance <= 0) return;
 		const horizontalLean = (dx / distance) * CHARACTER_MAX_LEAN;
 		const verticalLean = (dy / distance) * CHARACTER_MAX_LEAN * 0.45;
 		const targetRotation = horizontalLean - verticalLean;
 		display.rotation = lerp(display.rotation, targetRotation, CHARACTER_LEAN_LERP);
-		display.skew.x = lerp(display.skew.x, horizontalLean * (isClone ? 0.28 : 0.36), 0.18);
+		display.skew.x = lerp(display.skew.x, horizontalLean * 0.28, 0.18);
 	};
 
 	const settleMovementLean = (display: LexDisplay) => {
@@ -663,7 +663,7 @@
 	const setLexAnimation = (animationName: string) => {
 		if (!(mainBall instanceof PIXI.AnimatedSprite)) return;
 		if (currentLexAnimation === animationName) return;
-		const runTextures = getRunTextures(lexSheet, animationName);
+		const runTextures = normalizeAnimationTextures(getRunTextures(lexSheet, animationName));
 		if (runTextures.length === 0) return;
 		currentLexAnimation = animationName;
 		mainBall.textures = runTextures;
@@ -684,7 +684,9 @@
 	};
 
 	const createBall = (isClone: boolean, notation = context.stateGame.lex.lexNotation) => {
-		const runTextures = getRunTextures(isClone ? cloneSheet : lexSheet);
+		const runTextures = isClone
+			? getRunTextures(cloneSheet)
+			: normalizeAnimationTextures(getRunTextures(lexSheet));
 		const texture = isClone ? textures.cloneBall : textures.lex;
 		const ball =
 			runTextures.length > 0
@@ -1211,7 +1213,7 @@
 			if (context.stateGame.lexSkipPlayback) snapDisplayToFinalTarget(mainBall, pathTargets);
 			moveDisplayTowardTargets(mainBall, pathTargets, speed, (dx, dy) => {
 				setLexAnimation(getLexAnimationForDelta(dx, dy));
-				setMovementLean(mainBall as LexDisplay, dx, dy, false);
+				setMovementLean(mainBall as LexDisplay, dx, dy);
 			});
 			if (pathTargets.length === 0) settleMovementLean(mainBall);
 			lexTrailAnimation.add(getDisplayCenter(mainBall), false, 'main');
@@ -1227,7 +1229,7 @@
 			}
 			moveDisplayTowardTargets(clone.display, clone.pathTargets, speed, (dx, dy) => {
 				setCloneAnimation(cloneId, getLexAnimationForDelta(dx, dy));
-				setMovementLean(clone.display, dx, dy, true);
+				setMovementLean(clone.display, dx, dy);
 			});
 			if (clone.pathTargets.length === 0) settleMovementLean(clone.display);
 			lexTrailAnimation.add(getDisplayCenter(clone.display), true, cloneId);
