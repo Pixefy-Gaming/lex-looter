@@ -169,7 +169,7 @@ class GameState(GameStateOverride):
             self._finish_round(
                 state,
                 reason="safetyStop",
-                payout=state["tumble_value"] * state["mode_multiplier"],
+                payout=self._displayed_tumble_payout(state, state["mode_multiplier"]),
             )
             return
 
@@ -205,7 +205,7 @@ class GameState(GameStateOverride):
             self._finish_round(
                 state,
                 reason="bounceLimit",
-                payout=state["tumble_value"] * state["mode_multiplier"],
+                payout=self._displayed_tumble_payout(state, state["mode_multiplier"]),
             )
 
     def _process_clone_bounces(self, state: dict) -> None:
@@ -495,7 +495,7 @@ class GameState(GameStateOverride):
             return
 
         if object_name == "escape":
-            payout = state["tumble_value"] * state["mode_multiplier"]
+            payout = self._displayed_tumble_payout(state, state["mode_multiplier"])
             self._object_resolve_event(
                 state,
                 object_state,
@@ -633,8 +633,7 @@ class GameState(GameStateOverride):
         if corner_multiplier is None or self._live_ball_count(state) <= 0:
             return
 
-        displayed_tumble_value = self.to_cents(state["tumble_value"]) / 100.0
-        payout = displayed_tumble_value * corner_multiplier
+        payout = self._displayed_tumble_payout(state, corner_multiplier)
         self._finish_round(
             state,
             reason="cornerHit",
@@ -669,6 +668,11 @@ class GameState(GameStateOverride):
     def _live_ball_count(self, state: dict) -> int:
         """Return the total number of live balls."""
         return int(state["main_alive"]) + len(state["clones"])
+
+    def _displayed_tumble_payout(self, state: dict, multiplier: float) -> float:
+        """Calculate payout from the cents-rounded tumble value shown to players."""
+        displayed_tumble_value = self.to_cents(state["tumble_value"]) / 100.0
+        return displayed_tumble_value * multiplier
 
     def _finish_round(self, state: dict, *, reason: str, payout: float, **meta) -> None:
         """Freeze the round and store its terminal outcome."""

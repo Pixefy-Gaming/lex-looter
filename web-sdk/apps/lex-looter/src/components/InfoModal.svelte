@@ -158,7 +158,7 @@
 			rtp: '96.50%',
 			maxWin: '8,888x',
 			detail:
-				'Feature mode that starts with a Clone and a 5x mode multiplier applied to the final result.',
+				'Feature mode that starts with a Clone and stronger visible corner multipliers starting from 5x.',
 		},
 	];
 
