@@ -96368,12 +96368,12 @@ export default [
 			{
 				index: 45,
 				type: 'winInfo',
-				totalWin: 5000,
+				totalWin: 4500,
 				wins: [
 					{
 						symbol: 'H4',
 						clusterSize: 8,
-						win: 5000,
+						win: 4500,
 						positions: [
 							{
 								reel: 3,
@@ -142863,7 +142863,7 @@ export default [
 			{
 				index: 68,
 				type: 'setTotalWin',
-				amount: 5000,
+				amount: 4500,
 			},
 			{
 				index: 70,
@@ -143099,7 +143099,7 @@ export default [
 			{
 				index: 73,
 				type: 'setTotalWin',
-				amount: 5000,
+				amount: 4500,
 			},
 			{
 				index: 75,
@@ -143334,7 +143334,7 @@ export default [
 			{
 				index: 78,
 				type: 'setTotalWin',
-				amount: 5000,
+				amount: 4500,
 			},
 			{
 				index: 80,

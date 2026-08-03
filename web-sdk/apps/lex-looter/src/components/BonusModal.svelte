@@ -52,7 +52,7 @@
 					tickerSpin: 'NO SLAYER BONUS',
 					bannerText: '',
 				},
-				maxWin: 5000,
+				maxWin: 4500,
 			},
 			start_clone: {
 				mode: 'start_clone',
@@ -77,7 +77,7 @@
 					tickerSpin: 'START CLONE BONUS',
 					bannerText: '',
 				},
-				maxWin: 5000,
+				maxWin: 4500,
 			},
 			lucky_lex: {
 				mode: 'lucky_lex',
@@ -103,7 +103,7 @@
 					tickerSpin: 'LUCKY LEX BONUS',
 					bannerText: '',
 				},
-				maxWin: 5000,
+				maxWin: 4500,
 			},
 		};
 	};

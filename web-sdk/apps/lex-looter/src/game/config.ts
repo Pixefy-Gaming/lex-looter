@@ -11,14 +11,14 @@ export default {
 			feature: true,
 			buyBonus: false,
 			rtp: 0.97,
-			max_win: 5000.0,
+			max_win: 4500.0,
 		},
 		bonus: {
 			cost: 500,
 			feature: true,
 			buyBonus: false,
 			rtp: 0.97,
-			max_win: 5000.0,
+			max_win: 4500.0,
 		},
 	},
 	symbols: {
