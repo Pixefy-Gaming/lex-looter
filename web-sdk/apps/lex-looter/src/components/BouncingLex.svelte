@@ -69,8 +69,9 @@
 	const W = CANVAS_WIDTH;
 	const H = CANVAS_HEIGHT;
 	const CELL_SIZE = 17.009;
-	const BALL_SIZE = 35;
-	const OBJ_SIZE = 30;
+	const BALL_SIZE = 40;
+	const OBJ_SIZE = 36;
+	const SLAYER_OBJ_SIZE = 52;
 	const ESCAPE_OBJ_SIZE = 44;
 	const CORNER_SIZE = 58;
 	const CORNER_TAB_DESKTOP = {
@@ -152,6 +153,12 @@
 		to: PixelPoint | null;
 		elapsed: number;
 		duration: number;
+	};
+	type PendingBounceDisplay = {
+		roundSerial: number;
+		mainBounces: number;
+		tumbleValue: number;
+		point: PixelPoint;
 	};
 
 	const root = new PIXI.Container();
@@ -352,6 +359,9 @@
 	let pathTargets: PixelPoint[] = [];
 	let pathMotion: PathMotion = { from: null, to: null, elapsed: 0, duration: 0 };
 	let currentLexAnimation = 'unarmed_run_front';
+	let displayedTumbleValue = 0;
+	let displayedMainBounces = 0;
+	let pendingBounceDisplay: PendingBounceDisplay | undefined;
 
 	const formatMoney = (amount: number) => `$${(amount / 100).toFixed(2)}`;
 
@@ -460,7 +470,7 @@
 	};
 
 	const updateBounceText = () => {
-		bounceText.text = `${Math.min(context.stateGame.lex.mainBounces, MAX_BOUNCES)} / ${MAX_BOUNCES} STEALTH`;
+		bounceText.text = `${Math.min(displayedMainBounces, MAX_BOUNCES)} / ${MAX_BOUNCES} STEALTH`;
 	};
 
 	const updateHud = () => {
@@ -745,6 +755,9 @@
 		heart: { color: 0xff5a7a, label: 'HEART' },
 	};
 
+	const getObjectSpriteSize = (object: LexObjectName) =>
+		object === 'escape' ? ESCAPE_OBJ_SIZE : object === 'slayer' ? SLAYER_OBJ_SIZE : OBJ_SIZE;
+
 	const createObjectContainer = (object: LexObjectName, resolved = false) => {
 		const container = new PIXI.Container();
 		const animatedTextures =
@@ -785,7 +798,7 @@
 			sprite.animationSpeed = object === 'slayer' ? 0.28 : 0.18;
 			sprite.loop = object !== 'slayer';
 			sprite.play();
-			const spriteSize = object === 'slayer' ? ESCAPE_OBJ_SIZE * 1.45 : OBJ_SIZE;
+			const spriteSize = object === 'slayer' ? ESCAPE_OBJ_SIZE * 1.45 : getObjectSpriteSize(object);
 			fitSprite(sprite, spriteSize, spriteSize);
 			container.addChild(sprite);
 			return container;
@@ -795,15 +808,16 @@
 			smoothTexture(texture);
 			const sprite = new PIXI.Sprite(texture);
 			sprite.anchor.set(0.5);
-			const spriteSize = object === 'escape' || object === 'slayer' ? ESCAPE_OBJ_SIZE : OBJ_SIZE;
+			const spriteSize = getObjectSpriteSize(object);
 			fitSprite(sprite, spriteSize, spriteSize);
 			container.addChild(sprite);
 			return container;
 		}
 
 		const style = objectStyle[object];
+		const objectSize = getObjectSpriteSize(object);
 		const gfx = new PIXI.Graphics();
-		gfx.roundRect(-OBJ_SIZE / 2, -OBJ_SIZE / 2, OBJ_SIZE, OBJ_SIZE, 6);
+		gfx.roundRect(-objectSize / 2, -objectSize / 2, objectSize, objectSize, 6);
 		gfx.fill({ color: style.color, alpha: 0.95 });
 		gfx.stroke({ color: 0xffffff, alpha: 0.45, width: 2 });
 		container.addChild(gfx);
@@ -981,17 +995,79 @@
 		});
 	};
 
-	const queueBounceCashNumberPopAnimation = () => {
-		const lex = context.stateGame.lex;
-		if (lex.mainBounces <= 0 || lex.tumbleValue <= 0) return;
+	const queueDisplayedBounceCashNumberPopAnimation = (bounceDisplay: PendingBounceDisplay) => {
+		if (bounceDisplay.mainBounces <= 0 || bounceDisplay.tumbleValue <= 0) return;
 
 		cashNumberPopAnimation.queue({
-			id: `bounce:${lex.mainBounces}`,
-			roundSerial: lex.roundSerial,
-			point: notationToPixelCenter(lex.lexNotation),
-			label: formatMoney(lex.tumbleValue),
+			id: `bounce:${bounceDisplay.mainBounces}`,
+			roundSerial: bounceDisplay.roundSerial,
+			point: bounceDisplay.point,
+			label: formatMoney(bounceDisplay.tumbleValue),
 			tint: 0xffffff,
 		});
+	};
+
+	const commitDisplayedLexValue = ({
+		tumbleValue,
+		mainBounces,
+		queuePop = false,
+		point = notationToPixelCenter(context.stateGame.lex.lexNotation),
+	}: {
+		tumbleValue: number;
+		mainBounces: number;
+		queuePop?: boolean;
+		point?: PixelPoint;
+	}) => {
+		displayedTumbleValue = tumbleValue;
+		displayedMainBounces = mainBounces;
+		valueText.text = formatMoney(displayedTumbleValue);
+		updateBounceText();
+		if (queuePop) {
+			queueDisplayedBounceCashNumberPopAnimation({
+				roundSerial: context.stateGame.lex.roundSerial,
+				mainBounces,
+				tumbleValue,
+				point,
+			});
+		}
+	};
+
+	const syncDisplayedLexValue = () => {
+		const lex = context.stateGame.lex;
+		const targetPoint = notationToPixelCenter(lex.lexNotation);
+		const hasMainPathInFlight = pathTargets.length > 0 || !!pathMotion.to;
+		const mainBounceAdvanced = lex.mainBounces > displayedMainBounces;
+
+		if (mainBounceAdvanced && hasMainPathInFlight && !lex.roundEnded) {
+			pendingBounceDisplay = {
+				roundSerial: lex.roundSerial,
+				mainBounces: lex.mainBounces,
+				tumbleValue: lex.tumbleValue,
+				point: targetPoint,
+			};
+			return;
+		}
+
+		if (pendingBounceDisplay && !hasMainPathInFlight) {
+			const pending = pendingBounceDisplay;
+			pendingBounceDisplay = undefined;
+			commitDisplayedLexValue({
+				tumbleValue: pending.tumbleValue,
+				mainBounces: pending.mainBounces,
+				queuePop: true,
+				point: pending.point,
+			});
+			return;
+		}
+
+		if (lex.tumbleValue !== displayedTumbleValue || lex.mainBounces !== displayedMainBounces) {
+			commitDisplayedLexValue({
+				tumbleValue: lex.tumbleValue,
+				mainBounces: lex.mainBounces,
+				queuePop: mainBounceAdvanced && !lex.roundEnded,
+				point: targetPoint,
+			});
+		}
 	};
 
 	const queueCloneBounceCashNumberPopAnimation = () => {
@@ -1079,6 +1155,9 @@
 			currentPathKey = '';
 			pathTargets = [];
 			currentLexAnimation = 'unarmed_run_front';
+			displayedTumbleValue = context.stateGame.lex.tumbleValue;
+			displayedMainBounces = context.stateGame.lex.mainBounces;
+			pendingBounceDisplay = undefined;
 			collisionReactionAnimation.clear();
 			lexTrailAnimation.clear();
 			pickupBurstAnimation.clear();
@@ -1171,7 +1250,11 @@
 
 	const renderFromBookState = () => {
 		const lex = context.stateGame.lex;
-		valueText.text = formatMoney(lex.tumbleValue);
+		renderBalls();
+		queueLexPath();
+		queueClonePaths();
+		syncDisplayedLexValue();
+		valueText.text = formatMoney(displayedTumbleValue);
 		updateBounceText();
 		heartHudAnimation.syncShieldCount();
 		updateHud();
@@ -1188,12 +1271,8 @@
 		renderObjects();
 		queuePickupBurstAnimation();
 		queueCashNumberPopAnimation();
-		queueBounceCashNumberPopAnimation();
 		queueCloneBounceCashNumberPopAnimation();
-		renderBalls();
 		collisionReactionAnimation.syncBounceCount();
-		queueLexPath();
-		queueClonePaths();
 	};
 
 	const moveDisplayAlongTimedPath = (
@@ -1284,7 +1363,10 @@
 				setLexAnimation(getLexAnimationForDelta(dx, dy));
 				setMovementLean(mainBall as LexDisplay, dx, dy);
 			});
-			if (pathTargets.length === 0) settleMovementLean(mainBall);
+			if (pathTargets.length === 0) {
+				settleMovementLean(mainBall);
+				if (pendingBounceDisplay) syncDisplayedLexValue();
+			}
 			lexTrailAnimation.add(getDisplayCenter(mainBall), false, 'main');
 		}
 		collisionReactionAnimation.update(deltaMS);
