@@ -97,6 +97,7 @@ export type LexActiveObject = {
 	source: string;
 	resolved: boolean;
 	result?: string;
+	target?: string;
 };
 
 export type LexClonePlaybackState = {

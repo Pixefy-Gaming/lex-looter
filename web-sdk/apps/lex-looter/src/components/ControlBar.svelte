@@ -21,6 +21,7 @@
 	import { waitForTimeout } from 'utils-shared/wait';
 	import { BIG_WIN_PRESENTATION_MIN_BOOK_EVENT_AMOUNT } from '../game/winLevelMap';
 	import { CONTROL_BAR_THEME } from '../game/controlBarTheme';
+	import { getLexRoundDisplayWin } from '../game/lexWin';
 	import InfoModal from './InfoModal.svelte';
 
 	const { stateGame, i18nDerived, stateLayoutDerived, eventEmitter, stateXstateDerived } =
@@ -65,7 +66,17 @@
 	const isReplayFinished = $derived(isReplay && stateUi.config.replayStatus === 'finished');
 	const isReplayLoading = $derived(isReplay && stateUi.config.replayStatus === 'ready');
 	const currentSpinWin = $derived(
-		safeNumber(bookEventAmountToNormalisedAmount(stateBet.winBookEventAmount)),
+		safeNumber(
+			bookEventAmountToNormalisedAmount(
+				stateGame.lex.roundEnded
+					? getLexRoundDisplayWin({
+							reason: stateGame.lex.roundEndReason,
+							totalWin: stateGame.lex.totalWin,
+							tumbleValue: stateGame.lex.tumbleValue,
+						})
+					: stateGame.lex.tumbleValue,
+			),
+		),
 	);
 	let lastWinAmount = $state(0);
 	let inlineWinAmount = $state(0);

@@ -7,6 +7,7 @@ import { eventEmitter } from './eventEmitter';
 import { playBookEvent } from './utils';
 import { winLevelMap, type WinLevel, type WinLevelData } from './winLevelMap';
 import { createInitialLexPlaybackState, stateGame, stateGameDerived } from './stateGame.svelte';
+import { getLexRoundDisplayWin } from './lexWin';
 import type { SoundEffectName } from './sound';
 import type { BookEvent, BookEventOfType, BookEventContext, LexObjectName } from './typesBookEvent';
 import type { Position } from './types';
@@ -203,6 +204,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 					...activeObject,
 					resolved: true,
 					result: bookEvent.result,
+					target: 'target' in bookEvent ? bookEvent.target : undefined,
 				},
 			};
 		}
@@ -288,7 +290,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.lex.cornerMultiplier = bookEvent.cornerMultiplier;
 		stateGame.lex.cornerAt = bookEvent.cornerAt;
 		stateGame.lex.target = bookEvent.target;
-		stateBet.winBookEventAmount = bookEvent.totalWin;
+		stateBet.winBookEventAmount = getLexRoundDisplayWin(bookEvent);
 		await waitLexPlaybackStepInterruptible(650);
 	},
 	reveal: async (bookEvent: BookEventOfType<'reveal'>, { bookEvents }: BookEventContext) => {

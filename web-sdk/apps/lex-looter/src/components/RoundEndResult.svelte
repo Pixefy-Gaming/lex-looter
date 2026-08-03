@@ -6,6 +6,7 @@
 
 	import { getContext } from '../game/context';
 	import type { LexRoundEndReason } from '../game/typesBookEvent';
+	import { getLexRoundDisplayWin } from '../game/lexWin';
 	import { winLevelMap, type WinLevel } from '../game/winLevelMap';
 
 	const context = getContext();
@@ -53,7 +54,11 @@
 	const reason = $derived(lex.roundEndReason);
 	const isSpecialReason = $derived(!!reason && !!SPECIAL_REASON_LABELS[reason]);
 	const resultBookEventAmount = $derived(
-		isSpecialReason ? Math.max(lex.totalWin, lex.tumbleValue) : lex.totalWin,
+		getLexRoundDisplayWin({
+			reason,
+			totalWin: lex.totalWin,
+			tumbleValue: lex.tumbleValue,
+		}),
 	);
 	const hasWin = $derived(resultBookEventAmount > 0);
 	const isSocial = $derived(stateConfig.jurisdiction?.socialCasino || stateUrlDerived.social());

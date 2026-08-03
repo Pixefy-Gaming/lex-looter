@@ -100,7 +100,7 @@ export const createObjectResolveAnimationController = ({
 		container,
 		point,
 	}: ResolveRequest) => {
-		if (object === 'slayer' || object === 'escape') return;
+		if (object === 'escape') return;
 		const key = `${roundSerial}:${objectId}`;
 		if (resolvedKeys.has(key)) return;
 		resolvedKeys.add(key);

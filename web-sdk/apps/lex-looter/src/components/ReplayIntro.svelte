@@ -2,6 +2,8 @@
 	import { stateBet } from 'state-shared';
 	import { bookEventAmountToNormalisedAmount, numberToCurrencyString } from 'utils-shared';
 	import { getContext } from '../game/context';
+	import { getLexRoundDisplayWin } from '../game/lexWin';
+	import type { LexRoundEndReason } from '../game/typesBookEvent';
 
 	type ReplayRound = {
 		mode?: string;
@@ -33,7 +35,18 @@
 		const roundEnd = [...events]
 			.reverse()
 			.find((event) => event?.type === 'roundEnd' && Number.isFinite(Number(event.totalWin)));
-		if (roundEnd) return Number(roundEnd.totalWin);
+		if (roundEnd) {
+			return getLexRoundDisplayWin({
+				reason:
+					typeof roundEnd.reason === 'string'
+						? (roundEnd.reason as LexRoundEndReason)
+						: undefined,
+				totalWin: Number(roundEnd.totalWin),
+				tumbleValue: Number.isFinite(Number(roundEnd.tumbleValue))
+					? Number(roundEnd.tumbleValue)
+					: Number(roundEnd.totalWin),
+			});
+		}
 
 		return events.reduce((largestAmount, event) => {
 			const amount = firstFiniteNumber(event?.totalWin, event?.amount);

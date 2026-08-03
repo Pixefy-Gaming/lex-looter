@@ -2,6 +2,7 @@
 	import { stateBet } from 'state-shared';
 
 	import RoundEndResult from '../components/RoundEndResult.svelte';
+	import { getLexRoundDisplayWin } from '../game/lexWin';
 	import { createInitialLexPlaybackState, stateGame } from '../game/stateGame.svelte';
 	import type { LexRoundEndReason } from '../game/typesBookEvent';
 
@@ -25,7 +26,11 @@
 		stateBet.currency = 'USD';
 		stateBet.betAmount = 1;
 		stateBet.wageredBetAmount = 1;
-		stateBet.winBookEventAmount = amount;
+		stateBet.winBookEventAmount = getLexRoundDisplayWin({
+			reason,
+			totalWin: amount,
+			tumbleValue,
+		});
 		stateGame.lex = {
 			...createInitialLexPlaybackState(),
 			roundSerial,

@@ -3,6 +3,7 @@
 	import * as PIXI from 'pixi.js';
 	import { getContextParent } from 'pixi-svelte';
 	import { stateBet } from 'state-shared';
+	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 
 	import { getContext } from '../game/context';
 	import assets from '../game/assets';
@@ -21,6 +22,7 @@
 		notationToPixelCenter,
 		type PixelPoint,
 	} from '../game/notation';
+	import { getLexRoundDisplayWin } from '../game/lexWin';
 	import type { LexCornerKey, LexObjectName, LexRoundEndReason } from '../game/typesBookEvent';
 
 	const context = getContext();
@@ -363,7 +365,7 @@
 	let displayedMainBounces = 0;
 	let pendingBounceDisplay: PendingBounceDisplay | undefined;
 
-	const formatMoney = (amount: number) => `$${(amount / 100).toFixed(2)}`;
+	const formatMoney = (amount: number) => bookEventAmountToCurrencyString(amount);
 
 	const smoothTexture = (texture: PIXI.Texture | undefined) => {
 		if (!texture) return;
@@ -1037,6 +1039,13 @@
 		const targetPoint = notationToPixelCenter(lex.lexNotation);
 		const hasMainPathInFlight = pathTargets.length > 0 || !!pathMotion.to;
 		const mainBounceAdvanced = lex.mainBounces > displayedMainBounces;
+		const displayValue = lex.roundEnded
+			? getLexRoundDisplayWin({
+					reason: lex.roundEndReason,
+					totalWin: lex.totalWin,
+					tumbleValue: lex.tumbleValue,
+				})
+			: lex.tumbleValue;
 
 		if (mainBounceAdvanced && hasMainPathInFlight && !lex.roundEnded) {
 			pendingBounceDisplay = {
@@ -1060,9 +1069,9 @@
 			return;
 		}
 
-		if (lex.tumbleValue !== displayedTumbleValue || lex.mainBounces !== displayedMainBounces) {
+		if (displayValue !== displayedTumbleValue || lex.mainBounces !== displayedMainBounces) {
 			commitDisplayedLexValue({
-				tumbleValue: lex.tumbleValue,
+				tumbleValue: displayValue,
 				mainBounces: lex.mainBounces,
 				queuePop: mainBounceAdvanced && !lex.roundEnded,
 				point: targetPoint,
@@ -1105,7 +1114,7 @@
 
 		for (const activeObject of Object.values(activeObjects)) {
 			let container = objectContainers[activeObject.objectId];
-			const renderState = `${activeObject.object}:${activeObject.resolved}:${activeObject.result ?? ''}`;
+			const renderState = `${activeObject.object}:${activeObject.resolved}:${activeObject.result ?? ''}:${activeObject.target ?? ''}`;
 			if (!container || objectRenderStates[activeObject.objectId] !== renderState) {
 				if (container) {
 					objectSpawnAnimation.cancelContainer(container);
@@ -1120,7 +1129,10 @@
 			setObjectPosition(container, activeObject.notation, activeObject.x, activeObject.y);
 			const isTerminalResolvedObject =
 				activeObject.resolved &&
-				(activeObject.object === 'slayer' || activeObject.object === 'escape');
+				(activeObject.object === 'escape' ||
+					(activeObject.object === 'slayer' &&
+						activeObject.result === 'destroy' &&
+						activeObject.target === 'main'));
 			if (isTerminalResolvedObject) {
 				container.alpha = 1;
 				continue;
@@ -1128,7 +1140,6 @@
 
 			if (
 				activeObject.resolved &&
-				activeObject.object !== 'slayer' &&
 				activeObject.object !== 'escape'
 			) {
 				objectResolveAnimation.syncResolvedObject({
