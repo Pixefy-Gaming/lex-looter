@@ -140,7 +140,7 @@
 			title: 'No Slayer',
 			cost: '3x',
 			rtp: '96.50%',
-			maxWin: '8,888x',
+			maxWin: '5,000x',
 			detail:
 				'Feature mode with improved corner multipliers. Slayer is delayed out of play for the round, while escape is disabled.',
 		},
@@ -148,7 +148,7 @@
 			title: 'Start Clone',
 			cost: '50x',
 			rtp: '96.50%',
-			maxWin: '8,888x',
+			maxWin: '5,000x',
 			detail:
 				'Feature mode that begins with Lex and one Clone already active. Corner multipliers are stronger and escape is disabled.',
 		},
@@ -156,7 +156,7 @@
 			title: 'Lucky Lex',
 			cost: '100x',
 			rtp: '96.50%',
-			maxWin: '8,888x',
+			maxWin: '5,000x',
 			detail:
 				'Feature mode that starts with a Clone and stronger visible corner multipliers starting from 5x.',
 		},

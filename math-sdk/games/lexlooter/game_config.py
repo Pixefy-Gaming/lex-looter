@@ -14,7 +14,7 @@ class GameConfig(Config):
         self.provider_name = "Pixefy Gaming"
         self.working_name = "lexlooter"
         self.game_name = "Lex Looter"
-        self.wincap = 8888
+        self.wincap = 5000
         self.win_type = "other"
         self.rtp = 0.965
         self.construct_paths()
