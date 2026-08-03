@@ -7,6 +7,7 @@
 	import { getContext } from '../game/context';
 	import Transition from './Transition.svelte';
 	import PressToContinue from './PressToContinue.svelte';
+	import IntroFeatureScreen from './IntroFeatureScreen.svelte';
 
 	type Props = {
 		onloaded: () => void;
@@ -18,7 +19,7 @@
 	const LOGO_WIDTH = 500;
 	const LOGO_HEIGHT = 395;
 
-	let loadingType = $state<'start' | 'transition'>('start');
+	let loadingType = $state<'start' | 'intro' | 'transition'>('start');
 	let smoothProgress = $state(0);
 	const targetProgress = $derived(
 		context.stateApp.loaded ? 1 : Math.max(0, Math.min(1, context.stateApp.loadingProgress / 100)),
@@ -105,7 +106,12 @@
 
 <!-- press to continue -->
 <FadeContainer show={loadingType === 'start' && context.stateApp.loaded}>
-	<PressToContinue onpress={() => (loadingType = 'transition')} />
+	<PressToContinue onpress={() => (loadingType = 'intro')} />
+</FadeContainer>
+
+<!-- feature intro -->
+<FadeContainer show={loadingType === 'intro'}>
+	<IntroFeatureScreen oncontinue={() => (loadingType = 'transition')} />
 </FadeContainer>
 
 <!-- transition between the loading screen and the game -->

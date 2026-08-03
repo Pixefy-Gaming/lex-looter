@@ -1,5 +1,4 @@
 <script lang="ts">
-	import * as PIXI from 'pixi.js';
 	import { Rectangle, SpriteSheet } from 'pixi-svelte';
 	import { FadeContainer } from 'components-pixi';
 	import { SECOND } from 'constants-shared/time';
@@ -8,7 +7,6 @@
 	import { getContext } from '../game/context';
 
 	const context = getContext();
-	const backgroundBlur = new PIXI.BlurFilter({ strength: 6, quality: 4 });
 	const BACKGROUND_RATIO = 800 / 436;
 	const BACKGROUND_BLUR_OVERSCAN = 120;
 	const backgroundProps = $derived(
@@ -54,7 +52,6 @@
 		{...backgroundProps}
 		anchor={0.5}
 		animationSpeed={0.4}
-		filters={[backgroundBlur]}
 		play
 		loop
 	/>
@@ -66,7 +63,6 @@
 		{...backgroundProps}
 		anchor={0.5}
 		animationSpeed={0.4}
-		filters={[backgroundBlur]}
 		play
 		loop
 	/>
