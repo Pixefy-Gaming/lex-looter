@@ -105,10 +105,12 @@
 				: CORNER_TAB_DESKTOP,
 	);
 	const MAX_BOUNCES = 40;
-	const NORMAL_SPEED_PER_SECOND = 5600;
-	const TURBO_SPEED_PER_SECOND = 6500;
+	const NORMAL_SPEED_PER_SECOND = 6000;
+	const TURBO_SPEED_PER_SECOND = 7000;
 	const NORMAL_CHARACTER_ANIMATION_SPEED = 0.36;
 	const TURBO_CHARACTER_ANIMATION_SPEED = 0.48;
+	const MAX_MOVEMENT_DELTA_MS = 1000 / 60;
+	const MIN_PATH_SEGMENT_DURATION_MS = 1000 / 60;
 	const CHARACTER_MAX_LEAN = 0.16;
 	const CHARACTER_LEAN_LERP = 0.22;
 	const CHARACTER_SETTLE_LERP = 0.14;
@@ -145,6 +147,12 @@
 		safetyStop: 'Safety Stop',
 	};
 	type LexDisplay = PIXI.Sprite | PIXI.AnimatedSprite | PIXI.Graphics;
+	type PathMotion = {
+		from: PixelPoint | null;
+		to: PixelPoint | null;
+		elapsed: number;
+		duration: number;
+	};
 
 	const root = new PIXI.Container();
 	const hudLayer = new PIXI.Container();
@@ -334,6 +342,7 @@
 			animationName: string;
 			currentPathKey: string;
 			pathTargets: PixelPoint[];
+			pathMotion: PathMotion;
 		}
 	> = {};
 	let objectContainers: Record<string, PIXI.Container> = {};
@@ -341,6 +350,7 @@
 	let renderedRoundSerial = 0;
 	let currentPathKey = '';
 	let pathTargets: PixelPoint[] = [];
+	let pathMotion: PathMotion = { from: null, to: null, elapsed: 0, duration: 0 };
 	let currentLexAnimation = 'unarmed_run_front';
 
 	const formatMoney = (amount: number) => `$${(amount / 100).toFixed(2)}`;
@@ -574,6 +584,20 @@
 		stateBet.isTurbo ? TURBO_CHARACTER_ANIMATION_SPEED : NORMAL_CHARACTER_ANIMATION_SPEED;
 
 	const lerp = (from: number, to: number, amount: number) => from + (to - from) * amount;
+	const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
+	const clearPathMotion = (motion: PathMotion) => {
+		motion.from = null;
+		motion.to = null;
+		motion.elapsed = 0;
+		motion.duration = 0;
+	};
+
+	const getPathSegmentDuration = (from: PixelPoint, to: PixelPoint) => {
+		const distance = Math.hypot(to.x - from.x, to.y - from.y);
+		const speed = stateBet.isTurbo ? TURBO_SPEED_PER_SECOND : NORMAL_SPEED_PER_SECOND;
+		return Math.max(MIN_PATH_SEGMENT_DURATION_MS, (distance / speed) * 1000);
+	};
 
 	const setMovementLean = (display: LexDisplay, dx: number, dy: number) => {
 		const distance = Math.hypot(dx, dy);
@@ -665,9 +689,10 @@
 		if (currentLexAnimation === animationName) return;
 		const runTextures = normalizeAnimationTextures(getRunTextures(lexSheet, animationName));
 		if (runTextures.length === 0) return;
+		const frame = mainBall.currentFrame;
 		currentLexAnimation = animationName;
 		mainBall.textures = runTextures;
-		mainBall.gotoAndPlay(0);
+		mainBall.gotoAndPlay(frame % runTextures.length);
 		fitSprite(mainBall, BALL_SIZE, BALL_SIZE);
 	};
 
@@ -677,9 +702,10 @@
 		if (clone.animationName === animationName) return;
 		const runTextures = getRunTextures(cloneSheet, animationName);
 		if (runTextures.length === 0) return;
+		const frame = clone.display.currentFrame;
 		clone.animationName = animationName;
 		clone.display.textures = runTextures;
-		clone.display.gotoAndPlay(0);
+		clone.display.gotoAndPlay(frame % runTextures.length);
 		fitSprite(clone.display, BALL_SIZE, BALL_SIZE);
 	};
 
@@ -1096,6 +1122,7 @@
 					animationName: 'unarmed_run_front',
 					currentPathKey: '',
 					pathTargets: [],
+					pathMotion: { from: null, to: null, elapsed: 0, duration: 0 },
 				};
 			}
 		}
@@ -1109,6 +1136,7 @@
 		if (pathKey === currentPathKey) return;
 
 		currentPathKey = pathKey;
+		clearPathMotion(pathMotion);
 		const targets = path.map((notation) => notationToPixelCenter(notation));
 		if (!mainBall) {
 			pathTargets = targets;
@@ -1131,6 +1159,7 @@
 			if (pathKey === cloneDisplay.currentPathKey) continue;
 
 			cloneDisplay.currentPathKey = pathKey;
+			clearPathMotion(cloneDisplay.pathMotion);
 			const targets = path.map((notation) => notationToPixelCenter(notation));
 			const currentCenter = getDisplayCenter(cloneDisplay.display);
 			cloneDisplay.pathTargets = targets.filter((target, index) => {
@@ -1167,67 +1196,107 @@
 		queueClonePaths();
 	};
 
-	const moveDisplayTowardTargets = (
+	const moveDisplayAlongTimedPath = (
 		display: LexDisplay,
 		targets: PixelPoint[],
-		speed: number,
+		motion: PathMotion,
+		deltaMS: number,
 		onMove?: (dx: number, dy: number) => void,
 	) => {
-		if (targets.length === 0) return;
+		let remainingMS = deltaMS;
 
-		const target = targets[0];
-		const current = getDisplayCenter(display);
-		const dx = target.x - current.x;
-		const dy = target.y - current.y;
-		const distance = Math.hypot(dx, dy);
-		if (distance > 0) onMove?.(dx, dy);
-		if (distance <= speed) {
-			setDisplayCenter(display, target);
-			targets.shift();
-			return;
+		while (targets.length > 0 && remainingMS > 0) {
+			if (!motion.from || !motion.to) {
+				const from = getDisplayCenter(display);
+				const to = targets[0];
+				const dx = to.x - from.x;
+				const dy = to.y - from.y;
+				const distance = Math.hypot(dx, dy);
+
+				if (distance <= 0.001) {
+					targets.shift();
+					continue;
+				}
+
+				motion.from = from;
+				motion.to = to;
+				motion.elapsed = 0;
+				motion.duration = getPathSegmentDuration(from, to);
+			}
+
+			const from = motion.from;
+			const to = motion.to;
+			const dx = to.x - from.x;
+			const dy = to.y - from.y;
+			const distance = Math.hypot(dx, dy);
+
+			if (distance <= 0.001) {
+				targets.shift();
+				clearPathMotion(motion);
+				continue;
+			}
+
+			onMove?.(dx, dy);
+			const stepMS = Math.min(remainingMS, motion.duration - motion.elapsed);
+			motion.elapsed += stepMS;
+			remainingMS -= stepMS;
+			const progress = clamp(motion.elapsed / motion.duration, 0, 1);
+			setDisplayCenter(display, {
+				x: lerp(from.x, to.x, progress),
+				y: lerp(from.y, to.y, progress),
+			});
+
+			if (progress >= 1) {
+				setDisplayCenter(display, to);
+				targets.shift();
+				clearPathMotion(motion);
+			}
 		}
-
-		display.x += (dx / distance) * speed;
-		display.y += (dy / distance) * speed;
 	};
 
-	const snapDisplayToFinalTarget = (display: LexDisplay, targets: PixelPoint[]) => {
+	const snapDisplayToFinalTarget = (
+		display: LexDisplay,
+		targets: PixelPoint[],
+		motion: PathMotion,
+	) => {
 		const target = targets.at(-1);
 		if (!target) return;
 		setDisplayCenter(display, target);
 		targets.length = 0;
+		clearPathMotion(motion);
 	};
 
 	const tick = (ticker: PIXI.Ticker) => {
-		const baseSpeed = stateBet.isTurbo ? TURBO_SPEED_PER_SECOND : NORMAL_SPEED_PER_SECOND;
-		const speed = baseSpeed * (ticker.deltaMS / 1000);
+		const deltaMS = Math.min(ticker.deltaMS, MAX_MOVEMENT_DELTA_MS);
 		const animationSpeed = getCharacterAnimationSpeed();
-		heartHudAnimation.update(ticker.deltaMS);
-		lexTrailAnimation.update(ticker.deltaMS);
-		pickupBurstAnimation.update(ticker.deltaMS);
-		cashNumberPopAnimation.update(ticker.deltaMS);
-		objectSpawnAnimation.update(ticker.deltaMS);
-		objectResolveAnimation.update(ticker.deltaMS);
+		heartHudAnimation.update(deltaMS);
+		lexTrailAnimation.update(deltaMS);
+		pickupBurstAnimation.update(deltaMS);
+		cashNumberPopAnimation.update(deltaMS);
+		objectSpawnAnimation.update(deltaMS);
+		objectResolveAnimation.update(deltaMS);
 		if (mainBall) {
 			if (mainBall instanceof PIXI.AnimatedSprite) mainBall.animationSpeed = animationSpeed;
-			if (context.stateGame.lexSkipPlayback) snapDisplayToFinalTarget(mainBall, pathTargets);
-			moveDisplayTowardTargets(mainBall, pathTargets, speed, (dx, dy) => {
+			if (context.stateGame.lexSkipPlayback) {
+				snapDisplayToFinalTarget(mainBall, pathTargets, pathMotion);
+			}
+			moveDisplayAlongTimedPath(mainBall, pathTargets, pathMotion, deltaMS, (dx, dy) => {
 				setLexAnimation(getLexAnimationForDelta(dx, dy));
 				setMovementLean(mainBall as LexDisplay, dx, dy);
 			});
 			if (pathTargets.length === 0) settleMovementLean(mainBall);
 			lexTrailAnimation.add(getDisplayCenter(mainBall), false, 'main');
 		}
-		collisionReactionAnimation.update(ticker.deltaMS);
-		cornerAnticipationAnimation.update(ticker.deltaMS);
+		collisionReactionAnimation.update(deltaMS);
+		cornerAnticipationAnimation.update(deltaMS);
 		for (const [cloneId, clone] of Object.entries(cloneDisplays)) {
 			if (clone.display instanceof PIXI.AnimatedSprite) {
 				clone.display.animationSpeed = animationSpeed;
 			}
 			if (context.stateGame.lexSkipPlayback) {
-				snapDisplayToFinalTarget(clone.display, clone.pathTargets);
+				snapDisplayToFinalTarget(clone.display, clone.pathTargets, clone.pathMotion);
 			}
-			moveDisplayTowardTargets(clone.display, clone.pathTargets, speed, (dx, dy) => {
+			moveDisplayAlongTimedPath(clone.display, clone.pathTargets, clone.pathMotion, deltaMS, (dx, dy) => {
 				setCloneAnimation(cloneId, getLexAnimationForDelta(dx, dy));
 				setMovementLean(clone.display, dx, dy);
 			});

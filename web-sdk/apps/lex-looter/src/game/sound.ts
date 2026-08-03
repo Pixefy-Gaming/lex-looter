@@ -24,6 +24,7 @@ export type SoundEffectName =
 	| 'sfx_anticipation_start'
 	| 'sfx_bigwin_coinloop'
 	| 'sfx_btn_general'
+	| 'sfx_btn_respin'
 	| 'sfx_btn_spin'
 	| 'sfx_fs_respins'
 	| 'sfx_multiplier_combine_a'
