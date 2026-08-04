@@ -18,14 +18,17 @@
 	const { eventEmitter } = getContextEventEmitter<EmitterEventModal>();
 
 	const GAME_ASSET_URL = './assets/lex/game-asset.png';
-	const GAME_ASSET_SIZE = { width: 1885, height: 1354 };
+	const GAME_ASSET_SIZE = { width: 1873, height: 1321 };
 	const BONUS_ICON_FRAMES: Record<string, { x: number; y: number; width: number; height: number }> =
 		{
-			'ante.png': { x: 505, y: 445, width: 300, height: 360 },
-			startClone: { x: 1320, y: 35, width: 400, height: 330 },
-			'startClone.png': { x: 1320, y: 35, width: 400, height: 330 },
-			luckylex: { x: 1375, y: 440, width: 475, height: 338 },
-			'luckylex.png': { x: 1375, y: 440, width: 475, height: 338 },
+			// Coordinates come from the current lex/game-asset.json atlas.
+			'ante.png': { x: 543, y: 396, width: 442, height: 408 }, // Legacy alias: noHeart.png
+			'noHeart.png': { x: 543, y: 396, width: 442, height: 408 },
+			'heart.png': { x: 985, y: 396, width: 443, height: 410 },
+			startClone: { x: 517, y: 0, width: 484, height: 386 },
+			'startClone.png': { x: 517, y: 0, width: 484, height: 386 },
+			luckylex: { x: 0, y: 0, width: 517, height: 374 },
+			'luckylex.png': { x: 0, y: 0, width: 517, height: 374 },
 		};
 </script>
 

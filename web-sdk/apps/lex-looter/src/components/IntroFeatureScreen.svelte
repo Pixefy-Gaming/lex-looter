@@ -39,7 +39,7 @@
 		},
 		{
 			title: 'FEATURE MODES',
-			body: 'NO SLAYER, START CLONE, LUCKY LEX\nMAX WIN UP TO 4,500x',
+			body: 'EXTRA LIFE, START CLONE, LUCKY LEX\nMAX WIN UP TO 4,500x',
 			accent: 0xffd24a,
 			icon: 'max',
 		},

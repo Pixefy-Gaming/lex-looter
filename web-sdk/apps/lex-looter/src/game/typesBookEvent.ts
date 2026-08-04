@@ -126,6 +126,7 @@ type BookEventRoundStart = {
 	modeMultiplier: number;
 	cloneCount: number;
 	clones?: LexCloneBookState[];
+	shieldCount?: number;
 	startsWithSlayer: boolean;
 	board: LexBoardDefinition;
 	lexStart: BoardNotation;

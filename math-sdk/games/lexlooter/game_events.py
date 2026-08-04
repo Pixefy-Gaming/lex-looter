@@ -20,11 +20,12 @@ def round_start_event(
 	bet_cost: float,
 	mode_multiplier: float,
 	clone_count: int,
-	clones: list[dict] | None = None,
+	shield_count: int,
 	starts_with_slayer: bool,
 	board: dict,
 	lex_start: str,
 	lex_vector: dict,
+	clones: list[dict] | None = None,
 ) -> None:
 	add_game_event(
 		gamestate,
@@ -34,6 +35,7 @@ def round_start_event(
 		modeMultiplier=mode_multiplier,
 		cloneCount=clone_count,
 		clones=clones or None,
+		shieldCount=shield_count,
 		startsWithSlayer=starts_with_slayer,
 		board=board,
 		lexStart=lex_start,

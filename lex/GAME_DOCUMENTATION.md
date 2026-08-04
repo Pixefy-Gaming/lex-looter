@@ -103,7 +103,7 @@ Corners re-randomise every bounce. Distributions differ between Standard Mode an
 | Low multiplier  | 17%         | 0.1x – 1.0x  | Red    |
 | High multiplier | 8%          | 2.0x – 12.0x | Green  |
 
-### Bonus Modes (No Boom & Start Clone)
+### Bonus Modes (Extra Life, Start Clone & Lucky Lex)
 
 | Outcome         | Probability | Value Range  | Colour |
 | --------------- | ----------- | ------------ | ------ |
@@ -119,16 +119,16 @@ Up to **3 objects** can exist on the field at any one time. Each game loop tick 
 
 | Object            | Spawn Conditions                                  | Effect on Collection                                                     |
 | ----------------- | ------------------------------------------------- | ------------------------------------------------------------------------ |
-| **Slayer**        | Standard Mode and Start Clone Bonus               | Destroys the ball that touched it                                        |
+| **Slayer**        | All modes                                         | Destroys the ball that touched it unless Lex has a heart shield          |
 | **Blue Blob**     | All modes                                         | −50% of tumble value                                                     |
-| **Escape Ladder** | Standard Mode only (disabled in both bonus modes) | Cashes out tumble value immediately                                      |
+| **Escape Ladder** | Standard Mode only (disabled in bonus modes)      | Cashes out tumble value immediately                                      |
 | **Clone Orb**     | All modes                                         | Spawns a new Clone ball                                                  |
 | Gold Coin         | All modes                                         | Adds +$0.50 of the current bet to tumble value                           |
 | Green Gem         | All modes                                         | Adds ×5 of the current bet to tumble value                               |
 | **Red Heart**     | All modes                                         | Grants a one-time shield against the next Slayer hit                     |
 | **Mystery Chest** | All modes                                         | Applies a random multiplier (x0.1 – x10,000) to the current tumble value |
 
-> The Escape Ladder is intentionally **disabled in both paid bonus modes** since those modes offer enhanced multiplier distributions, making an early cashout less desirable from a design perspective.
+> The Escape Ladder is intentionally **disabled in bonus modes** since those modes offer enhanced starts and multiplier distributions, making an early cashout less desirable from a design perspective.
 
 ---
 
@@ -144,24 +144,39 @@ Up to **3 objects** can exist on the field at any one time. Each game loop tick 
 
 ---
 
-### 8b. No Boom Bonus — `NO BOOM ($100)`
+### 8b. Extra Life Bonus — `EXTRA LIFE`
 
-- **Cost:** $100 (flat buy-in, deducted immediately).
+- **Cost:** 3× the selected bet.
 - Activates **Bonus Mode** corner distributions (higher multipliers).
-- The **Slayer object is suppressed** — it will never spawn during this round.
+- One Lex ball spawns at the centre.
+- Lex starts with **1 heart shield**.
+- Slayer **can** spawn.
 - The **Escape Ladder is also suppressed** — no early cashout via ladder.
 - The Blue Blob and Clone Orb can still spawn.
-- One Lex ball spawns; gameplay otherwise identical to Standard Mode.
 
 ---
 
-### 8c. Start Clone Bonus — `START CLONE ($170)`
+### 8c. Start Clone Bonus — `START CLONE`
 
-- **Cost:** $170 (flat buy-in, deducted immediately).
+- **Cost:** 50× the selected bet.
 - Activates **Bonus Mode** corner distributions (higher multipliers).
 - Both **Lex (main)** and a **Clone** ball spawn simultaneously at the start.
+- Lex starts with **2 heart shields**.
 - The Clone has 15 hits before expiring (+$0.50 bonus when it does).
-- Slayer **can** spawn (unlike No Boom).
+- Slayer **can** spawn.
+- The **Escape Ladder is suppressed** — no early cashout via ladder.
+- The round continues until all balls are eliminated or Lex hits a live corner.
+
+---
+
+### 8d. Lucky Lex Bonus — `LUCKY LEX`
+
+- **Cost:** 100× the selected bet.
+- Activates **Bonus Mode** corner distributions (higher multipliers).
+- Both **Lex (main)** and a **Clone** ball spawn simultaneously at the start.
+- Lex starts with **3 heart shields**.
+- Live corner multipliers start at **x5**.
+- Slayer **can** spawn.
 - The **Escape Ladder is suppressed** — no early cashout via ladder.
 - The round continues until all balls are eliminated or Lex hits a live corner.
 
@@ -204,8 +219,9 @@ At the end of every round a modal overlay displays:
 | **Auto**             | Toggle button | Enables auto-play; rounds run continuously until toggled off |
 | **Turbo**            | Toggle button | Speeds up ball movement for faster rounds                    |
 | **Binance**          | Icon button   | Opens platform/wallet integration (Binance)                  |
-| `NO BOOM ($100)`     | Bonus buy     | Activates No Boom Bonus and auto-starts a round              |
-| `START CLONE ($170)` | Bonus buy     | Activates Start Clone Bonus and auto-starts with two balls   |
+| `EXTRA LIFE`         | Bonus buy     | Activates Extra Life Bonus and starts with 1 heart shield    |
+| `START CLONE`        | Bonus buy     | Activates Start Clone Bonus and starts with a Clone and 2 heart shields |
+| `LUCKY LEX`          | Bonus buy     | Activates Lucky Lex Bonus and starts with a Clone, 3 heart shields, and x5+ corner multipliers |
 
 > The **PLAY** button is disabled during an active round and re-enabled when the round ends.
 
@@ -268,6 +284,7 @@ Starts a Lex Looter round and defines the mode-level settings.
 | `betCost`          | number  | Cost/value unit for this round, in cents.              |
 | `modeMultiplier`   | number  | Mode multiplier applied to final payouts.              |
 | `cloneCount`       | number  | Number of clones alive at round start.                 |
+| `shieldCount`      | number  | Number of heart shields active at round start.          |
 | `startsWithSlayer` | boolean | Whether a start-authored Slayer spawn should be shown. |
 
 ### `cornerUpdate`
@@ -363,7 +380,7 @@ Optional fields depend on the reason:
 
 ```json
 [
-  { "type": "roundStart", "mode": "BASE", "betCost": 100, "modeMultiplier": 1, "cloneCount": 0, "startsWithSlayer": false },
+  { "type": "roundStart", "mode": "BASE", "betCost": 100, "modeMultiplier": 1, "cloneCount": 0, "shieldCount": 0, "startsWithSlayer": false },
   { "type": "cornerUpdate", "mainBounces": 0, "corners": { "tl": null, "tr": null, "bl": null, "br": null } },
   { "type": "cornerUpdate", "mainBounces": 5, "corners": { "tl": null, "tr": 2.5, "bl": null, "br": null } },
   { "type": "objectSpawn", "objectId": "coin_1", "object": "coin", "turn": 6, "x": 0.45, "y": 0.25, "source": "random" },

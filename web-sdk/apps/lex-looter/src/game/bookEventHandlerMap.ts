@@ -115,6 +115,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			mainAlive: true,
 			cloneCount: bookEvent.cloneCount,
 			clones: {},
+			shieldCount: bookEvent.shieldCount ?? 0,
 		};
 		applyCloneSnapshots(bookEvent.clones);
 		stateGame.lex.cloneCount = bookEvent.cloneCount;

@@ -72,9 +72,9 @@ INVALID_SESSION_RESPONSE = {
 
 MODE_ALIAS_OVERRIDES = {
     "default": "base",
-    "no slayer": "no_slayer",
-    "no-slayer": "no_slayer",
-    "noslayer": "no_slayer",
+    "extra life": "extra_life",
+    "extra-life": "extra_life",
+    "extralife": "extra_life",
     "start clone": "start_clone",
     "start-clone": "start_clone",
     "startclone": "start_clone",

@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     num_sim_args = {
         "base": int(1e5),
-        "no_slayer": int(1e5),
+        "extra_life": int(1e5),
         "start_clone": int(1e5),
         "lucky_lex": int(1e5),
     }

@@ -137,12 +137,12 @@
 				'Standard Lex Looter round. One Lex ball starts in the arena, corners use the base multiplier profile, and all regular objects may appear.',
 		},
 		{
-			title: 'No Slayer',
+			title: 'Extra Life',
 			cost: '3x',
 			rtp: '96.50%',
 			maxWin: '4,500x',
 			detail:
-				'Feature mode with improved corner multipliers. Slayer is delayed out of play for the round, while escape is disabled.',
+				'Feature mode that starts with one heart shield. Slayer can still spawn, and escape is disabled.',
 		},
 		{
 			title: 'Start Clone',
@@ -150,7 +150,7 @@
 			rtp: '96.50%',
 			maxWin: '4,500x',
 			detail:
-				'Feature mode that begins with Lex and one Clone already active. Corner multipliers are stronger and escape is disabled.',
+				'Feature mode that begins with Lex, one Clone, and two heart shields. Slayer can still spawn, and escape is disabled.',
 		},
 		{
 			title: 'Lucky Lex',
@@ -158,14 +158,14 @@
 			rtp: '96.50%',
 			maxWin: '4,500x',
 			detail:
-				'Feature mode that starts with a Clone and stronger visible corner multipliers starting from 5x.',
+				'Feature mode that starts with a Clone and three heart shields. Corner multipliers start at x5, Slayer can still spawn, and escape is disabled.',
 		},
 	];
 
 	const controlRows = $derived([
 		`Press Play or the spin control to start a Base round at the selected ${costUnitLabel}.`,
 		'Use the left and right amount arrows to lower or raise the selected cost.',
-		`Open the feature menu to ${featureActionLabel} No Slayer, Start Clone, or Lucky Lex.`,
+		`Open the feature menu to ${featureActionLabel} Extra Life, Start Clone, or Lucky Lex.`,
 		'Auto Play opens a confirmation step before it starts.',
 		'Turbo speeds up Lex movement and round reveals while it is active.',
 		'Sound and music can both be toggled from the main controls and settings menu.',

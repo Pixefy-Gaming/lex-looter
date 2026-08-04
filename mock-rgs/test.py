@@ -6,7 +6,7 @@ import json
 
 BASE_URL = "http://localhost:3008"
 SESSION_ID = "test-123"
-MODES = ["base", "no_slayer", "start_clone", "lucky_lex"]
+MODES = ["base", "extra_life", "start_clone", "lucky_lex"]
 BET_AMOUNTS = [100000, 1000000]
 
 def test_authenticate():
