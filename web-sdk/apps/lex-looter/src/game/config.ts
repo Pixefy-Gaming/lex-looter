@@ -2,7 +2,7 @@ export default {
 	providerName: 'sample_provider',
 	gameName: 'sample_lines',
 	gameID: '0_0_cluster',
-	rtp: 0.97,
+	rtp: 0.965,
 	numReels: 7,
 	numRows: [7, 7, 7, 7, 7, 7, 7],
 	betModes: {
@@ -10,15 +10,15 @@ export default {
 			cost: 1.0,
 			feature: true,
 			buyBonus: false,
-			rtp: 0.97,
-			max_win: 4500.0,
+			rtp: 0.965,
+			max_win: 5000.0,
 		},
 		bonus: {
 			cost: 500,
 			feature: true,
 			buyBonus: false,
-			rtp: 0.97,
-			max_win: 4500.0,
+			rtp: 0.965,
+			max_win: 5000.0,
 		},
 	},
 	symbols: {

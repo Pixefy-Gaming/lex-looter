@@ -25,7 +25,7 @@ def test_authenticate_returns_dynamic_config_and_social_currency():
     assert data["balance"]["currency"] == "XSC"
     assert data["config"]["jurisdiction"]["socialCasino"] is True
     assert data["config"]["betLevels"] == server.SUPPORTED_BET_LEVELS
-    assert set(data["config"]["betModes"]) == {"BASE", "NO_SLAYER", "START_CLONE", "LUCKY_LEX"}
+    assert set(data["config"]["betModes"]) == {"BASE", "EXTRA_LIFE", "START_CLONE", "LUCKY_LEX"}
     assert data["config"]["betModes"]["START_CLONE"]["costMultiplier"] == 50.0
 
 
@@ -35,7 +35,7 @@ def test_active_round_restores_amount_and_mode_on_authenticate():
         status, play_data = post_json(
             client,
             "/wallet/play",
-            {"sessionID": "resume", "amount": 20_000, "mode": "NO_SLAYER"},
+            {"sessionID": "resume", "amount": 20_000, "mode": "EXTRA_LIFE"},
         )
         assert status == 200
 
@@ -47,7 +47,7 @@ def test_active_round_restores_amount_and_mode_on_authenticate():
 
     assert status == 200
     assert auth_data["round"]["amount"] == 20_000
-    assert auth_data["round"]["mode"] == "NO_SLAYER"
+    assert auth_data["round"]["mode"] == "EXTRA_LIFE"
     assert auth_data["round"]["roundID"] == play_data["round"]["roundID"]
 
 

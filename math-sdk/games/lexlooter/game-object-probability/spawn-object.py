@@ -16,6 +16,9 @@ chest = [
 # the current bounce count, then does a weighted draw from that phase.
 # Weight 0 = never spawns.
 # "nothing" = the spawn roll resolves as no object, used to control hit rate/RTP.
+# Opening-board population ignores "nothing" and uses the relative non-empty
+# weights; opening count, replenishment attempts, and board caps live in
+# game_config.py so density can be tuned independently for every mode.
 # "chest" remains weighted 0 because chests live only in the four board corners.
 #
 # Modes:

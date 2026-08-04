@@ -251,7 +251,7 @@
 
       <div id="controls">
         <button id="start-btn" class="btn">BET $1.00</button>
-        <button id="bonus1-btn" class="btn">NO BOOM ($100)</button>
+        <button id="bonus1-btn" class="btn">EXTRA LIVE ($100)</button>
         <button id="bonus2-btn" class="btn">START CLONE ($170)</button>
       </div>
     </div>
@@ -399,8 +399,6 @@
         const types = ["boom", "minus", "sticky", "special"];
         const type = types[Math.floor(Math.random() * types.length)];
 
-        // NO BOOM Logic: Prevent bombs
-        if (type === "boom" && noBoomActive) return;
         // BONUS Logic: Prevent Sticky Cashout in BOTH paid bonuses
         if (type === "sticky" && highMultMode) return;
 
@@ -551,8 +549,8 @@
         wallet -= 100;
         walletUI.innerText = `$${wallet.toFixed(2)}`;
         highMultMode = true;
-        noBoomActive = true;
-        document.getElementById("mode-text").innerText = "NO BOOM BONUS";
+        noBoomActive = false;
+        document.getElementById("mode-text").innerText = "EXTRA LIVE BONUS";
         document.getElementById("mode-text").style.color = "var(--accent)";
         document.getElementById("start-btn").onclick();
       };

@@ -43,6 +43,8 @@ class GameState(GameStateOverride):
                 corners=state["corners"],
             )
 
+            self._spawn_initial_objects(state)
+
             if state["start_with_slayer"]:
                 self._spawn_object(
                     state,
@@ -101,6 +103,9 @@ class GameState(GameStateOverride):
             "main_bounce_increment": float(conditions["main_bounce_increment"]),
             "corner_profile": conditions["corner_profile"],
             "spawn_chance_per_turn": float(conditions["spawn_chance_per_turn"]),
+            "spawn_attempts_per_bounce": int(conditions["spawn_attempts_per_bounce"]),
+            "max_active_objects": int(conditions["max_active_objects"]),
+            "start_object_count": int(conditions["start_object_count"]),
             "start_with_slayer": bool(conditions["start_with_slayer"]),
             "start_slayer_delay_min": int(conditions["start_slayer_delay_min"]),
             "start_slayer_delay_max": int(conditions["start_slayer_delay_max"]),
@@ -154,7 +159,7 @@ class GameState(GameStateOverride):
             if state["finished"]:
                 break
 
-            self._maybe_spawn_random_object(state)
+            self._maybe_spawn_random_objects(state)
             self._resolve_due_objects(state)
             if state["finished"]:
                 break
@@ -257,20 +262,35 @@ class GameState(GameStateOverride):
             clone_expire_event(self, **expiration)
         state["clone_expirations"] = []
 
-    def _maybe_spawn_random_object(self, state: dict) -> None:
-        """Spawn at most one random object for the current turn."""
-        if len(state["active_objects"]) >= self.MAX_ACTIVE_OBJECTS:
+    def _spawn_initial_objects(self, state: dict) -> None:
+        """Populate the opening board with guaranteed, mode-configured objects."""
+        object_count = min(state["start_object_count"], state["max_active_objects"])
+        for _ in range(object_count):
+            object_name = self.draw_spawn_object(
+                state["main_bounces"],
+                allow_nothing=False,
+            )
+            if object_name is None:
+                break
+            self._spawn_object(state, object_name, source="start")
+
+    def _maybe_spawn_random_objects(self, state: dict) -> None:
+        """Run the mode-configured number of object replenishment attempts."""
+        if len(state["active_objects"]) >= state["max_active_objects"]:
             return
         if state["main_alive"] and not state["last_step"].get("bounced"):
             return
-        if self.random() >= state["spawn_chance_per_turn"]:
-            return
 
-        object_name = self.draw_spawn_object(state["main_bounces"])
-        if object_name is None:
-            return
+        available_slots = state["max_active_objects"] - len(state["active_objects"])
+        attempts = min(state["spawn_attempts_per_bounce"], available_slots)
+        for _ in range(attempts):
+            if self.random() >= state["spawn_chance_per_turn"]:
+                continue
 
-        self._spawn_object(state, object_name, source="random")
+            object_name = self.draw_spawn_object(state["main_bounces"])
+            if object_name is None:
+                continue
+            self._spawn_object(state, object_name, source="random")
 
     def _spawn_object(
         self,
@@ -485,7 +505,7 @@ class GameState(GameStateOverride):
             return
 
         if object_name == "heart":
-            state["shield_count"] += 1
+            state["shield_count"] = min(state["shield_count"] + 1, self.MAX_HEARTS)
             self._object_resolve_event(
                 state,
                 object_state,
@@ -679,7 +699,8 @@ class GameState(GameStateOverride):
     def _finish_round(self, state: dict, *, reason: str, payout: float, **meta) -> None:
         """Freeze the round and store its terminal outcome."""
         state["finished"] = True
-        state["payout"] = self.to_cents(max(payout, 0.0)) / 100.0
+        max_win = float(self.get_current_betmode().get_wincap())
+        state["payout"] = self.to_cents(min(max(payout, 0.0), max_win)) / 100.0
         state["end_reason"] = reason
         state["end_meta"] = meta
         state["active_objects"] = []

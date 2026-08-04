@@ -25,7 +25,7 @@ from notation import (
 class GameCalculations(Executables):
     MAX_MAIN_BOUNCES = 40
     CLONE_LIFETIME = 10
-    MAX_ACTIVE_OBJECTS = 3
+    MAX_HEARTS = 3
     OBJECT_HIT_RADIUS_CELLS = 1
 
     CLONE_BOUNCE_INCREMENT = 0.04
@@ -98,7 +98,12 @@ class GameCalculations(Executables):
         }
         return float(get_random_outcome(distribution))
 
-    def get_spawn_weights(self, main_bounces: int) -> dict:
+    def get_spawn_weights(
+        self,
+        main_bounces: int,
+        *,
+        include_nothing: bool = True,
+    ) -> dict:
         """Return the active spawn weights for the current mode and bounce phase."""
         spawn_mode = self.get_mode_conditions()["spawn_mode"]
         mode_tables = self.load_probability_tables()["spawn_tables"][spawn_mode]
@@ -112,12 +117,19 @@ class GameCalculations(Executables):
         return {
             key: weight
             for key, weight in active_phase.items()
-            if key != "from_bounce" and float(weight) > 0
+            if key != "from_bounce"
+            and (include_nothing or key not in ("none", "nothing"))
+            and float(weight) > 0
         }
 
-    def draw_spawn_object(self, main_bounces: int) -> str | None:
+    def draw_spawn_object(
+        self,
+        main_bounces: int,
+        *,
+        allow_nothing: bool = True,
+    ) -> str | None:
         """Draw a spawnable object for the active mode and bounce window."""
-        distribution = self.get_spawn_weights(main_bounces)
+        distribution = self.get_spawn_weights(main_bounces, include_nothing=allow_nothing)
         if not distribution:
             return None
         outcome = get_random_outcome(distribution)

@@ -1,7 +1,7 @@
 """Main file for generating Lex Looter simulation books."""
 
 from pathlib import Path
-import shutil
+import os
 import sys
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -12,27 +12,41 @@ from gamestate import GameState
 from game_config import GameConfig
 from src.state.run_sims import create_books
 from src.write_data.write_configs import generate_configs
+from weight_balancer import balance_lookup_table
 
 
-def sync_lookup_tables(gamestate: GameState) -> None:
-    """Mirror fresh lookup tables into the publish filenames used by generate_configs."""
+def balance_lookup_tables(gamestate: GameState) -> None:
+    """Balance fresh simulations to every mode's configured RTP before publishing."""
     for betmode in gamestate.config.bet_modes:
         lookup_paths = gamestate.output_files.lookups[betmode.get_name()]["paths"]
-        shutil.copyfile(lookup_paths["base_lookup"], lookup_paths["optimized_lookup"])
+        summary = balance_lookup_table(
+            Path(lookup_paths["base_lookup"]),
+            Path(lookup_paths["optimized_lookup"]),
+            betmode,
+        )
+        print(
+            f"Balanced {summary['mode']}: {summary['achieved_rtp'] * 100:.6f}% "
+            f"(target {summary['target_rtp'] * 100:.2f}%)"
+        )
 
 if __name__ == "__main__":
 
-    num_threads = 10
+    # One low-priority worker keeps the calibration run from monopolising a dev machine.
+    num_threads = 1
     batching_size = 50000
     compression = True
     profiling = False
 
-    num_sim_args = {
-        "base": int(1e5),
-        "extra_life": int(1e5),
-        "start_clone": int(1e5),
-        "lucky_lex": int(1e5),
+    all_modes = ("base", "extra_life", "start_clone", "lucky_lex")
+    selected_modes = {
+        mode.strip()
+        for mode in os.environ.get("LEXLOOTER_SIM_MODES", ",".join(all_modes)).split(",")
+        if mode.strip()
     }
+    unknown_modes = selected_modes.difference(all_modes)
+    if unknown_modes:
+        raise ValueError(f"Unknown Lex Looter simulation modes: {sorted(unknown_modes)}")
+    num_sim_args = {mode: int(1e5) if mode in selected_modes else 0 for mode in all_modes}
 
     run_conditions = {"run_sims": True}
 
@@ -49,5 +63,5 @@ if __name__ == "__main__":
             compression,
             profiling,
         )
-    sync_lookup_tables(gamestate)
+    balance_lookup_tables(gamestate)
     generate_configs(gamestate)

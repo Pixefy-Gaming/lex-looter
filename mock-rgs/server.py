@@ -75,6 +75,10 @@ MODE_ALIAS_OVERRIDES = {
     "extra life": "extra_life",
     "extra-life": "extra_life",
     "extralife": "extra_life",
+    "extra live": "extra_life",
+    "extra-live": "extra_life",
+    "extra_live": "extra_life",
+    "extralive": "extra_life",
     "start clone": "start_clone",
     "start-clone": "start_clone",
     "startclone": "start_clone",
@@ -203,6 +207,8 @@ class Session:
 
     def get_mode_display_name(self, mode_name):
         """Return the RGS-facing display form of a mode name."""
+        if mode_name == "extra_life":
+            return "EXTRA_LIFE"
         return str(mode_name).upper()
 
     def get_rgs_bet_modes_config(self):

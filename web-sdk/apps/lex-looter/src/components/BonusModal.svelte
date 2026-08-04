@@ -27,7 +27,7 @@
 					tickerSpin: 'GOOD LUCK',
 					bannerText: '',
 				},
-				maxWin: 35,
+				maxWin: 5000,
 			},
 			extra_life: {
 				mode: 'extra_life',
@@ -52,7 +52,7 @@
 					tickerSpin: 'EXTRA LIFE BONUS',
 					bannerText: '',
 				},
-				maxWin: 4500,
+				maxWin: 5000,
 			},
 			start_clone: {
 				mode: 'start_clone',
@@ -77,7 +77,7 @@
 					tickerSpin: 'START CLONE BONUS',
 					bannerText: '',
 				},
-				maxWin: 4500,
+				maxWin: 5000,
 			},
 			lucky_lex: {
 				mode: 'lucky_lex',
@@ -103,7 +103,7 @@
 					tickerSpin: 'LUCKY LEX BONUS',
 					bannerText: '',
 				},
-				maxWin: 4500,
+				maxWin: 5000,
 			},
 		};
 	};

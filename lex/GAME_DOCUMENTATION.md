@@ -115,7 +115,9 @@ Corners re-randomise every bounce. Distributions differ between Standard Mode an
 
 ## 7. Spawnable Objects
 
-Up to **3 objects** can exist on the field at any one time. Each game loop tick has a ~1.2% chance of spawning a new object. Objects are placed randomly in the central region of the arena (avoiding the outermost 100 px border). The ball must come within **35 px** of an object's centre to collect it.
+Active-object caps are mode-specific: **6 Base, 14 Extra Live, 10 Start Clone,
+and 12 Lucky Lex**. Modes begin with a dense opening population and replenish
+objects on main-ball bounces using their weighted phase tables.
 
 | Object            | Spawn Conditions                                  | Effect on Collection                                                     |
 | ----------------- | ------------------------------------------------- | ------------------------------------------------------------------------ |
@@ -151,6 +153,7 @@ Up to **3 objects** can exist on the field at any one time. Each game loop tick 
 - One Lex ball spawns at the centre.
 - Lex starts with **1 heart shield**.
 - Slayer **can** spawn.
+- The opening board is densely populated.
 - The **Escape Ladder is also suppressed** — no early cashout via ladder.
 - The Blue Blob and Clone Orb can still spawn.
 
