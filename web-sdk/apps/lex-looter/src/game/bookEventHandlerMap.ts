@@ -50,7 +50,7 @@ const LEX_OBJECT_SOUND_MAP: Record<LexObjectName, SoundEffectName> = {
 	heart: 'hit-heart',
 };
 
-const NORMAL_LEX_PLAYBACK_DURATION_SCALE = 0.55;
+const NORMAL_LEX_PLAYBACK_DURATION_SCALE = 0.45;
 
 const waitLexPlaybackStepInterruptible = async (duration = 220) => {
 	if (stateGame.lexSkipPlayback) return;
