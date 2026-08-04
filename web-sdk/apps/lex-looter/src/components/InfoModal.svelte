@@ -132,7 +132,7 @@
 			title: 'Base',
 			cost: '1x',
 			rtp: '96.50%',
-			maxWin: '35x',
+			maxWin: '5,000x',
 			detail:
 				'Standard Lex Looter round. One Lex ball starts in the arena, corners use the base multiplier profile, and all regular objects may appear.',
 		},
@@ -140,7 +140,7 @@
 			title: 'Extra Life',
 			cost: '3x',
 			rtp: '96.50%',
-			maxWin: '4,500x',
+			maxWin: '5,000x',
 			detail:
 				'Feature mode that starts with one heart shield. Slayer can still spawn, and escape is disabled.',
 		},
@@ -148,7 +148,7 @@
 			title: 'Start Clone',
 			cost: '50x',
 			rtp: '96.50%',
-			maxWin: '4,500x',
+			maxWin: '5,000x',
 			detail:
 				'Feature mode that begins with Lex, one Clone, and two heart shields. Slayer can still spawn, and escape is disabled.',
 		},
@@ -156,7 +156,7 @@
 			title: 'Lucky Lex',
 			cost: '100x',
 			rtp: '96.50%',
-			maxWin: '4,500x',
+			maxWin: '5,000x',
 			detail:
 				'Feature mode that starts with a Clone and three heart shields. Corner multipliers start at x5, Slayer can still spawn, and escape is disabled.',
 		},

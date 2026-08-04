@@ -31,8 +31,10 @@ def balance_lookup_tables(gamestate: GameState) -> None:
 
 if __name__ == "__main__":
 
-    # One low-priority worker keeps the calibration run from monopolising a dev machine.
-    num_threads = 1
+    # Can be raised for a faster targeted publish rebuild.
+    num_threads = int(os.environ.get("LEXLOOTER_SIM_THREADS", "1"))
+    if num_threads < 1:
+        raise ValueError("LEXLOOTER_SIM_THREADS must be at least 1")
     batching_size = 50000
     compression = True
     profiling = False

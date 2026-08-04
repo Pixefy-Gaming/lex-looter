@@ -163,6 +163,7 @@ class GameConfig(Config):
                         "start_clone_count": start_clone_count,
                         "start_shield_count": start_shield_count,
                         "start_object_count": start_object_count,
+                        "max_zero_payout_rate": 0.895 if name == "extra_life" else None,
                         "start_multiplier": start_multiplier,
                         "spawn_chance_per_turn": spawn_chance_per_turn,
                         "spawn_attempts_per_bounce": spawn_attempts_per_bounce,

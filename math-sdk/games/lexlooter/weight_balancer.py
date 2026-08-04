@@ -80,6 +80,35 @@ def _refine_weights(weights: list[int], payouts: list[int], target: Fraction) ->
         weights[index] += added_weight
 
 
+def _constrained_weights(
+    payouts: list[int], target: Fraction, max_zero_payout_rate: float
+) -> list[int]:
+    """Build weights with a capped zero-payout share and the requested mean."""
+    zero_indices = [index for index, payout in enumerate(payouts) if payout == 0]
+    positive_indices = [index for index, payout in enumerate(payouts) if payout > 0]
+    if not zero_indices or not positive_indices:
+        raise RuntimeError("A zero-payout cap requires both zero and positive outcomes")
+
+    zero_weight = int(TOTAL_WEIGHT_SCALE * max_zero_payout_rate)
+    positive_weight = TOTAL_WEIGHT_SCALE - zero_weight
+    conditional_target = float(target) / (1.0 - max_zero_payout_rate)
+    positive_payouts = [payouts[index] for index in positive_indices]
+    score = _find_score(positive_payouts, conditional_target)
+    logs = [score * payout for payout in positive_payouts]
+    maximum = max(logs)
+    relative_weights = [exp(max(log_weight - maximum, -745.0)) for log_weight in logs]
+
+    weights = [0] * len(payouts)
+    zero_base, zero_remainder = divmod(zero_weight, len(zero_indices))
+    for offset, index in enumerate(zero_indices):
+        weights[index] = zero_base + int(offset < zero_remainder)
+
+    scale = positive_weight / fsum(relative_weights)
+    for index, relative_weight in zip(positive_indices, relative_weights):
+        weights[index] = max(1, int(round(relative_weight * scale)))
+    return weights
+
+
 def balance_lookup_table(source: Path, destination: Path, betmode) -> dict:
     """Write a weighted lookup table with the exact configured RTP target."""
     rows: list[tuple[str, int]] = []
@@ -93,12 +122,17 @@ def balance_lookup_table(source: Path, destination: Path, betmode) -> dict:
 
     payouts = [payout for _, payout in rows]
     target = _target_cents(betmode)
-    score = _find_score(payouts, float(target))
-    log_weights = [score * payout for payout in payouts]
-    maximum = max(log_weights)
-    relative_weights = [exp(max(log_weight - maximum, -745.0)) for log_weight in log_weights]
-    scale = TOTAL_WEIGHT_SCALE / fsum(relative_weights)
-    weights = [max(1, int(round(relative_weight * scale))) for relative_weight in relative_weights]
+    conditions = betmode.get_distribution_conditions("main")
+    max_zero_payout_rate = conditions.get("max_zero_payout_rate")
+    if max_zero_payout_rate is not None:
+        weights = _constrained_weights(payouts, target, float(max_zero_payout_rate))
+    else:
+        score = _find_score(payouts, float(target))
+        log_weights = [score * payout for payout in payouts]
+        maximum = max(log_weights)
+        relative_weights = [exp(max(log_weight - maximum, -745.0)) for log_weight in log_weights]
+        scale = TOTAL_WEIGHT_SCALE / fsum(relative_weights)
+        weights = [max(1, int(round(relative_weight * scale))) for relative_weight in relative_weights]
     _refine_weights(weights, payouts, target)
 
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -117,5 +151,5 @@ def balance_lookup_table(source: Path, destination: Path, betmode) -> dict:
         "achieved_rtp": achieved_rtp,
         "target_payout_cents": float(target),
         "achieved_payout_cents": weighted_payout / total_weight,
-        "tilt_score": score,
+        "max_zero_payout_rate": max_zero_payout_rate,
     }
