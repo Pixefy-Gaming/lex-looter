@@ -143,7 +143,7 @@
 				<Container y={iconY + 4}>
 					<ResponsiveText
 						anchor={0.5}
-						text="4,500x"
+						text="5,000x"
 						maxWidth={cardWidth * 0.78}
 						style={{
 							fontFamily: 'Jersey 25',
