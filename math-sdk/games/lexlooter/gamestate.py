@@ -539,6 +539,7 @@ class GameState(GameStateOverride):
 
             if target_ball == "main":
                 state["main_alive"] = False
+                state["clones"] = []
             else:
                 state["clones"] = [clone for clone in state["clones"] if clone["id"] != target_ball]
 
@@ -550,7 +551,7 @@ class GameState(GameStateOverride):
                 target=target_ball,
                 remainingBalls=self._live_ball_count(state),
             )
-            if not self._has_live_balls(state):
+            if target_ball == "main" or not self._has_live_balls(state):
                 self._finish_round(
                     state,
                     reason="slayer",

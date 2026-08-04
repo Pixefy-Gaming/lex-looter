@@ -248,6 +248,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		if (bookEvent.result === 'destroy') {
 			if (bookEvent.target === 'main') {
 				stateGame.lex.mainAlive = false;
+				stateGame.lex.clones = {};
 				eventEmitter.broadcast({ type: 'soundStop', name: 'running' });
 			}
 			if (bookEvent.target !== 'main') {
@@ -255,10 +256,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				delete nextClones[bookEvent.target];
 				stateGame.lex.clones = nextClones;
 			}
-			stateGame.lex.cloneCount = Math.max(
-				bookEvent.remainingBalls - (stateGame.lex.mainAlive ? 1 : 0),
-				0,
-			);
+			stateGame.lex.cloneCount =
+				bookEvent.target === 'main'
+					? 0
+					: Math.max(bookEvent.remainingBalls - (stateGame.lex.mainAlive ? 1 : 0), 0);
 		}
 		if (bookEvent.result === 'shieldBlock') {
 			stateGame.lex.cloneCount = Math.max(
