@@ -79,6 +79,10 @@ MODE_ALIAS_OVERRIDES = {
     "extra-live": "extra_life",
     "extra_live": "extra_life",
     "extralive": "extra_life",
+    # Keep existing sessions working while Stake Engine switches to EXTRA_LIFE.
+    "no slayer": "extra_life",
+    "no-slayer": "extra_life",
+    "noslayer": "extra_life",
     "start clone": "start_clone",
     "start-clone": "start_clone",
     "startclone": "start_clone",
